@@ -96,7 +96,7 @@ export default function Navigation() {
                                 <Link to="/about"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
-                                    Về CSM HANOI
+                                    Về CSM HCM
                                 </Link>
                                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">

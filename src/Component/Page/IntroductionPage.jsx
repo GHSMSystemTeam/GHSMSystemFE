@@ -41,15 +41,15 @@ export default function IntroductionPage() {
                             <LogoGHSMS />
                         </Link>
                         <div className="hidden lg:block">
-                            <h1 className="text-blue-700 font-semibold text-lg uppercase">Trung tâm Y học Giới tính Hà Nội</h1>
-                            <p className="text-gray-600 text-sm">Bệnh viện Nam học và Hiếm muộn Hà Nội</p>
-                            <p className="text-gray-500 text-xs">Center for Sexual Medicine of Hanoi</p>
+                            <h1 className="text-blue-700 font-semibold text-lg uppercase">Trung tâm Y học Giới tính TPHCM</h1>
+                            <p className="text-gray-600 text-sm">Bệnh viện Nam học và Hiếm muộn TPHCM</p>
+                            <p className="text-gray-500 text-xs">Center for Sexual Medicine of HCM city</p>
                         </div>
                     </div>
                     <div className="flex items-center space-x-6">
                         <div className="hidden md:flex items-center space-x-1">
                             <Mail size={16} className="text-blue-600" />
-                            <span className="text-sm">contact@csmhanoi.vn</span>
+                            <span className="text-sm">ttyhgt@afTPHCM.com</span>
                         </div>
                         <div className="hidden md:flex items-center space-x-1">
                             <Phone size={16} className="text-blue-600" />
@@ -67,7 +67,7 @@ export default function IntroductionPage() {
             </header>
 
             {/* Hero Banner */}
-            <div className="w-full bg-blue-700 py-12">
+            <div className="w-full bg-indigo-500 text-white py-2">
                 <div className="container mx-auto px-4">
                     <div className="text-center text-white">
                         <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
@@ -90,7 +90,7 @@ export default function IntroductionPage() {
                             <ul>
                                 <li className="border-b border-gray-100 last:border-b-0">
                                     <Link to="/about" className="block p-4 hover:bg-blue-50 text-blue-700 font-medium">
-                                        Về CSM HANOI
+                                        Về CSM HCM
                                     </Link>
                                 </li>
                                 <li className="border-b border-gray-100 last:border-b-0">
@@ -124,7 +124,7 @@ export default function IntroductionPage() {
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Địa chỉ:</p>
-                                        <p className="font-medium">52 Nguyễn Thái Học, Ba Đình, Hà Nội</p>
+                                        <p className="font-medium">Đường 22, Thành phố Thủ Đức</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start">
@@ -142,7 +142,7 @@ export default function IntroductionPage() {
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Email:</p>
-                                        <p className="font-medium">contact@csmhanoi.vn</p>
+                                        <p className="font-medium">ttyhgt@afTPHCM.com</p>
                                     </div>
                                 </div>
                             </div>
@@ -152,7 +152,7 @@ export default function IntroductionPage() {
                     {/* Main content */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Trung tâm Y học Giới tính Hà Nội</h1>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Trung tâm Y học Giới tính </h1>
                             
                             <div className="prose max-w-none">
                                 <div className="mb-8">
@@ -162,12 +162,12 @@ export default function IntroductionPage() {
                                         className="w-full h-auto rounded-lg mb-4"
                                         onError={(e) => e.target.src = 'https://placehold.co/800x400?text=Trung+tâm+Y+học+Giới+tính+Hà+Nội'}
                                     />
-                                    <p className="text-sm text-center text-gray-500 italic">Trung tâm Y học Giới tính Hà Nội - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
+                                    <p className="text-sm text-center text-gray-500 italic">Trung tâm Y học Giới tính TPHCM - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
                                 </div>
                                 
                                 <h2 className="text-2xl font-semibold text-blue-700 mb-4">Về chúng tôi</h2>
                                 <p className="mb-6 text-gray-700 leading-relaxed">
-                                    Trung tâm Y học Giới tính Hà Nội (CSM HANOI) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam. 
+                                    Trung tâm Y học Giới tính TPHCM (CSM HCM) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam. 
                                     Chúng tôi cung cấp các dịch vụ chuyên sâu trong điều trị, tư vấn và chăm sóc sức khỏe giới tính toàn diện cho nam giới, nữ giới 
                                     và cộng đồng đa dạng giới.
                                 </p>
@@ -268,19 +268,6 @@ export default function IntroductionPage() {
                                     </div>
                                 </div>
 
-                                <div className="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-8">
-                                    <h2 className="text-2xl font-semibold text-blue-700 mb-4">Đặt lịch khám</h2>
-                                    <p className="mb-4 text-gray-700">
-                                        Để được tư vấn và đặt lịch khám với các chuyên gia của chúng tôi, vui lòng liên hệ qua số điện thoại 
-                                        <span className="font-semibold"> 0866.249.268</span> hoặc nhấn vào nút bên dưới.
-                                    </p>
-                                    <button 
-                                        onClick={() => setShowAppointmentModal(true)}
-                                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-medium transition-colors duration-300"
-                                    >
-                                        Đặt lịch ngay
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -292,10 +279,10 @@ export default function IntroductionPage() {
                 <div className="container mx-auto px-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <div>
-                            <h3 className="text-xl font-semibold mb-4">Trung tâm Y học Giới tính Hà Nội</h3>
-                            <p className="mb-2">Địa chỉ: 52 Nguyễn Thái Học, Ba Đình, Hà Nội</p>
+                            <h3 className="text-xl font-semibold mb-4">Trung tâm Y học Giới tính TPHCM</h3>
+                            <p className="mb-2">Địa chỉ: Đường 22, Thành phố HCM</p>
                             <p className="mb-2">Điện thoại: 0866.249.268</p>
-                            <p className="mb-2">Email: contact@csmhanoi.vn</p>
+                            <p className="mb-2">Email: ttyhgt@afTPHCM.com</p>
                         </div>
                         <div>
                             <h3 className="text-xl font-semibold mb-4">Giờ làm việc</h3>
@@ -313,116 +300,12 @@ export default function IntroductionPage() {
                         </div>
                     </div>
                     <div className="border-t border-gray-800 mt-8 pt-6 text-center text-sm">
-                        <p>© {new Date().getFullYear()} Trung tâm Y học Giới tính Hà Nội. Tất cả các quyền được bảo lưu.</p>
+                        <p>© {new Date().getFullYear()} Trung tâm Y học Giới tính TPHCM. Tất cả các quyền được bảo lưu.</p>
                     </div>
                 </div>
             </footer>
 
-            {/* Appointment Modal */}
-            {showAppointmentModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-semibold text-gray-900">Đặt lịch khám</h3>
-                                <button 
-                                    onClick={() => setShowAppointmentModal(false)}
-                                    className="text-gray-400 hover:text-gray-500"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            
-                            <form className="space-y-4" onSubmit={handleAppointmentSubmit}>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-                                    <input 
-                                        type="text" 
-                                        name="name"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Nhập họ và tên"
-                                        required
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-                                    <input 
-                                        type="tel" 
-                                        name="phone"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Nhập số điện thoại"
-                                        required
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                    <input 
-                                        type="email" 
-                                        name="email"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        placeholder="Nhập email"
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ngày khám mong muốn</label>
-                                    <input 
-                                        type="date" 
-                                        name="date"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    />
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Dịch vụ</label>
-                                    <select 
-                                        name="service"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        required
-                                    >
-                                        <option value="">Chọn dịch vụ</option>
-                                        <option value="nam-hoc">Khám nam học</option>
-                                        <option value="nu-khoa">Khám nữ khoa</option>
-                                        <option value="tam-ly">Tư vấn tâm lý</option>
-                                        <option value="lgbt">Dịch vụ cho cộng đồng LGBT+</option>
-                                    </select>
-                                </div>
-                                
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
-                                    <textarea 
-                                        name="notes"
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                        rows="3"
-                                        placeholder="Nhập nội dung ghi chú (nếu có)"
-                                    ></textarea>
-                                </div>
-                                
-                                <div className="flex justify-end space-x-3 pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setShowAppointmentModal(false)}
-                                        className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                    >
-                                        Hủy
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                    >
-                                        Đặt lịch
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            )}
+
 
             {/* Floating contact buttons */}
             <div className="fixed right-4 bottom-4 flex flex-col space-y-2 z-50">

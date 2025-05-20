@@ -143,7 +143,7 @@ export default function GHSMSCenter() {
                                     25/06/2023: Scientific Workshop: Update on Male and Female Sexual Health Care
                                 </h3>
                                 <p className="text-gray-700">
-                                    Vietnam Society of Gender Medicine (VSSM) and Hanoi Andrology and Infertility Hospital
+                                    Vietnam Society of Gender Medicine (VSSM) and HCM city Andrology and Infertility Hospital
                                     organized a scientific seminar  "UPDATING MALE AND FEMALE SEXUAL HEALTH CARE".
                                 </p>
                             </div>
