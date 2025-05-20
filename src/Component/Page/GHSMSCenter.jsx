@@ -5,7 +5,7 @@ import NavItem from '../Nav/NavItem';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import ServiceItem from '../Service/ServiceItem';
 import CircleIcon from '../Icon/CircleIcon';
-
+import { Link } from 'react-router-dom';
 
 
 
@@ -13,6 +13,7 @@ import CircleIcon from '../Icon/CircleIcon';
 export default function GHSMSCenter() {
     const [activeTab, setActiveTab] = useState('home');
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+    const [showDropdown, setShowDropdown] = useState(false);
     const handleAppointmentSubmit = (e) => {
     e.preventDefault();
     // Get form data
@@ -86,17 +87,22 @@ export default function GHSMSCenter() {
                             <NavItem label="Trang chủ" active={activeTab === 'home'} onClick={() => setActiveTab('home')} />
 
                             <div className="relative group">
+                                <div 
+                                    className="flex items-center cursor-pointer"
+                                    onMouseEnter={() => setShowDropdown(true)}
+                                >
                                 <NavItem label="Giới thiệu"
                                     icon={<ChevronDown size={16} />}
                                     // onClick={() => setShowDropdown(!showDropdown)}
                                     // active={showDropdown} 
-                                     active={activeTab === 'about'}
+                                     active={activeTab === 'about' || showDropdown }
                                     />
-                                {/* {showDropdown && ( */}
+                                </div>
+                                {(showDropdown || false) && (
                                      <div className="hidden group-hover:block absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg py-2 mt-1 z-50">
-                                        <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
+                                        <Link to="/about" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                                             Về CSM HANOI
-                                        </a>
+                                        </Link>
                                         <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
                                             Đội ngũ chuyên môn
                                         </a>
@@ -107,7 +113,7 @@ export default function GHSMSCenter() {
                                             Tin chuyên môn
                                         </a>
                                     </div>
-                                {/* )} */}
+                                     )}
                             </div>
                             <NavItem label="Dịch vụ" icon={<ChevronDown size={16} />} />
                             <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
