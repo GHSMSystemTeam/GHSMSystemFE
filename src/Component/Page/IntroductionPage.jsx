@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import NavItem from '../Nav/NavItem';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import CircleIcon from '../Icon/CircleIcon';
+import Navigation from '../Nav/Navigation';
 
 export default function IntroductionPage() {
     const [activeTab, setActiveTab] = useState('about');
@@ -62,52 +63,7 @@ export default function IntroductionPage() {
                 </div>
 
                 {/* Navigation */}
-                <nav className="bg-white">
-                    <div className="container mx-auto px-4 flex justify-between items-center">
-                        <div className="hidden md:flex space-x-6">
-                            <NavItem label="Trang chủ" active={false} to="/" />
-                            <div className="relative group">
-                                <NavItem 
-                                    label="Giới thiệu"
-                                    icon={<ChevronDown size={16} />}
-                                    active={true}
-                                />
-                                <div className="hidden group-hover:block absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg py-2 mt-1 z-50">
-                                    <Link to="/about" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                        Về CSM HANOI
-                                    </Link>
-                                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                        Đội ngũ chuyên môn
-                                    </a>
-                                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                        Tin tức báo chí
-                                    </a>
-                                    <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600">
-                                        Tin chuyên môn
-                                    </a>
-                                </div>
-                            </div>
-                            <NavItem label="Dịch vụ" icon={<ChevronDown size={16} />} />
-                            <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
-                            <NavItem label="Liên hệ" />
-                        </div>
-
-                        <div className="hidden md:flex items-center space-x-4">
-                            <Search size={20} className="text-gray-500" />
-                            <button 
-                                className="bg-red-600 text-white px-4 py-2 rounded font-medium"
-                                onClick={() => setShowAppointmentModal(true)}
-                            >
-                                Đặt lịch khám
-                            </button>
-                        </div>
-                        <button className="md:hidden text-gray-500">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
-                        </button>
-                    </div>
-                </nav>
+                <Navigation/>
             </header>
 
             {/* Hero Banner */}
