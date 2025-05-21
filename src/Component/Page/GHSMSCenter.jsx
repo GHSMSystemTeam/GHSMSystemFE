@@ -7,6 +7,8 @@ import ServiceItem from '../Service/ServiceItem';
 import CircleIcon from '../Icon/CircleIcon';
 import { Link } from 'react-router-dom';
 import Navigation from '../Nav/Navigation';
+import DoctorTeam from '../Team/DoctorTeam';
+import Footer from '../Footer/Footer';
 
 
 
@@ -151,7 +153,11 @@ export default function GHSMSCenter() {
                         </div>
                     </div>
                 </div>
+                <DoctorTeam/>
+
             </div>
+
+            <Footer/>
         </div>
     )
 }
