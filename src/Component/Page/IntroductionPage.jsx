@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React from 'react';
 import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import NavItem from '../Nav/NavItem';
@@ -8,30 +8,6 @@ import Navigation from '../Nav/Navigation';
 import Footer from '../Footer/Footer';
 
 export default function IntroductionPage() {
-    const [activeTab, setActiveTab] = useState('about');
-    const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-    
-    const handleAppointmentSubmit = (e) => {
-        e.preventDefault();
-        // Get form data
-        const formData = new FormData(e.target);
-        const appointmentData = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            email: formData.get('email'),
-            date: formData.get('date'),
-            service: formData.get('service'),
-            notes: formData.get('notes')
-        };
-        
-        // Here you would typically send this data to your backend API
-        console.log('Appointment data:', appointmentData);
-        
-        // Close the modal and show a success message
-        setShowAppointmentModal(false);
-        alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    };
-
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             {/* Header */}
@@ -95,9 +71,9 @@ export default function IntroductionPage() {
                                     </Link>
                                 </li>
                                 <li className="border-b border-gray-100 last:border-b-0">
-                                    <a href="#" className="block p-4 hover:bg-blue-50">
+                                    <Link to="/dncm" className="block p-4 hover:bg-blue-50">
                                         Đội ngũ chuyên môn
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="border-b border-gray-100 last:border-b-0">
                                     <a href="#" className="block p-4 hover:bg-blue-50">

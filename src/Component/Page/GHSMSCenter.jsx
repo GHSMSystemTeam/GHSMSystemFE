@@ -1,5 +1,4 @@
-import React, { use } from 'react'
-import { useState, useEffect, useRef } from 'react'
+import React from 'react';
 import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle } from 'lucide-react';
 import NavItem from '../Nav/NavItem';
 import LogoGHSMS from '../Logo/LogoGHSMS';
@@ -115,7 +114,7 @@ export default function GHSMSCenter() {
                 {/* Main Menu Navigation Buttons */}
                 <div className="w-full bg-indigo-500 text-white py-2">
                     <div className="container mx-auto px-4 flex flex-wrap justify-center md:justify-between">
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">ABOUT US</button>
+                        <Link to="/about" className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">ABOUT US</Link>
                         <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">SERVICE PRICE LIST</button>
                         <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDICAL TEST RESULTS</button>
                         <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDIA SECTION</button>

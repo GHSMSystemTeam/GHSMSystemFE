@@ -5,6 +5,7 @@ import './App.css'
 import { Route, Router, Routes } from 'react-router-dom'
 import GHSMSCenter from './Component/Page/GHSMSCenter'
 import IntroductionPage from './Component/Page/IntroductionPage'
+import DNCM from './Component/Page/DNCM'
 function App() {
 
   return (
@@ -12,6 +13,7 @@ function App() {
       <Routes>
         <Route path="/" element={<GHSMSCenter/>}/>
         <Route path="/about" element={<IntroductionPage/>}/>
+        <Route path="/dncm" element={<DNCM/>}/>
       </Routes>
     </>
   )
