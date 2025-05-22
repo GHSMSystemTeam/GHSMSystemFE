@@ -3,8 +3,8 @@ import {Link} from 'react-router-dom';
 import Navigation from '../Nav/Navigation'; 
 import Footer from '../Footer/Footer';
 import LogoGHSMS from '../Logo/LogoGHSMS';
-import DoctorTeam from '../Team/DoctorTeam';
-import {doctors} from '../Team/DoctorTeam';
+import DoctorTeam from '../Array/DoctorTeam';
+import {doctors} from '../Array/DoctorTeam';
 
 export default function DNCM() { 
   const specialistTeam = doctors.map((doctor) => ({

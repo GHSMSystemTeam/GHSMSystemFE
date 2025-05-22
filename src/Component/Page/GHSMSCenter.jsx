@@ -6,8 +6,9 @@ import ServiceItem from '../Service/ServiceItem';
 import CircleIcon from '../Icon/CircleIcon';
 import { Link } from 'react-router-dom';
 import Navigation from '../Nav/Navigation';
-import DoctorTeam from '../Team/DoctorTeam';
+import DoctorTeam from '../Array/DoctorTeam';
 import Footer from '../Footer/Footer';
+import Service from '../Array/Service';
 
 
 
@@ -68,17 +69,17 @@ export default function GHSMSCenter() {
 
                         <ServiceItem
                             icon={<CircleIcon />}
-                            text="Tham vấn và trị liệu tâm lý"
+                            text="Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)"
                         />
 
                         <ServiceItem
                             icon={<CircleIcon />}
-                            text="Phẫu thuật tạo hình thẩm mỹ vùng kín"
+                            text="Quản lý kế hoạch hóa gia đình, tránh thai"
                         />
 
                         <ServiceItem
                             icon={<CircleIcon />}
-                            text="Chăm sóc sức khỏe cộng đồng LGBT+"
+                            text="Hỗ trợ quản lý bệnh nhân"
                         />
 
 
@@ -152,6 +153,8 @@ export default function GHSMSCenter() {
                         </div>
                     </div>
                 </div>
+                <Service/>
+                
                 <DoctorTeam/>
 
             </div>
