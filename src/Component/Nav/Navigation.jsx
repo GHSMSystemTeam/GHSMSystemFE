@@ -6,12 +6,23 @@ import { Search, ChevronDown } from 'lucide-react'
 
 export default function Navigation() {
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-    const [showDropdown, setShowDropdown] = useState(false);
-    const dropdownRef = useRef(null);
-    const timeoutRef = useRef(null);
+    
+    // Tạo state riêng cho từng dropdown
+    const [showAboutDropdown, setShowAboutDropdown] = useState(false);
+    const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+    
+    // Tạo ref riêng cho từng dropdown
+    const aboutDropdownRef = useRef(null);
+    const serviceDropdownRef = useRef(null);
+    
+    // Tạo timeout riêng cho từng dropdown
+    const aboutTimeoutRef = useRef(null);
+    const serviceTimeoutRef = useRef(null);
+    
     const location = useLocation();
     const currentPath = location.pathname;
-     // Xác định tab nào đang active dựa trên đường dẫn hiện tại
+    
+    // Xác định tab nào đang active dựa trên đường dẫn hiện tại
     const isActive = (path) => {
         if (path === '/' && currentPath === '/') {
             return true;
@@ -22,28 +33,46 @@ export default function Navigation() {
         }
         return false;
     };
-    
 
-    const handleMouseEnter = () => {
-        if (timeoutRef.current) {
-            clearTimeout(timeoutRef.current);
+    // Handler cho dropdown "Giới thiệu"
+    const handleAboutMouseEnter = () => {
+        if (aboutTimeoutRef.current) {
+            clearTimeout(aboutTimeoutRef.current);
         }
-        setShowDropdown(true);
+        setShowAboutDropdown(true);
     };
 
-    const handleMouseLeave = () => {
-        timeoutRef.current = setTimeout(() => {
-            setShowDropdown(false);
-        }, 300); // 300ms delay before closing
+    const handleAboutMouseLeave = () => {
+        aboutTimeoutRef.current = setTimeout(() => {
+            setShowAboutDropdown(false);
+        }, 50);
+    };
+
+    // Handler cho dropdown "Dịch vụ"
+    const handleServiceMouseEnter = () => {
+        if (serviceTimeoutRef.current) {
+            clearTimeout(serviceTimeoutRef.current);
+        }
+        setShowServiceDropdown(true);
+    };
+
+    const handleServiceMouseLeave = () => {
+        serviceTimeoutRef.current = setTimeout(() => {
+            setShowServiceDropdown(false);
+        }, 50);
     };
 
     useEffect(() => {
         return () => {
-            if (timeoutRef.current) {
-                clearTimeout(timeoutRef.current);
+            if (aboutTimeoutRef.current) {
+                clearTimeout(aboutTimeoutRef.current);
+            }
+            if (serviceTimeoutRef.current) {
+                clearTimeout(serviceTimeoutRef.current);
             }
         };
     }, []);
+
     const handleAppointmentSubmit = (e) => {
         e.preventDefault();
         // Get form data
@@ -64,6 +93,7 @@ export default function Navigation() {
         setShowAppointmentModal(false);
         alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
     };
+
     return (
         <nav className="bg-white">
             <div className="container mx-auto px-4 flex justify-between items-center">
@@ -72,33 +102,29 @@ export default function Navigation() {
                         <NavItem label="Trang chủ" active={currentPath === '/'} />
                     </Link>
 
-
+                    {/* Dropdown "Giới thiệu" */}
                     <div className="relative"
-                        ref={dropdownRef}
-                        onMouseEnter={handleMouseEnter}
-                        onMouseLeave={handleMouseLeave}>
+                        ref={aboutDropdownRef}
+                        onMouseEnter={handleAboutMouseEnter}
+                        onMouseLeave={handleAboutMouseLeave}>
 
-                        <div
-                            className="flex items-center cursor-pointer"
-
-                        >
+                        <div className="flex items-center cursor-pointer">
                             <NavItem
                                 label="Giới thiệu"
                                 icon={<ChevronDown size={16} />}
-
-                                active={isActive('/about')}
-
+                                active={isActive('/about') || isActive('/dncm')}
+                               
                             />
                         </div>
-                        {showDropdown && (
+                        
+                        {showAboutDropdown && (
                             <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-
                                 <Link to="/about"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Về CSM HCM
                                 </Link>
-                                <Link to="/dncm" 
+                                <Link to="/dncm"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Đội ngũ chuyên môn
@@ -111,11 +137,47 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                     Tin chuyên môn
                                 </a>
-
                             </div>
                         )}
                     </div>
-                    <NavItem label="Dịch vụ" icon={<ChevronDown size={16} />} />
+
+                    {/* Dropdown "Dịch vụ" */}
+                    <div className='relative'
+                        ref={serviceDropdownRef}
+                        onMouseEnter={handleServiceMouseEnter}
+                        onMouseLeave={handleServiceMouseLeave}>
+                        
+                        <div className='flex items-center cursor-pointer'>
+                            <NavItem
+                                label="Dịch vụ"
+                                icon={<ChevronDown size={16} />}
+                            />
+                        </div>
+
+                        {showServiceDropdown && (
+                            <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
+                                <Link to="#"
+                                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Quản lý khám và tư vấn sức khỏe sinh sản
+                                </Link>
+                                <Link to="#"
+                                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)
+                                </Link>
+                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Quản lý kế hoạch hóa gia đình, tránh thai
+                                </a>
+                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Hỗ trợ quản lý bệnh nhân
+                                </a>
+                            </div>
+                        )}
+                    </div>
+
                     <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
                     <NavItem label="Liên hệ" />
                 </div>
@@ -128,6 +190,7 @@ export default function Navigation() {
                     >
                         Đặt lịch khám
                     </button>
+                    
                     {/* Appointment Modal */}
                     {showAppointmentModal && (
                         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -150,6 +213,7 @@ export default function Navigation() {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
                                             <input
                                                 type="text"
+                                                name="name"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Nhập họ và tên"
                                                 required
@@ -160,6 +224,7 @@ export default function Navigation() {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
                                             <input
                                                 type="tel"
+                                                name="phone"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Nhập số điện thoại"
                                                 required
@@ -170,6 +235,7 @@ export default function Navigation() {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                                             <input
                                                 type="email"
+                                                name="email"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 placeholder="Nhập email"
                                             />
@@ -179,6 +245,7 @@ export default function Navigation() {
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Ngày khám mong muốn</label>
                                             <input
                                                 type="date"
+                                                name="date"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 required
                                             />
@@ -187,6 +254,7 @@ export default function Navigation() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Dịch vụ</label>
                                             <select
+                                                name="service"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 required
                                             >
@@ -201,6 +269,7 @@ export default function Navigation() {
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
                                             <textarea
+                                                name="notes"
                                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 rows="3"
                                                 placeholder="Nhập nội dung ghi chú (nếu có)"
@@ -228,12 +297,12 @@ export default function Navigation() {
                         </div>
                     )}
                 </div>
+                
                 <button className="md:hidden text-gray-500">
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                     </svg>
                 </button>
-
             </div>
         </nav>
     )
