@@ -76,9 +76,9 @@ export default function IntroductionPage() {
                                     </Link>
                                 </li>
                                 <li className="border-b border-gray-100 last:border-b-0">
-                                    <a href="#" className="block p-4 hover:bg-blue-50">
+                                    <Link to="/news" className="block p-4 hover:bg-blue-50">
                                         Tin tức báo chí
-                                    </a>
+                                    </Link>
                                 </li>
                                 <li className="border-b border-gray-100 last:border-b-0">
                                     <a href="#" className="block p-4 hover:bg-blue-50">
