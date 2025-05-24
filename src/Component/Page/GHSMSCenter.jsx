@@ -55,9 +55,6 @@ export default function GHSMSCenter() {
             <div className="relative bg-gradient-to-r from-purple-100 to-blue-50">
                 <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
                     <div className="w-full md:w-1/2 md:pr-12 z-10">
-                        <div className="flex items-center mb-6">
-                            <LogoGHSMS />
-                        </div>
                         <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
 
                         <div className="space-y-4">
@@ -86,15 +83,8 @@ export default function GHSMSCenter() {
                     </div>
 
                     <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center">
-                        <div className="flex items-center mb-4 sm:mb-0 sm:mr-8">
-                            <div className="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                                <Phone size={24} className="text-purple-600" />
-                            </div>
-                            <div className="ml-3">
-                                <p className="text-sm text-purple-600">Hotline</p>
-                                <p className="text-lg font-semibold text-purple-500">0866 249 268</p>
-                            </div>
-                        </div>
+
+                        {/* nên chèn ảnh ở đây */}
 
                         {/* Floating contact buttons */}
                         <div className="fixed right-4 bottom-4 flex flex-col space-y-2 z-50">
@@ -112,19 +102,9 @@ export default function GHSMSCenter() {
 
                 </div>
 
-                {/* Main Menu Navigation Buttons */}
-                <div className="w-full bg-indigo-500 text-white py-2">
-                    <div className="container mx-auto px-4 flex flex-wrap justify-center md:justify-between">
-                        <Link to="/about" className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">ABOUT US</Link>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">SERVICE PRICE LIST</button>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDICAL TEST RESULTS</button>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDIA SECTION</button>
-                    </div>
-                </div>
-
-
+                <Service/>
                 {/* News and Events Section */}
-                <div className="bg-gray-50 py-16">
+                <div className="relative bg-gradient-to-r from-purple-100 to-blue-50 py-16">
                     <div className="container mx-auto px-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {/* History Item 1 */}
@@ -153,9 +133,6 @@ export default function GHSMSCenter() {
                         </div>
                     </div>
                 </div>
-                <Service/>
-                
-                <DoctorTeam/>
 
             </div>
 

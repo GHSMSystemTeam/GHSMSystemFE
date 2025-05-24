@@ -36,15 +36,24 @@ export default function DNCM() {
         <Navigation />
       </header>
 
+      {/* Introduction Banner with Return Home */}
+      <div className="w-full bg-indigo-500 text-white py-4">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <h1 className="text-4xl font-bold mt-2">Đội Ngũ Chuyên Môn</h1>
+            <Link 
+              to="/" 
+              className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors mb-1"
+            >
+              Trang Chủ
+            </Link>
+          </div>
+        </div>
+      </div>
+
       <main className="flex-grow">
         <div className="bg-gradient-to-r from-purple-100 to-blue-50 py-16">
           <div className="container mx-auto px-4">
-            <h1 className="text-4xl font-bold text-center text-purple-700 mb-4">Đội Ngũ Chuyên Môn</h1>
-            <p className="text-lg text-center text-gray-700 mb-12 max-w-3xl mx-auto">
-              Đội ngũ chuyên môn của Trung tâm Y học Giới tính TPHCM gồm các chuyên gia đầu ngành 
-              trong lĩnh vực Y học Giới tính, Nam học, Phụ khoa và Tâm lý học với nhiều năm kinh nghiệm 
-              trong chẩn đoán, tư vấn và điều trị các vấn đề liên quan đến sức khỏe tình dục và giới tính.
-            </p>
             
             {/* Team introduction */}
             <div className="max-w-6xl mx-auto">

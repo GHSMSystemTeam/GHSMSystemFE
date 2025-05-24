@@ -4,17 +4,21 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
     return (
-        <footer className="bg-gray-900 text-white py-8 mt-auto">
+        <footer className="w-full bg-indigo-500 text-white py-2">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <h3 className="text-xl font-semibold mb-4">Trung tâm Y học Giới tính TPHCM</h3>
+                        <h3 className="text-xl font-semibold mb-6 text-white border-b border-white/40 pb-2">
+                            Trung tâm Y học Giới tính TPHCM
+                        </h3>
                         <p className="mb-2">Địa chỉ: Đường 22, Thành phố Thủ Đức</p>
                         <p className="mb-2">Điện thoại: 0866.249.268</p>
                         <p className="mb-2">Email: ttyhgt@afTPHCM.com</p>
                     </div>
                     <div>
-                        <h3 className="text-xl font-semibold mb-4">Giờ làm việc</h3>
+                        <h3 className="text-xl font-semibold mb-6 text-white border-b border-white/40 pb-2">
+                            Giờ làm việc
+                        </h3>
                         <p className="mb-2">Thứ 2 - Thứ 6: 8:00 - 17:00</p>
                         <p className="mb-2">Thứ 7 - Chủ nhật: 8:00 - 12:00</p>
                     </div>
@@ -28,7 +32,7 @@ export default function Footer() {
                         </ul>
                     </div>
                 </div>
-                <div className="border-t border-gray-800 mt-8 pt-6 text-center text-sm">
+                <div className="border-t border-white/40 mt-8 pt-6 text-center text-sm">
                     <p>© {new Date().getFullYear()} Trung tâm Y học Giới tính TPHCM. Tất cả các quyền được bảo lưu.</p>
                 </div>
             </div>

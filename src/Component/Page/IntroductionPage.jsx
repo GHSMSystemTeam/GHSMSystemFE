@@ -9,7 +9,7 @@ import Footer from '../Footer/Footer';
 
 export default function IntroductionPage() {
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50">
             {/* Header */}
             <header className="bg-white shadow-sm">
                 <div className="container mx-auto px-4 py-2 flex justify-between items-center">
@@ -44,14 +44,17 @@ export default function IntroductionPage() {
             </header>
 
             {/* Hero Banner */}
-            <div className="w-full bg-indigo-500 text-white py-2">
+            <div className="w-full bg-indigo-500 text-white py-4">
                 <div className="container mx-auto px-4">
                     <div className="text-center text-white">
-                        <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
-                        <div className="flex items-center justify-center text-sm">
-                            <Link to="/" className="text-white hover:underline">Trang chủ</Link>
-                            <span className="mx-2">/</span>
-                            <span>Giới thiệu</span>
+                        <div className="flex flex-col items-center justify-center">
+                            <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
+                            <Link 
+                                to="/" 
+                                className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors"
+                                >
+                                Trang Chủ
+                            </Link>
                         </div>
                     </div>
                 </div>
