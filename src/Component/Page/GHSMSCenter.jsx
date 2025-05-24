@@ -111,8 +111,8 @@ export default function GHSMSCenter() {
                     </div>
 
                 </div>
-
-                {/* Main Menu Navigation Buttons */}
+                
+                {/* Main Menu Navigation Buttons
                 <div className="w-full bg-indigo-500 text-white py-2">
                     <div className="container mx-auto px-4 flex flex-wrap justify-center md:justify-between">
                         <Link to="/about" className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">ABOUT US</Link>
@@ -120,15 +120,15 @@ export default function GHSMSCenter() {
                         <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDICAL TEST RESULTS</button>
                         <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDIA SECTION</button>
                     </div>
-                </div>
+                </div> */}
 
 
                 {/* News and Events Section */}
-                <div className="bg-gray-50 py-16">
-                    <div className="container mx-auto px-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* <div className="bg-gray-50 py-16"> */}
+                    {/* <div className="container mx-auto px-4"> */}
+                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> */}
                             {/* History Item 1 */}
-                            <div className="bg-white p-6 rounded-lg shadow-sm">
+                            {/* <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <h3 className="text-xl font-semibold text-purple-500 mb-4">
                                     12/2022: Establishment of GHSMS HCM
                                 </h3>
@@ -137,10 +137,10 @@ export default function GHSMSCenter() {
                                     issues related to male and female sexuality; homosexuality – bisexuality and transgender,
                                     intersex cases as well as cases of gender differentiation disorders.
                                 </p>
-                            </div>
+                            </div> */}
 
                             {/* History Item 2 */}
-                            <div className="bg-white p-6 rounded-lg shadow-sm">
+                            {/* <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <h3 className="text-xl font-semibold text-purple-500 mb-4">
                                     25/06/2023: Scientific Workshop: Update on Male and Female Sexual Health Care
                                 </h3>
@@ -148,14 +148,14 @@ export default function GHSMSCenter() {
                                     Vietnam Society of Gender Medicine (VSSM) and HCM city Andrology and Infertility Hospital
                                     organized a scientific seminar  "UPDATING MALE AND FEMALE SEXUAL HEALTH CARE".
                                 </p>
-                            </div>
+                            </div> */}
 
-                        </div>
+                        {/* </div>
                     </div>
-                </div>
+                </div> */}
                 <Service/>
                 
-                <DoctorTeam/>
+               
 
             </div>
 

@@ -159,7 +159,7 @@ export default function Navigation() {
                                 <Link to="#"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
-                                    Quản lý khám và tư vấn sức khỏe sinh sản
+                                    Tư vấn trị liệu tình dục
                                 </Link>
                                 <Link to="#"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
