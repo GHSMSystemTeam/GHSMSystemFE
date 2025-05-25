@@ -2,7 +2,7 @@ import React from 'react'
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import NavItem from './NavItem'
-import { Search, ChevronDown } from 'lucide-react'
+import { Search, ChevronDown, Bell, X } from 'lucide-react'
 
 export default function Navigation() {
     const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -11,13 +11,23 @@ export default function Navigation() {
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
     
+    // Tạo notification
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Toast notification state
+    const [toast, setToast] = useState({ show: false, message: '', type: '' });
+
     // Tạo ref riêng cho từng dropdown
     const aboutDropdownRef = useRef(null);
     const serviceDropdownRef = useRef(null);
+    const notificationDropdownRef = useRef(null);
     
     // Tạo timeout riêng cho từng dropdown
     const aboutTimeoutRef = useRef(null);
     const serviceTimeoutRef = useRef(null);
+    const toastTimeoutRef = useRef(null);
     
     const location = useLocation();
     const currentPath = location.pathname;
@@ -62,7 +72,62 @@ export default function Navigation() {
         }, 50);
     };
 
+    //Handler for notification dropdown 
+    const toggleNotifications = () =>{
+        setShowNotifications(!showNotifications);
+        if(unreadCount > 0 && !showNotifications)
+        {
+            setUnreadCount(0); //Danh dau da doc khi mo
+        }
+    };
+
+    // Add a notification
+    const addNotification = (message, type = 'success') => {
+        const newNotification = {
+            id: Date.now(),
+            message,
+            type,
+            timestamp: new Date(),
+            read: false
+        };
+        
+        setNotifications(prev => [newNotification, ...prev]);
+        setUnreadCount(prev => prev + 1);
+
+        // Show toast notification
+        showToast(message, type);
+    };
+        // Show toast notification in the middle of the screen
+    const showToast = (message, type = 'success') => {
+        // Clear any existing timeout
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
+        
+        // Show the toast
+        setToast({ show: true, message, type });
+        
+        // Auto hide after 5 seconds
+        toastTimeoutRef.current = setTimeout(() => {
+            setToast(prev => ({ ...prev, show: false }));
+        }, 5000);
+    };
+    
+    // Close toast manually
+    const closeToast = () => {
+        if (toastTimeoutRef.current) {
+            clearTimeout(toastTimeoutRef.current);
+        }
+        setToast(prev => ({ ...prev, show: false }));
+    };
+
     useEffect(() => {
+        function handleClickOutside(event) {
+            if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
+                setShowNotifications(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
         return () => {
             if (aboutTimeoutRef.current) {
                 clearTimeout(aboutTimeoutRef.current);
@@ -91,10 +156,17 @@ export default function Navigation() {
 
         // Close the modal and show a success message
         setShowAppointmentModal(false);
-        alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
+        addNotification('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
+    };
+
+    // Format the timestamp for notifications
+    const formatTimestamp = (timestamp) => {
+        const date = new Date(timestamp);
+        return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     };
 
     return (
+        <>
         <nav className="bg-white">
             <div className="container mx-auto px-4 flex justify-between items-center">
                 <div className="hidden md:flex space-x-6">
@@ -184,6 +256,60 @@ export default function Navigation() {
 
                 <div className="hidden md:flex items-center space-x-4">
                     <Search size={20} className="text-gray-500" />
+                     {/* Notification Bell */}
+                    <div className="relative" ref={notificationDropdownRef}>
+                        <button 
+                            className="text-gray-500 hover:text-gray-700 focus:outline-none" 
+                            onClick={toggleNotifications}
+                        >
+                            <Bell size={20} />
+                            {unreadCount > 0 && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </button>
+                        
+                        {showNotifications && (
+                            <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto">
+                                <div className="p-3 border-b border-gray-200">
+                                    <h3 className="text-lg font-semibold text-gray-800">Thông báo</h3>
+                                </div>
+                                <div>
+                                    {notifications.length === 0 ? (
+                                        <div className="p-4 text-center text-gray-500">
+                                            Không có thông báo
+                                        </div>
+                                    ) : (
+                                        notifications.map(notification => (
+                                            <div 
+                                                key={notification.id} 
+                                                className={`p-3 border-b border-gray-100 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
+                                            >
+                                                <div className="flex items-start">
+                                                    <div className={`flex-shrink-0 w-2 h-2 mt-2 rounded-full ${notification.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`}></div>
+                                                    <div className="ml-3 flex-1">
+                                                        <p className="text-sm text-gray-800">{notification.message}</p>
+                                                        <p className="text-xs text-gray-500 mt-1">{formatTimestamp(notification.timestamp)}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                                {notifications.length > 0 && (
+                                    <div className="p-2 text-center border-t border-gray-100">
+                                        <button 
+                                            className="text-sm text-blue-600 hover:text-blue-800"
+                                            onClick={() => setNotifications([])}
+                                        >
+                                            Xóa tất cả
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
                     <button
                         className="bg-red-600 text-white px-4 py-2 rounded font-medium"
                         onClick={() => setShowAppointmentModal(true)}
@@ -305,5 +431,61 @@ export default function Navigation() {
                 </button>
             </div>
         </nav>
+
+         {/* Toast Notification */}
+            {toast.show && (
+                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+                    <div className={`
+                        max-w-md w-full mx-4 p-4 rounded-lg shadow-lg pointer-events-auto
+                        ${toast.type === 'success' ? 'bg-green-100 border-l-4 border-green-500' : 
+                          toast.type === 'error' ? 'bg-red-100 border-l-4 border-red-500' : 
+                          'bg-blue-100 border-l-4 border-blue-500'}
+                    `}>
+                        <div className="flex items-start">
+                            {toast.type === 'success' && (
+                                <div className="flex-shrink-0 mr-3">
+                                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                            )}
+                            {toast.type === 'error' && (
+                                <div className="flex-shrink-0 mr-3">
+                                    <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </div>
+                            )}
+                            {toast.type !== 'success' && toast.type !== 'error' && (
+                                <div className="flex-shrink-0 mr-3">
+                                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                            )}
+                            <div className="flex-1">
+                                <p className={`text-sm font-medium ${
+                                    toast.type === 'success' ? 'text-green-800' : 
+                                    toast.type === 'error' ? 'text-red-800' : 
+                                    'text-blue-800'
+                                }`}>
+                                    {toast.message}
+                                </p>
+                            </div>
+                            <button 
+                                className={`ml-4 flex-shrink-0 ${
+                                    toast.type === 'success' ? 'text-green-500 hover:text-green-700' : 
+                                    toast.type === 'error' ? 'text-red-500 hover:text-red-700' : 
+                                    'text-blue-500 hover:text-blue-700'
+                                }`}
+                                onClick={closeToast}
+                            >
+                                <X size={16} />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>     
     )
 }

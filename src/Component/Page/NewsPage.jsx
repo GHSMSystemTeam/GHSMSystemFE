@@ -76,11 +76,11 @@ export default function NewsPage() {
       </header>
 
       {/* Introduction Banner with Return Home */}
-      <div className="bg-indigo-700 text-white py-6">
+      <div className="w-full bg-indigo-500 text-white py-2">
         <div className="container mx-auto px-4">
           <div className="text-center text-white">
             <div>
-              <h2 className="text-2xl font-bold mb-2">Tin Tức Báo Chí</h2>
+              <h2 className="text-4xl font-bold mb-4">Tin Tức Báo Chí</h2>
               <p className="text-indigo-100">Cập nhật thông tin mới nhất từ Trung tâm Y học Giới tính TPHCM</p>
             </div>
             <div className="flex items-center justify-center text-sm">
