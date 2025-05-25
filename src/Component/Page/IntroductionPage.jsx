@@ -83,11 +83,6 @@ export default function IntroductionPage() {
                                         Tin tức báo chí
                                     </Link>
                                 </li>
-                                <li className="border-b border-gray-100 last:border-b-0">
-                                    <a href="#" className="block p-4 hover:bg-blue-50">
-                                        Tin chuyên môn
-                                    </a>
-                                </li>
                             </ul>
                         </div>
 

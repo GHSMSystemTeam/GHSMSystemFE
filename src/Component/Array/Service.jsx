@@ -63,7 +63,7 @@ export default function Service() {
         <section className="py-20">
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
-                    {services.map((service, index) => (
+                    {services.map((service) => (
                         <div key={service.id} className={`relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br ${service.color}`}>
                             {/* Background decoration */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>

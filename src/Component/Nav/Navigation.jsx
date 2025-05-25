@@ -1,12 +1,10 @@
 import React from 'react'
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation} from 'react-router-dom'
 import NavItem from './NavItem'
 import { Search, ChevronDown, Bell, X } from 'lucide-react'
 
 export default function Navigation() {
-    const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-    
     // Tạo state riêng cho từng dropdown
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
@@ -122,6 +120,7 @@ export default function Navigation() {
     };
 
     useEffect(() => {
+        
         function handleClickOutside(event) {
             if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
                 setShowNotifications(false);
@@ -129,42 +128,32 @@ export default function Navigation() {
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
             if (aboutTimeoutRef.current) {
                 clearTimeout(aboutTimeoutRef.current);
             }
             if (serviceTimeoutRef.current) {
                 clearTimeout(serviceTimeoutRef.current);
             }
+            if (toastTimeoutRef.current) {
+                clearTimeout(toastTimeoutRef.current);
+            }
         };
     }, []);
 
-    const handleAppointmentSubmit = (e) => {
-        e.preventDefault();
-        // Get form data
-        const formData = new FormData(e.target);
-        const appointmentData = {
-            name: formData.get('name'),
-            phone: formData.get('phone'),
-            email: formData.get('email'),
-            date: formData.get('date'),
-            service: formData.get('service'),
-            notes: formData.get('notes')
+    // addNotification globally
+    useEffect(() => {
+    window.addNotificationToNav = addNotification;
+    return () => {
+        window.addNotificationToNav = null;
         };
-
-        // Here you would typically send this data to your backend API
-        console.log('Appointment data:', appointmentData);
-
-        // Close the modal and show a success message
-        setShowAppointmentModal(false);
-        addNotification('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.');
-    };
+    }, []);
 
     // Format the timestamp for notifications
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
         return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
     };
-
     return (
         <>
         <nav className="bg-white">
@@ -205,10 +194,6 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                     Tin tức báo chí
                                 </Link>
-                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                    Tin chuyên môn
-                                </a>
                             </div>
                         )}
                     </div>
@@ -231,11 +216,20 @@ export default function Navigation() {
                                 <Link to="#"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
+                                    Quản lý khám và tư vấn sức khỏe sinh sản
+                                </Link>
+                                <Link to="#"
+                                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
                                     Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)
                                 </Link>
                                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Quản lý kế hoạch hóa gia đình, tránh thai
+                                </a>
+                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Hỗ trợ quản lý bệnh nhân
                                 </a>
                             </div>
                         )}
@@ -301,118 +295,12 @@ export default function Navigation() {
                             </div>
                         )}
                     </div>
-                    <button
-                        className="bg-red-600 text-white px-4 py-2 rounded font-medium"
-                        onClick={() => setShowAppointmentModal(true)}
+                    <Link
+                        to="/appointment"
+                        className="bg-red-600 text-white px-4 py-2 rounded font-medium hover:bg-red-700 transition-colors"
                     >
                         Đặt lịch khám
-                    </button>
-                    
-                    {/* Appointment Modal */}
-                    {showAppointmentModal && (
-                        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                                <div className="p-6">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-xl font-semibold text-gray-900">Đặt lịch khám</h3>
-                                        <button
-                                            onClick={() => setShowAppointmentModal(false)}
-                                            className="text-gray-400 hover:text-gray-500"
-                                        >
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    <form className="space-y-4" onSubmit={handleAppointmentSubmit} >
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Họ và tên</label>
-                                            <input
-                                                type="text"
-                                                name="name"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Nhập họ và tên"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Nhập số điện thoại"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                placeholder="Nhập email"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ngày khám mong muốn</label>
-                                            <input
-                                                type="date"
-                                                name="date"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Dịch vụ</label>
-                                            <select
-                                                name="service"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                required
-                                            >
-                                                <option value="">Chọn dịch vụ</option>
-                                                <option value="tu-van">Tư vấn, trị liệu tình dục</option>
-                                                <option value="tam-ly">Tham vấn và trị liệu tâm lý</option>
-                                                <option value="phau-thuat">Phẫu thuật tạo hình thẩm mỹ vùng kín</option>
-                                                <option value="lgbt">Chăm sóc sức khỏe cộng đồng LGBT+</option>
-                                            </select>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Ghi chú</label>
-                                            <textarea
-                                                name="notes"
-                                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                                rows="3"
-                                                placeholder="Nhập nội dung ghi chú (nếu có)"
-                                            ></textarea>
-                                        </div>
-
-                                        <div className="flex justify-end space-x-3 pt-2">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowAppointmentModal(false)}
-                                                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-                                            >
-                                                Hủy
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                                            >
-                                                Đặt lịch
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+                    </Link>                                        
                 </div>
                 
                 <button className="md:hidden text-gray-500">
