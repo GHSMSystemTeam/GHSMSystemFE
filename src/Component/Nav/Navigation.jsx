@@ -231,20 +231,11 @@ export default function Navigation() {
                                 <Link to="#"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
-                                    Tư vấn trị liệu tình dục
-                                </Link>
-                                <Link to="#"
-                                    className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
                                     Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)
                                 </Link>
                                 <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Quản lý kế hoạch hóa gia đình, tránh thai
-                                </a>
-                                <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                    Hỗ trợ quản lý bệnh nhân
                                 </a>
                             </div>
                         )}

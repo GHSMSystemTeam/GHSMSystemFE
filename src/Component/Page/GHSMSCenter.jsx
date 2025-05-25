@@ -9,12 +9,131 @@ import Navigation from '../Nav/Navigation';
 import DoctorTeam from '../Array/DoctorTeam';
 import Footer from '../Footer/Footer';
 import Service from '../Array/Service';
-
+import { useState, useEffect } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 
 
 export default function GHSMSCenter() {
-   
+    const [lastPeriodDate, setLastPeriodDate] = useState('');
+    const [periodDuration, setPeriodDuration] = useState(5);
+    const [cycleLength, setCycleLength] = useState(28);
+    const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+    const [predictions, setPredictions] = useState({});
+    const [showTracker, setShowTracker] = useState(false);
+
+    const months = [
+        'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
+        'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'
+    ];
+
+    const weekDays = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+    // Calculate predictions based on last period date
+    const calculatePredictions = () => {
+        if (!lastPeriodDate) return {};
+
+        const lastDate = new Date(lastPeriodDate);
+        const predictions = {};
+        // Calculate for next 3 months
+        for (let i = 0; i < 90; i++) {
+            const currentDate = new Date(lastDate);
+            currentDate.setDate(lastDate.getDate() + i);
+            const daysSinceLastPeriod = i;
+            const cycleDay = (daysSinceLastPeriod % cycleLength) + 1;
+            const dateKey = currentDate.toISOString().split('T')[0];
+
+            if (cycleDay <= periodDuration) {
+                predictions[dateKey] = 'period';
+            } else if (cycleDay >= cycleLength - 3 && cycleDay <= cycleLength) {
+                predictions[dateKey] = 'pre-period';
+            } else if (cycleDay >= 12 && cycleDay <= 16) {
+                predictions[dateKey] = 'ovulation';
+            } else if (cycleDay >= 17 && cycleDay <= 26) {
+                predictions[dateKey] = 'post-ovulation';
+            }
+        }
+        return predictions;
+    }
+
+
+
+    const handleTrackNow = () => {
+        if (lastPeriodDate && periodDuration && cycleLength) {
+            setPredictions(calculatePredictions());
+            setShowTracker(true);
+        }
+    };
+
+    const getDaysInMonth = (month, year) => {
+        return new Date(year, month + 1, 0).getDate();
+    };
+
+    const getFirstDayOfMonth = (month, year) => {
+        return new Date(year, month, 1).getDay();
+    };
+
+    const renderCalendar = (monthOffset = 0) => {
+        const month = (currentMonth + monthOffset + 12) % 12;
+        const year = currentYear + Math.floor((currentMonth + monthOffset) / 12);
+        const daysInMonth = getDaysInMonth(month, year);
+        const firstDay = getFirstDayOfMonth(month, year);
+        const days = [];
+
+        // Empty cells for days before first day of month
+        for (let i = 0; i < firstDay; i++) {
+            days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
+        }
+
+        // Days of the month
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dateKey = date.toISOString().split('T')[0];
+            const prediction = predictions[dateKey];
+            const isToday = date.toDateString() === new Date().toDateString();
+
+            let dayClass = 'w-8 h-8 flex items-center justify-center text-sm rounded-full cursor-pointer hover:bg-gray-100 ';
+
+            if (prediction === 'period') {
+                dayClass += 'bg-pink-500 text-white ';
+            } else if (prediction === 'pre-period') {
+                dayClass += 'bg-orange-400 text-white ';
+            } else if (prediction === 'ovulation') {
+                dayClass += 'bg-green-500 text-white ';
+            } else if (prediction === 'post-ovulation') {
+                dayClass += 'bg-purple-400 text-white ';
+            }
+
+            if (isToday && !prediction) {
+                dayClass += 'border-2 border-blue-500 ';
+            }
+
+            days.push(
+                <div key={day} className={dayClass}>
+                    {day}
+                </div>
+            )
+        }
+        return (
+            <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h3 className="text-center font-semibold text-lg mb-4 text-pink-600">
+                    {months[month]} {year}
+                </h3>
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                    {weekDays.map(day => (
+                        <div key={day} className="text-center text-sm font-medium text-gray-500 py-1">
+                            {day}
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-7 gap-1">
+                    {days}
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             <header className="bg-white shadow-sm">
@@ -48,7 +167,7 @@ export default function GHSMSCenter() {
                 </div>
 
                 {/* Navigation */}
-                <Navigation/>
+                <Navigation />
             </header>
 
             {/* Hero Section */}
@@ -101,8 +220,7 @@ export default function GHSMSCenter() {
                     </div>
 
                 </div>
-<<<<<<< HEAD
-                
+
                 {/* Main Menu Navigation Buttons
                 <div className="w-full bg-indigo-500 text-white py-2">
                     <div className="container mx-auto px-4 flex flex-wrap justify-center md:justify-between">
@@ -116,18 +234,10 @@ export default function GHSMSCenter() {
 
                 {/* News and Events Section */}
                 {/* <div className="bg-gray-50 py-16"> */}
-                    {/* <div className="container mx-auto px-4"> */}
-                        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> */}
-=======
-
-                <Service/>
-                {/* News and Events Section */}
-                <div className="relative bg-gradient-to-r from-purple-100 to-blue-50 py-16">
-                    <div className="container mx-auto px-4">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
->>>>>>> 69b43a5b72aa1fe0ba52902520911c7c1aeb91f3
-                            {/* History Item 1 */}
-                            {/* <div className="bg-white p-6 rounded-lg shadow-sm">
+                {/* <div className="container mx-auto px-4"> */}
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> */}
+                {/* History Item 1 */}
+                {/* <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <h3 className="text-xl font-semibold text-purple-500 mb-4">
                                     12/2022: Establishment of GHSMS HCM
                                 </h3>
@@ -138,8 +248,8 @@ export default function GHSMSCenter() {
                                 </p>
                             </div> */}
 
-                            {/* History Item 2 */}
-                            {/* <div className="bg-white p-6 rounded-lg shadow-sm">
+                {/* History Item 2 */}
+                {/* <div className="bg-white p-6 rounded-lg shadow-sm">
                                 <h3 className="text-xl font-semibold text-purple-500 mb-4">
                                     25/06/2023: Scientific Workshop: Update on Male and Female Sexual Health Care
                                 </h3>
@@ -149,20 +259,187 @@ export default function GHSMSCenter() {
                                 </p>
                             </div> */}
 
-                        {/* </div>
+                {/* </div>
                     </div>
-<<<<<<< HEAD
                 </div> */}
-                <Service/>
-                
-               
-=======
+                <Service />
+
+
+                <div className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 p-4">
+                    <div className="max-w-4xl mx-auto">
+                        <div className="text-center mb-8">
+                            <h1 className="text-4xl font-bold text-pink-600 mb-2">
+                                Theo dõi chu kì kinh nguyệt
+                            </h1>
+                            <p className="text-gray-600">
+                                Quản lý và dự đoán chu kì kinh nguyệt của bạn một cách chính xác
+                            </p>
+                        </div>
+
+                        {!showTracker && (
+                            <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+                                <h2 className="text-2xl font-semibold text-pink-600 mb-6 text-center">
+                                    Trả lời ba câu hỏi đơn giản và nhận bộ theo dõi chu kì tùy chỉnh!
+                                </h2>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                    <div className="text-center">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Ngày của chu kì cuối cùng?
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={lastPeriodDate}
+                                            onChange={(e) => setLastPeriodDate(e.target.value)}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-pink-500 text-center"
+                                        />
+                                    </div>
+
+                                    <div className='text-center'>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Kéo dài bao lâu?
+                                        </label>
+                                        <div className="flex items-center justify-center space-x-3">
+                                            <button
+                                                onClick={() => setPeriodDuration(Math.max(1, periodDuration - 1))}
+                                                className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-200"
+                                            >
+                                                -
+                                            </button>
+                                            <span className="text-lg font-semibold px-4 py-2 bg-gray-50 rounded-lg">
+                                                {periodDuration} Ngày
+                                            </span>
+                                            <button
+                                                onClick={() => setPeriodDuration(periodDuration + 1)}
+                                                className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-200"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <div className='text-center'>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Độ dài chu kì thông thường của bạn?
+                                        </label>
+                                        <div className="flex items-center justify-center space-x-3">
+                                            <button
+                                                onClick={() => setCycleLength(Math.max(21, cycleLength - 1))}
+                                                className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-200"
+                                            >
+                                                -
+                                            </button>
+                                            <span className="text-lg font-semibold px-4 py-2 bg-gray-50 rounded-lg">
+                                                {cycleLength} Ngày
+                                            </span>
+                                            <button
+                                                onClick={() => setCycleLength(cycleLength + 1)}
+                                                className="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center hover:bg-pink-200"
+                                            >
+                                                +
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div className="text-center">
+                                    <button
+                                        onClick={handleTrackNow}
+                                        disabled={!lastPeriodDate}
+                                        className="bg-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-pink-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+                                    >
+                                        Theo dõi ngay
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                        {/* Tracker Display */}
+                        {showTracker && (
+                            <>
+                                {/* Navigation */}
+                                <div className="flex justify-between items-center mb-6">
+                                    <button
+                                        onClick={() => setCurrentMonth(currentMonth - 1)}
+                                        className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow hover:bg-gray-50"
+                                    >
+                                        <ChevronLeft size={20} />
+                                        <span>3 tháng trước</span>
+                                    </button>
+
+                                    <h2 className="text-xl font-semibold text-gray-800">
+                                        Bộ theo dõi của bạn
+                                    </h2>
+
+                                    <button
+                                        onClick={() => setCurrentMonth(currentMonth + 1)}
+                                        className="flex items-center space-x-2 px-4 py-2 bg-white rounded-lg shadow hover:bg-gray-50"
+                                    >
+                                        <span>3 tháng tới</span>
+                                        <ChevronRight size={20} />
+                                    </button>
+                                </div>
+
+                                {/* Calendar Grid */}
+                                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                                    {renderCalendar(-1)}
+                                    {renderCalendar(0)}
+                                    {renderCalendar(1)}
+                                </div>
+
+                                {/* Legend */}
+                                <div className="bg-white rounded-lg p-6 shadow-sm">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-4 h-4 bg-orange-400 rounded-full"></div>
+                                            <span className="text-sm">Giai đoạn tiền kinh</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-4 h-4 bg-pink-500 rounded-full"></div>
+                                            <span className="text-sm">Ngày có kinh</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-4 h-4 bg-purple-400 rounded-full"></div>
+                                            <span className="text-sm">Giai đoạn sau rụng trứng</span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <div className="w-4 h-4 bg-green-500 rounded-full"></div>
+                                            <span className="text-sm">Giai đoạn rụng trứng cao điểm</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Reset Button */}
+                                <div className="text-center mt-6">
+                                    <button
+                                        onClick={() => {
+                                            setShowTracker(false);
+                                            setLastPeriodDate('');
+                                            setPredictions({});
+                                        }}
+                                        className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+                                    >
+                                        Cập nhật thông tin
+                                    </button>
+                                </div>
+
+                                {/* Disclaimer */}
+                                <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6 rounded">
+                                    <p className="text-sm text-yellow-800">
+                                        <strong>Lưu ý:</strong> Bộ theo dõi chu kì này chỉ mang tính chất ước tính.
+                                        Chu kì kinh nguyệt duy nhất của bạn có thể khác với những kết quả này.
+                                    </p>
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
->>>>>>> 69b43a5b72aa1fe0ba52902520911c7c1aeb91f3
+
+
 
             </div>
 
-            <Footer/>
+            <Footer />
         </div>
     )
 }
