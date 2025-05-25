@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle } from 'lucide-react';
+import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle, Users, Award, Clock, Star } from 'lucide-react';
 import NavItem from '../Nav/NavItem';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import ServiceItem from '../Service/ServiceItem';
@@ -11,6 +11,7 @@ import Footer from '../Footer/Footer';
 import Service from '../Array/Service';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+
 
 
 
@@ -134,6 +135,13 @@ export default function GHSMSCenter() {
         );
     }
 
+    const stats = [
+        { number: "10,000+", label: "Bệnh nhân đã điều trị", icon: <Users className="w-8 h-8" /> },
+        { number: "15+", label: "Năm kinh nghiệm", icon: <Award className="w-8 h-8" /> },
+        { number: "24/7", label: "Hỗ trợ tư vấn", icon: <Clock className="w-8 h-8" /> },
+        { number: "98%", label: "Hài lòng", icon: <Star className="w-8 h-8" /> }
+    ];
+
     return (
         <div className="min-h-screen flex flex-col bg-gray-50">
             <header className="bg-white shadow-sm">
@@ -170,10 +178,47 @@ export default function GHSMSCenter() {
                 <Navigation />
             </header>
 
+            <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-hidden">
+                {/* Background decorative elements */}
+                <div className="absolute inset-0 opacity-10">
+                    <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full"></div>
+                    <div className="absolute top-32 right-20 w-16 h-16 bg-purple-400 rounded-full"></div>
+                    <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-pink-400 rounded-full"></div>
+                </div>
+
+
+                <div className="container mx-auto px-4 py-16">
+                    {/* Welcome Section */}
+                    <div className="text-center mb-16">
+                        <h1 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
+                            Chào mừng đến với <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                Trung tâm Y học Giới tính TPHCM
+                            </span>
+                        </h1>
+                        <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                            Cung cấp dịch vụ tư vấn và điều trị chuyên nghiệp về sức khỏe giới tính,
+                            với đội ngũ bác sĩ giàu kinh nghiệm và công nghệ hiện đại
+                        </p>
+                    </div>
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                        {stats.map((stat, index) => (
+                            <div key={index} className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow">
+                                <div className="text-blue-600 mb-3 flex justify-center">{stat.icon}</div>
+                                <div className="text-3xl font-bold text-purple-600 mb-2">{stat.number}</div>
+                                <div className="text-gray-600 text-sm">{stat.label}</div>
+                            </div>
+                        ))}
+                    </div>
+
+                </div>
+            </div>
+
             {/* Hero Section */}
             <div className="relative bg-gradient-to-r from-purple-100 to-blue-50">
                 <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
-                    <div className="w-full md:w-1/2 md:pr-12 z-10">
+                    {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
                         <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
 
                         <div className="space-y-4">
@@ -199,7 +244,10 @@ export default function GHSMSCenter() {
                         />
 
 
-                    </div>
+                    </div> */}
+
+
+
 
                     <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center">
 
@@ -262,6 +310,15 @@ export default function GHSMSCenter() {
                 {/* </div>
                     </div>
                 </div> */}
+                <div className='text-center py-12 bg-gradient-to-r from-purple-100 to-blue-50'>
+                    <h2 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Chăm sóc sức khỏe toàn diện</span>
+                    </h2>
+                    <p className="text-xl text-gray-600 leading-relaxed mb-8">
+                        Đội ngũ chuyên gia hàng đầu với hơn 15 năm kinh nghiệm,
+                        mang đến dịch vụ y tế chất lượng cao và tư vấn chuyên nghiệp
+                    </p>
+                </div>
                 <Service />
 
 

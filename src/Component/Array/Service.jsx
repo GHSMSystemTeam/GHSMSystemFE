@@ -68,7 +68,7 @@ export default function Service() {
                             {/* Background decoration */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -ml-12 -mb-12"></div>
-
+                            
                             <div className="relative p-8 text-white">
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="flex-1">
