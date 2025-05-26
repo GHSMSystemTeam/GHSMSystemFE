@@ -3,6 +3,7 @@ import LogoGHSMS from '../Logo/LogoGHSMS';
 import Navigation from '../Nav/Navigation';
 import Footer from '../Footer/Footer';
 import { Link } from 'react-router';
+import { Mail, Phone } from 'lucide-react';
 
 export default function ReproductiveManage() {
     return (
@@ -10,13 +11,27 @@ export default function ReproductiveManage() {
             <header className="bg-white shadow-sm">
                                 <div className="container mx-auto px-4 py-2 flex justify-between items-center">
                                     <div className="flex items-center">
-                                        <div className="mr-4">
+                                        <Link to="/" className="mr-4">
                                             <LogoGHSMS />
-                                        </div>
+                                        </Link>
                                         <div className="hidden lg:block">
                                             <h1 className="text-blue-700 font-semibold text-lg uppercase">Trung tâm Y học Giới tính TPHCM</h1>
                                             <p className="text-gray-600 text-sm">Bệnh viện Nam học và Hiếm muộn TPHCM</p>
                                             <p className="text-gray-500 text-xs">Center for Sexual Medicine of TPHCM</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center space-x-6">
+                                        <div className="hidden md:flex items-center space-x-1">
+                                            <Mail size={16} className="text-blue-600" />
+                                            <span className="text-sm">ttyhgt@afTPHCM.com</span>
+                                        </div>
+                                        <div className="hidden md:flex items-center space-x-1">
+                                            <Phone size={16} className="text-blue-600" />
+                                            <span className="text-sm">0866.249.268</span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">VN</button>
+                                            <button className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs">EN</button>
                                         </div>
                                     </div>
                                 </div>

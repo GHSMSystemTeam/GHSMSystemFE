@@ -218,7 +218,7 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                     Quản lý khám và tư vấn sức khỏe sinh sản
                                 </Link>
-                                <Link to="#"
+                                <Link to="/sti-management"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)
