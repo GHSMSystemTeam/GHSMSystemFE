@@ -206,7 +206,7 @@ export default function DatLichKham() {
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                    Email
+                                                    Email <span className="text-red-500">*</span>
                                                 </label>
                                                 <div className="relative">
                                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -219,6 +219,7 @@ export default function DatLichKham() {
                                                         onChange={handleChange}
                                                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         placeholder="Nhập email"
+                                                        required
                                                     />
                                                 </div>
                                             </div>
@@ -400,7 +401,7 @@ export default function DatLichKham() {
                                                         Đang xử lý...
                                                     </span>
                                                 ) : (
-                                                    'Đặt lịch khám'
+                                                    'Gửi đi'
                                                 )}
                                             </button>
                                         </div>

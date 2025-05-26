@@ -213,7 +213,7 @@ export default function Navigation() {
 
                         {showServiceDropdown && (
                             <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                <Link to="#"
+                                <Link to="/reproductive-manage"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Quản lý khám và tư vấn sức khỏe sinh sản

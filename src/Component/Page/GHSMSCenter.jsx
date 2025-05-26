@@ -216,7 +216,7 @@ export default function GHSMSCenter() {
             </div>
 
             {/* Hero Section */}
-            <div className="relative bg-gradient-to-r from-purple-100 to-blue-50">
+            <div className="relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50">
                 <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
                     {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
                         <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
@@ -310,7 +310,7 @@ export default function GHSMSCenter() {
                 {/* </div>
                     </div>
                 </div> */}
-                <div className='text-center py-12 bg-gradient-to-r from-purple-100 to-blue-50'>
+                <div className='text-center relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50'>
                     <h2 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Chăm sóc sức khỏe toàn diện</span>
                     </h2>
