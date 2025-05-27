@@ -227,10 +227,14 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                     Quản lý kế hoạch hóa gia đình, tránh thai
                                 </Link>
+                                {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                    Hỗ trợ quản lý bệnh nhân
+                                </a> */}
                             </div>
                         )}
                     </div>
-                    
+
                     <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
                     <NavItem label="Liên hệ" />
                 </div>
