@@ -58,7 +58,7 @@ export default function DNCM() {
                 <h1 className="text-4xl font-bold mt-2">Đội Ngũ Chuyên Môn</h1>
                 <Link 
                   to="/" 
-                  className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors mb-1"
+                  className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors mb-1 transition-all duration-500 hover:scale-105"
                 >
                   Trang Chủ
                 </Link>

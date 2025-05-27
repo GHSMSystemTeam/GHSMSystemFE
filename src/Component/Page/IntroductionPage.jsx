@@ -51,7 +51,7 @@ export default function IntroductionPage() {
                             <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
                             <Link 
                                 to="/" 
-                                className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors"
+                                className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
                                 >
                                 Trang Chủ
                             </Link>

@@ -103,7 +103,7 @@ export default function NewsPage() {
             <div className="flex items-center justify-center text-sm">
                 <Link 
                 to="/" 
-                className="mt-4 md:mt-0 inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors"
+                className="mt-4 md:mt-0 inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
                 >
                 Trang Chủ
                 </Link>
