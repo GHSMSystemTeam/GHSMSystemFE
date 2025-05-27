@@ -204,7 +204,7 @@ export default function GHSMSCenter() {
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
                         {stats.map((stat, index) => (
-                            <div key={index} className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow">
+                            <div key={index} className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow ">
                                 <div className="text-blue-600 mb-3 flex justify-center">{stat.icon}</div>
                                 <div className="text-3xl font-bold text-purple-600 mb-2">{stat.number}</div>
                                 <div className="text-gray-600 text-sm">{stat.label}</div>

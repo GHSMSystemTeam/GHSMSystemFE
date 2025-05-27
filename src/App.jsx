@@ -11,6 +11,7 @@ import SignUp from './Component/Page/SignUp'
 import DatLichKham from './Component/Page/DatLichKham'
 import ReproductiveManage from './Component/Page/ReproductiveManage'
 import STDsPage from './Component/Page/STDsPage'
+import FamilyPlan from './Component/Page/FamilyPlan'
 function App() {
 
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/news" element={<NewsPage/>}/>
         <Route path="/appointment" element={<DatLichKham/>}/>
         <Route path="/sti-management" element={<STDsPage/>}/>
+        <Route path="/family-plan" element={<FamilyPlan/>}/>
         <Route path="/reproductive-manage" element={<ReproductiveManage/>}/>
         <Route path="/login" element={<Login/>}/>
         <Route path="forgotpassword" element={<ForgotPassword/>}/>

@@ -60,9 +60,9 @@ export default function STDsPage() {
                     <main className="container mx-auto px-4 py-8 flex-1">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <div className="bg-white p-6 rounded-lg shadow-md">
-                                <h1 className="text-xl font-semibold mb-4">Thông tin về STDs</h1>
+                                <h1 className="text-xl font-semibold mb-4">Thông tin về STIs</h1>
                                 <p className="text-gray-700 mb-4">
-                                    Bệnh lây truyền qua đường tình dục (STDs) là những bệnh nhiễm trùng lây lan chủ yếu qua quan hệ tình dục.
+                                    Bệnh lây truyền qua đường tình dục (STIs) là những bệnh nhiễm trùng lây lan chủ yếu qua quan hệ tình dục.
                                     Chúng có thể do vi khuẩn, virus hoặc ký sinh
                                 </p>
                                 <h3 className="text-lg font-semibold mb-2">Các loại STDs phổ biến</h3>
@@ -95,7 +95,7 @@ export default function STDsPage() {
                                 <ul className="list-disc list-inside text-gray-700">
                                     <li>Sử dụng bao cao su khi quan hệ tình dục</li>
                                     <li>Tránh quan hệ tình dục không an toàn</li>
-                                    <li>Khám sức khỏe định kỳ, xét nghiệm STDs khi có nguy cơ</li>
+                                    <li>Khám sức khỏe định kỳ, xét nghiệm STIs khi có nguy cơ</li>
                                     <li>Không dùng chung kim tiêm, vật dụng cá nhân</li>
                                     <li>Tiêm vắc xin phòng ngừa (HPV, viêm gan B...)</li>
                                 </ul>
@@ -113,23 +113,23 @@ export default function STDsPage() {
                                 </div>
                             </div>
                             <div className="flex items-center justify-center h-full">
-                                <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center space-y-8  h-full">                                    
+                                <div className="bg-white p-6 rounded-lg shadow-md flex flex-col items-center space-y-8  h-full ">                                    
                                     <img
                                         src="https://placehold.co/600x400/667eea/ffffff?text=Bệnh+lây+truyền+qua+đường+tình+dục+1"
                                         alt="Bệnh lây truyền qua đường tình dục 1"
-                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover"
+                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover transition-all duration-500 hover:scale-105 "
                                         loading="lazy"
                                     />
                                     <img
                                         src="https://placehold.co/600x400/667eea/ffffff?text=Bệnh+lây+truyền+qua+đường+tình+dục+2"
                                         alt="Bệnh lây truyền qua đường tình dục 2"
-                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover"
+                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover transition-all duration-500 hover:scale-105"
                                         loading="lazy"
                                     />
                                     <img
                                         src="https://placehold.co/600x400/667eea/ffffff?text=Bệnh+lây+truyền+qua+đường+tình+dục+3"
                                         alt="Bệnh lây truyền qua đường tình dục 3"
-                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover "
+                                        className="rounded-lg shadow-md max-h-[420px] w-full object-cover transition-all duration-500 hover:scale-105"
                                         loading="lazy"
                                     />
                                 </div>
