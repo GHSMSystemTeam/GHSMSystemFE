@@ -44,20 +44,20 @@ export default function Service() {
             ],
             image: "/api/placeholder/400/300"
         },
-        {
-            id: 4,
-            title: "Hỗ trợ quản lý bệnh nhân",
-            subtitle: "",
-            icon: "🧠",
-            color: "from-green-400 to-teal-500",
-            features: [
-                "Quản lý thông tin bệnh nhân (Hồ sơ sức khỏe cá nhân)",
-                "Quản lý lịch sử y tế và khám chữa bệnh",
-                "Quản lý lịch hẹn và theo dõi tái khám",
-                "Quản lý điều trị và đơn thuốc"
-            ],
-            image: "/api/placeholder/400/300"
-        }
+        // {
+        //     id: 4,
+        //     title: "Hỗ trợ quản lý bệnh nhân",
+        //     subtitle: "",
+        //     icon: "🧠",
+        //     color: "from-green-400 to-teal-500",
+        //     features: [
+        //         "Quản lý thông tin bệnh nhân (Hồ sơ sức khỏe cá nhân)",
+        //         "Quản lý lịch sử y tế và khám chữa bệnh",
+        //         "Quản lý lịch hẹn và theo dõi tái khám",
+        //         "Quản lý điều trị và đơn thuốc"
+        //     ],
+        //     image: "/api/placeholder/400/300"
+        // }
     ];
     return (
         <section className="py-20">
