@@ -48,7 +48,7 @@ export default function STDsPage() {
                                     <h1 className="text-4xl font-bold mb-4">Bệnh lây truyền qua đường tình dục (STDs)</h1>
                                     <Link 
                                     to="/" 
-                                    className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors"
+                                    className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
                                          >
                                         Trang Chủ
                                     </Link>
@@ -104,11 +104,11 @@ export default function STDsPage() {
                                     <li>Nếu có triệu chứng nghi ngờ STDs</li>
                                     <li>Đã có quan hệ tình dục không an toàn</li>
                                     <li>Bạn tình có dấu hiệu mắc bệnh</li>
-                                    <li>Đã từng mắc STDs trước đó</li>
+                                    <li>Đã từng mắc STIs trước đó</li>
                                 </ul>
                                 <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mt-6 rounded-lg">
                                     <p className="text-blue-700">
-                                       <strong>Lưu ý:</strong> STDs có thể không có triệu chứng rõ ràng. Khám và xét nghiệm định kỳ giúp phát hiện sớm và điều trị hiệu quả, bảo vệ sức khỏe bản thân và cộng đồng.
+                                       <strong>Lưu ý:</strong> STIs có thể không có triệu chứng rõ ràng. Khám và xét nghiệm định kỳ giúp phát hiện sớm và điều trị hiệu quả, bảo vệ sức khỏe bản thân và cộng đồng.
                                     </p>
                                 </div>
                             </div>
