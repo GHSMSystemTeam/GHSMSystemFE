@@ -218,10 +218,10 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                     Quản lý khám và tư vấn sức khỏe sinh sản
                                 </Link>
-                                <Link to="/sti-management"
+                                <Link to="/test"
                                     className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
-                                    Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)
+                                    Đặt lịch xét nghiệm trực tuyến
                                 </Link>
                                 <Link to="/family-plan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">

@@ -12,6 +12,7 @@ import DatLichKham from './Component/Page/DatLichKham'
 import ReproductiveManage from './Component/Page/ReproductiveManage'
 import STDsPage from './Component/Page/STDsPage'
 import FamilyPlan from './Component/Page/FamilyPlan'
+import TestBookingPage from './Component/Page/TestBookingPage'
 function App() {
 
   return (
@@ -28,6 +29,7 @@ function App() {
         <Route path="/login" element={<Login/>}/>
         <Route path="forgotpassword" element={<ForgotPassword/>}/>
         <Route path="signup" element={<SignUp/>}/>
+        <Route path="/test" element={<TestBookingPage/>}/>
       </Routes>
     </>
   )
