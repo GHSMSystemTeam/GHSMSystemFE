@@ -1,6 +1,6 @@
 import React from 'react'
 import { useState, useRef, useEffect } from 'react'
-import { Link, useLocation} from 'react-router-dom'
+import { Link, useLocation, useNavigate} from 'react-router-dom'
 import NavItem from './NavItem'
 import { Search, ChevronDown, Bell, X } from 'lucide-react'
 
@@ -30,6 +30,19 @@ export default function Navigation() {
     const location = useLocation();
     const currentPath = location.pathname;
     
+    // Search 
+    const [search, setSearch] = useState("");
+    const navigate = useNavigate();
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        if (search.trim() !== "") {
+            // Navigate to the search results page with the search query
+            navigate(`/search?query=${encodeURIComponent(search)}`);
+            setSearch(""); // Reset search input
+        }
+    };
+
     // Xác định tab nào đang active dựa trên đường dẫn hiện tại
     const isActive = (path) => {
         if (path === '/' && currentPath === '/') {
@@ -235,12 +248,28 @@ export default function Navigation() {
                         )}
                     </div>
 
-                    <NavItem label="Blog" icon={<ChevronDown size={16} />} />
-                    {/* <NavItem label="Liên hệ" /> */}
+                    <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
+                    <NavItem label="Liên hệ" />
                 </div>
 
                 <div className="hidden md:flex items-center space-x-4">
-                    <Search size={20} className="text-gray-500" />
+                    {/* Search Bar */}
+                    <form onSubmit={handleSearch} className="relative flex items-center w-full max-w-md">
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Tìm kiếm..."
+                            className="w-full border-2 border-blue-500 rounded-lg px-3 py-2 pl-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-600"
+                        />
+                        <button 
+                            type="submit" 
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center" 
+                            aria-label="Search"
+                        >
+                            <Search size={20} className="text-gray-500" />
+                        </button>
+                    </form>
                      {/* Notification Bell */}
                     <div className="relative" ref={notificationDropdownRef}>
                         <button 

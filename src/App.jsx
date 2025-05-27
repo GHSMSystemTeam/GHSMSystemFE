@@ -13,6 +13,8 @@ import ReproductiveManage from './Component/Page/ReproductiveManage'
 import STDsPage from './Component/Page/STDsPage'
 import FamilyPlan from './Component/Page/FamilyPlan'
 import TestBookingPage from './Component/Page/TestBookingPage'
+import { Search } from 'lucide-react'
+import SearchPage from './Component/Page/SearchPage'
 function App() {
 
   return (
@@ -22,6 +24,7 @@ function App() {
         <Route path="/about" element={<IntroductionPage/>}/>
         <Route path="/dncm" element={<DNCM/>}/>
         <Route path="/news" element={<NewsPage/>}/>
+        <Route path="/search" element={<SearchPage/>}/>
         <Route path="/appointment" element={<DatLichKham/>}/>
         <Route path="/sti-management" element={<STDsPage/>}/>
         <Route path="/family-plan" element={<FamilyPlan/>}/>
