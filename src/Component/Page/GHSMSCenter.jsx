@@ -11,6 +11,7 @@ import Footer from '../Footer/Footer';
 import Service from '../Array/Service';
 import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import SlideShow from '../Array/SlideShow';
 
 
 
@@ -201,6 +202,7 @@ export default function GHSMSCenter() {
                             với đội ngũ bác sĩ giàu kinh nghiệm và công nghệ hiện đại
                         </p>
                     </div>
+                    <SlideShow />
                     {/* Stats */}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
                         {stats.map((stat, index) => (
