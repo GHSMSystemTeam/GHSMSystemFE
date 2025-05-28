@@ -6,42 +6,13 @@ import LogoGHSMS from '../Logo/LogoGHSMS';
 import CircleIcon from '../Icon/CircleIcon';
 import Navigation from '../Nav/Navigation';
 import Footer from '../Footer/Footer';
+import Header from '../Header/Header';
 
 export default function IntroductionPage() {
     return (
         <div className="min-h-screen flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50">
             {/* Header */}
-            <header className="bg-white shadow-sm">
-                <div className="container mx-auto px-4 py-2 flex justify-between items-center">
-                    <div className="flex items-center">
-                        <Link to="/" className="mr-4">
-                            <LogoGHSMS />
-                        </Link>
-                        <div className="hidden lg:block">
-                            <h1 className="text-blue-700 font-semibold text-lg uppercase">Trung tâm Y học Giới tính TPHCM</h1>
-                            <p className="text-gray-600 text-sm">Bệnh viện Nam học và Hiếm muộn TPHCM</p>
-                            <p className="text-gray-500 text-xs">Center for Sexual Medicine of HCM city</p>
-                        </div>
-                    </div>
-                    <div className="flex items-center space-x-6">
-                        <div className="hidden md:flex items-center space-x-1">
-                            <Mail size={16} className="text-blue-600" />
-                            <span className="text-sm">ttyhgt@afTPHCM.com</span>
-                        </div>
-                        <div className="hidden md:flex items-center space-x-1">
-                            <Phone size={16} className="text-blue-600" />
-                            <span className="text-sm">0866.249.268</span>
-                        </div>
-                        <div className="flex gap-2">
-                            <button className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">VN</button>
-                            <button className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs">EN</button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Navigation */}
-                <Navigation/>
-            </header>
+            <Header />
 
             {/* Hero Banner */}
             <div className="w-full bg-indigo-500 text-white py-4">
@@ -49,10 +20,10 @@ export default function IntroductionPage() {
                     <div className="text-center text-white">
                         <div className="flex flex-col items-center justify-center">
                             <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
-                            <Link 
-                                to="/" 
+                            <Link
+                                to="/"
                                 className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
-                                >
+                            >
                                 Trang Chủ
                             </Link>
                         </div>
@@ -128,28 +99,35 @@ export default function IntroductionPage() {
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow-sm p-6">
                             <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Trung tâm Y học Giới tính </h1>
-                            
+
                             <div className="prose max-w-none">
+<<<<<<< HEAD
                                 <div className="mb-8 transition-all duration-500 hover:scale-105">
                                     <img 
                                         src="/images/center-building.jpg" 
                                         alt="Trung tâm Y học Giới tính Hà Nội" 
+=======
+                                <div className="mb-8">
+                                    <img
+                                        src="/images/center-building.jpg"
+                                        alt="Trung tâm Y học Giới tính Hà Nội"
+>>>>>>> e4f1be952029927279a8971852063eaba2cf3dc2
                                         className="w-full h-auto rounded-lg mb-4"
                                         onError={(e) => e.target.src = 'https://placehold.co/800x400?text=Trung+tâm+Y+học+Giới+tính'}
                                     />
                                     <p className="text-sm text-center text-gray-500 italic">Trung tâm Y học Giới tính TPHCM - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
                                 </div>
-                                
+
                                 <h2 className="text-2xl font-semibold text-blue-700 mb-4">Về chúng tôi</h2>
                                 <p className="mb-6 text-gray-700 leading-relaxed">
-                                    Trung tâm Y học Giới tính TPHCM (CSM HCM) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam. 
-                                    Chúng tôi cung cấp các dịch vụ chuyên sâu trong điều trị, tư vấn và chăm sóc sức khỏe giới tính toàn diện cho nam giới, nữ giới 
+                                    Trung tâm Y học Giới tính TPHCM (CSM HCM) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam.
+                                    Chúng tôi cung cấp các dịch vụ chuyên sâu trong điều trị, tư vấn và chăm sóc sức khỏe giới tính toàn diện cho nam giới, nữ giới
                                     và cộng đồng đa dạng giới.
                                 </p>
-                                
+
                                 <p className="mb-6 text-gray-700 leading-relaxed">
-                                    Trung tâm được thành lập với đội ngũ bác sĩ, chuyên gia tâm lý và nhân viên y tế có trình độ chuyên môn cao, 
-                                    được đào tạo bài bản tại các cơ sở y tế trong nước và quốc tế. Chúng tôi tự hào áp dụng phác đồ điều trị tiên tiến 
+                                    Trung tâm được thành lập với đội ngũ bác sĩ, chuyên gia tâm lý và nhân viên y tế có trình độ chuyên môn cao,
+                                    được đào tạo bài bản tại các cơ sở y tế trong nước và quốc tế. Chúng tôi tự hào áp dụng phác đồ điều trị tiên tiến
                                     và các phương pháp kỹ thuật hiện đại trong chẩn đoán và điều trị.
                                 </p>
 
@@ -157,17 +135,17 @@ export default function IntroductionPage() {
                                 <div className="mb-6 bg-blue-50 p-5 rounded-lg">
                                     <h3 className="text-xl font-medium text-blue-600 mb-3">Tầm nhìn</h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        Trở thành trung tâm y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc 
-                                        phát triển các phương pháp điều trị hiện đại và toàn diện, góp phần nâng cao chất lượng đời sống tình dục 
+                                        Trở thành trung tâm y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc
+                                        phát triển các phương pháp điều trị hiện đại và toàn diện, góp phần nâng cao chất lượng đời sống tình dục
                                         của người dân.
                                     </p>
                                 </div>
-                                
+
                                 <div className="mb-8 bg-blue-50 p-5 rounded-lg">
                                     <h3 className="text-xl font-medium text-blue-600 mb-3">Sứ mệnh</h3>
                                     <p className="text-gray-700 leading-relaxed">
-                                        Mang đến giải pháp toàn diện cho các vấn đề sức khỏe tình dục, đồng thời nâng cao nhận thức của cộng đồng 
-                                        về tầm quan trọng của sức khỏe giới tính thông qua các hoạt động tư vấn, giáo dục và truyền thông, góp phần 
+                                        Mang đến giải pháp toàn diện cho các vấn đề sức khỏe tình dục, đồng thời nâng cao nhận thức của cộng đồng
+                                        về tầm quan trọng của sức khỏe giới tính thông qua các hoạt động tư vấn, giáo dục và truyền thông, góp phần
                                         xóa bỏ các rào cản và định kiến xã hội.
                                     </p>
                                 </div>
@@ -250,7 +228,7 @@ export default function IntroductionPage() {
             </div>
 
             {/* Footer */}
-           <Footer/>
+            <Footer />
 
 
 
