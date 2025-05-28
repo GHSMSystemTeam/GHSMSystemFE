@@ -7,12 +7,14 @@ import Navigation from "../Nav/Navigation";
 
 // Replace these with your real data or import them
 const services = [
-    { id: 1, title: "Khám sức khỏe sinh sản", excerpt: "Dịch vụ khám sức khỏe sinh sản", link: "/reproductive-manage" },
-    { id: 2, title: "Tư vấn STIs", excerpt: "Tư vấn điều trị các bệnh lây truyền qua đường tình dục.", link: "/sti-management" }
+    { id: 1, title: "Khám sức khỏe sinh sản", excerpt: "Dịch vụ khám sức khỏe sinh sản", link: "/reproductive-manage", img: "/images/service1.jpg" },
+    { id: 2, title: "Tư vấn STIs", excerpt: "Tư vấn điều trị các bệnh lây truyền qua đường tình dục.", link: "/sti-management", img: "/images/service2.jpg" },
+    { id: 3, title: "Quản lý kế hoạch hóa gia đình, tránh thai", excerpt: "Lợi ích của kế hoạch hóa gia đình", link: "/family-plan", img: "/images/service3.jpg" },
 ];
 const aboutPages = [
-    { id: 1, title: "Về Trung tâm", excerpt: "Giới thiệu về Trung tâm Y học Giới tính TPHCM.", link: "/about" },
-    { id: 2, title: "Đội ngũ chuyên môn", excerpt: "Thông tin về đội ngũ bác sĩ, chuyên gia.", link: "/dncm" }
+    { id: 1, title: "Về Trung tâm", excerpt: "Giới thiệu về Trung tâm Y học Giới tính TPHCM.", link: "/about", img: "/images/about1.jpg" },
+    { id: 2, title: "Đội ngũ chuyên môn", excerpt: "Thông tin về đội ngũ bác sĩ, chuyên gia.", link: "/dncm", img: "/images/about2.jpg" },
+    { id: 3, title: "Tin tức báo chí", excerpt: "Cập nhật tin tức mới nhất từ Trung tâm.", link: "/news", img: "/images/about3.jpg" },
 ];
 
 function useQuery() {
@@ -90,7 +92,14 @@ export default function SearchPage() {
                     ) : (
                         <ul className="space-y-6">
                             {results.map(item => (
-                                <li key={item.type + item.id} className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <li 
+                                    key={item.type + item.id}
+                                    className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow min-h-[300px] transition-all duration-500 hover:scale-105">
+                                    <img
+                                        src={item.img || "/images/default.jpg"}
+                                        alt={item.title}
+                                        className="max-h-[420px] object-cover rounded-lg flex-shrink-0 border mb-4 min-h-[250px]"  
+                                     />
                                     <a href={item.link} className="block">
                                         <span className="text-xs text-gray-400">{item.type}</span>
                                         <h2 className="text-lg font-semibold text-blue-700 hover:underline mb-2">{item.title}</h2>

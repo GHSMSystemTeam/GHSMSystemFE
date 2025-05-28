@@ -130,12 +130,12 @@ export default function IntroductionPage() {
                             <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Trung tâm Y học Giới tính </h1>
                             
                             <div className="prose max-w-none">
-                                <div className="mb-8">
+                                <div className="mb-8 transition-all duration-500 hover:scale-105">
                                     <img 
                                         src="/images/center-building.jpg" 
                                         alt="Trung tâm Y học Giới tính Hà Nội" 
                                         className="w-full h-auto rounded-lg mb-4"
-                                        onError={(e) => e.target.src = 'https://placehold.co/800x400?text=Trung+tâm+Y+học+Giới+tính+Hà+Nội'}
+                                        onError={(e) => e.target.src = 'https://placehold.co/800x400?text=Trung+tâm+Y+học+Giới+tính'}
                                     />
                                     <p className="text-sm text-center text-gray-500 italic">Trung tâm Y học Giới tính TPHCM - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
                                 </div>

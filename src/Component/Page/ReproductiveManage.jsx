@@ -61,7 +61,7 @@ export default function ReproductiveManage() {
                             Tư vấn sức khỏe sinh sản là quá trình cung cấp thông tin, hướng dẫn và hỗ trợ cá nhân về các vấn đề liên quan đến sức khỏe sinh sản và tình dục, bao gồm cả tâm lý, thể chất và yếu tố xã hội. Đây là hình thức truyền đạt kiến thức giúp người dân, đặc biệt là vị thành niên, thanh niên và phụ nữ trong độ tuổi sinh sản hiểu rõ về cách chăm sóc sức khỏe, phát hiện sớm những bất thường và có hướng điều trị kịp thời nếu cần.
                             Dịch vụ tư vấn có thể thực hiện trực tiếp tại bệnh viện, trung tâm tư vấn hoặc thông qua tổng đài tư vấn sức khỏe sinh sản miễn phí.
                         </p>
-                        <div className="rounded-lg w-full mb-6 bg-gray-200 flex items-center justify-center h-56">
+                        <div className="rounded-lg w-full mb-6 bg-gray-200 flex items-center justify-center h-56 transition-all duration-500 hover:scale-105">
                             <img
                                 src="https://afhanoi.com/wp-content/uploads/2022/09/quan-ly-thai-ky.jpg"
                                 alt="Quản lý thai kỳ"

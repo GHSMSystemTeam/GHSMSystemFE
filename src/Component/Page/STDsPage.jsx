@@ -45,7 +45,7 @@ export default function STDsPage() {
                         <div className="container mx-auto px-4">
                             <div className="text-center text-white">
                                 <div className="flex flex-col items-center justify-center">
-                                    <h1 className="text-4xl font-bold mb-4">Bệnh lây truyền qua đường tình dục (STDs)</h1>
+                                    <h1 className="text-4xl font-bold mb-4">Bệnh lây truyền qua đường tình dục (STIs)</h1>
                                     <Link 
                                     to="/" 
                                     className="inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
@@ -65,7 +65,7 @@ export default function STDsPage() {
                                     Bệnh lây truyền qua đường tình dục (STIs) là những bệnh nhiễm trùng lây lan chủ yếu qua quan hệ tình dục.
                                     Chúng có thể do vi khuẩn, virus hoặc ký sinh
                                 </p>
-                                <h3 className="text-lg font-semibold mb-2">Các loại STDs phổ biến</h3>
+                                <h3 className="text-lg font-semibold mb-2">Các loại STIs phổ biến</h3>
                                 <ul className="list-disc list-inside text-gray-700">
                                     <li>Chlamydia</li>
                                     <li>Lậu (Gonorrhea)</li>
@@ -101,7 +101,7 @@ export default function STDsPage() {
                                 </ul>
                                 <h3 className="text-lg font-semibold mt-4">Khi nào cần khám bác sĩ</h3> 
                                 <ul className="list-disc list-inside text-gray-700">
-                                    <li>Nếu có triệu chứng nghi ngờ STDs</li>
+                                    <li>Nếu có triệu chứng nghi ngờ STIs</li>
                                     <li>Đã có quan hệ tình dục không an toàn</li>
                                     <li>Bạn tình có dấu hiệu mắc bệnh</li>
                                     <li>Đã từng mắc STIs trước đó</li>
