@@ -58,7 +58,7 @@ export default function IntroductionPage() {
                         </div>
 
                         {/* Contact sidebar */}
-                        <div className="bg-white rounded-lg shadow-sm p-4">
+                        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
                             <h3 className="text-lg font-semibold mb-4">Liên hệ với chúng tôi</h3>
                             <div className="space-y-3">
                                 <div className="flex items-start">
@@ -70,7 +70,7 @@ export default function IntroductionPage() {
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Địa chỉ:</p>
-                                        <p className="font-medium">Đường 22, Thành phố Thủ Đức</p>
+                                        <p className="font-medium">123 Đường ABC, Quận 1, TP.HCM</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start">
@@ -92,6 +92,28 @@ export default function IntroductionPage() {
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+                            <div className="mb-6 bg-blue-50 p-4 rounded-lg">
+                                <h3 className="text-xl font-medium text-blue-600 mb-3">Tầm nhìn</h3>
+                                <p className="text-gray-700 leading-relaxed">
+                                        Trở thành trung tâm y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc
+                                        phát triển các phương pháp điều trị hiện đại và toàn diện, góp phần nâng cao chất lượng đời sống tình dục
+                                        của người dân.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="bg-white rounded-lg shadow-sm p-4">
+                            <div className="mb-8 bg-blue-50 p-4 rounded-lg">
+                                <h3 className="text-xl font-medium text-blue-600 mb-3">Sứ mệnh</h3>
+                                <p className="text-gray-700 leading-relaxed">
+                                        Mang đến giải pháp toàn diện cho các vấn đề sức khỏe tình dục, đồng thời nâng cao nhận thức của cộng đồng
+                                        về tầm quan trọng của sức khỏe giới tính thông qua các hoạt động tư vấn, giáo dục và truyền thông, góp phần
+                                        xóa bỏ các rào cản và định kiến xã hội.
+                                </p>
+                            </div>                            
                         </div>
                     </div>
 
@@ -123,26 +145,7 @@ export default function IntroductionPage() {
                                     được đào tạo bài bản tại các cơ sở y tế trong nước và quốc tế. Chúng tôi tự hào áp dụng phác đồ điều trị tiên tiến
                                     và các phương pháp kỹ thuật hiện đại trong chẩn đoán và điều trị.
                                 </p>
-
-                                <h2 className="text-2xl font-semibold text-blue-700 mb-4 mt-8">Tầm nhìn và Sứ mệnh</h2>
-                                <div className="mb-6 bg-blue-50 p-5 rounded-lg">
-                                    <h3 className="text-xl font-medium text-blue-600 mb-3">Tầm nhìn</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        Trở thành trung tâm y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc
-                                        phát triển các phương pháp điều trị hiện đại và toàn diện, góp phần nâng cao chất lượng đời sống tình dục
-                                        của người dân.
-                                    </p>
-                                </div>
-
-                                <div className="mb-8 bg-blue-50 p-5 rounded-lg">
-                                    <h3 className="text-xl font-medium text-blue-600 mb-3">Sứ mệnh</h3>
-                                    <p className="text-gray-700 leading-relaxed">
-                                        Mang đến giải pháp toàn diện cho các vấn đề sức khỏe tình dục, đồng thời nâng cao nhận thức của cộng đồng
-                                        về tầm quan trọng của sức khỏe giới tính thông qua các hoạt động tư vấn, giáo dục và truyền thông, góp phần
-                                        xóa bỏ các rào cản và định kiến xã hội.
-                                    </p>
-                                </div>
-
+                                
                                 <h2 className="text-2xl font-semibold text-blue-700 mb-4">Lĩnh vực chuyên môn</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                                     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
