@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
+import { useAuth } from '../Auth/AuthContext';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -9,6 +10,7 @@ export default function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -25,6 +27,11 @@ export default function Login() {
         // Replace this with actual authentication logic
         if (email && password) {
             // Navigate to home page after successful login
+            login({
+                fullName: 'Tên người dùng',
+                email: email,
+                // other user data
+            });
             navigate('/');
         } else {
             setErrorMessage('Email hoặc mật khẩu không đúng');

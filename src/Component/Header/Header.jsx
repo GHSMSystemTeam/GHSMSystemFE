@@ -3,8 +3,12 @@ import { Link } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import Navigation from '../Nav/Navigation';
 import { Mail, Phone } from 'lucide-react';
+import { useState } from 'react';
+import { useAuth } from '../Auth/AuthContext';
 
 export default function Header() {
+    const { user, logout } = useAuth();
+    const [showUserMenu, setShowUserMenu] = useState(false);
     return (
         <header className="bg-white shadow-sm">
             <div className="container mx-auto px-4 py-2 flex justify-between items-center">
@@ -19,18 +23,63 @@ export default function Header() {
                     </div>
                 </div>
                 <div className="flex items-center space-x-6">
-                    <Link
-                        to="/login"
-                        className="text-blue-600 hover:text-blue-800 font-medium transition-colors whitespace-nowrap"
-                    >
-                        Đăng nhập
-                    </Link>
-                    <Link
-                        to="/signup"
-                        className="bg-blue-600 text-white px-3 py-2 rounded font-medium hover:bg-blue-700 transition-colors whitespace-nowrap text-sm"
-                    >
-                        Đăng ký
-                    </Link>
+
+                    {/* Auth Section */}
+                    {!user ? (
+                        // Hiển thị nút đăng nhập/đăng ký khi chưa đăng nhập
+                        <div className="flex items-center space-x-2">
+                            <Link
+                                to="/login"
+                                className="text-blue-600 hover:text-blue-800 font-medium transition-colors whitespace-nowrap"
+                            >
+                                Đăng nhập
+                            </Link>
+                            <Link
+                                to="/signup"
+                                className="bg-blue-600 text-white px-3 py-2 rounded font-medium hover:bg-blue-700 transition-colors whitespace-nowrap text-sm"
+                            >
+                                Đăng ký
+                            </Link>
+                        </div>
+                    ) : (
+                        // Hiển thị thông tin user khi đã đăng nhập
+                        <div className="relative">
+                            <button
+                                className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded-lg"
+                                onClick={() => setShowUserMenu(!showUserMenu)}
+                            >
+                                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <User size={20} className="text-blue-600" />
+                                </div>
+                                <span className="text-gray-700 font-medium">{user.fullName}</span>
+                            </button>
+
+                            {/* User dropdown menu */}
+                            {showUserMenu && (
+                                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
+                                    <Link
+                                        to="/profile"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                    >
+                                        Thông tin cá nhân
+                                    </Link>
+                                    <Link
+                                        to="/appointments"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                    >
+                                        Lịch hẹn của tôi
+                                    </Link>
+                                    <button
+                                        onClick={logout}
+                                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center"
+                                    >
+                                        <LogOut size={16} className="mr-2" />
+                                        Đăng xuất
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
                     <div className="hidden md:flex items-center space-x-1">
                         <Mail size={16} className="text-blue-600" />
                         <span className="text-sm">ttyhgt@afTPHCM.com</span>

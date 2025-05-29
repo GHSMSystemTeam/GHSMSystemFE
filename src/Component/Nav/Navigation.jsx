@@ -2,9 +2,11 @@ import React from 'react'
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import NavItem from './NavItem'
-import { Search, ChevronDown, Bell, X } from 'lucide-react'
+import { Search, ChevronUp, Bell, X, LogOut, User } from 'lucide-react';
+import { useAuth } from '../Auth/AuthContext';
 
 export default function Navigation() {
+
     // Tạo state riêng cho từng dropdown
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
@@ -184,7 +186,7 @@ export default function Navigation() {
                             <div className="flex items-center cursor-pointer">
                                 <NavItem
                                     label="Giới thiệu"
-                                    icon={<ChevronDown size={16} />}
+                                    icon={<ChevronUp size={16} />}
                                     active={isActive('/about') || isActive('/dncm')}
 
                                 />
@@ -219,16 +221,16 @@ export default function Navigation() {
                             <div className='flex items-center cursor-pointer'>
                                 <NavItem
                                     label="Dịch vụ"
-                                    icon={<ChevronDown size={16} />}
+                                    icon={<ChevronUp size={16} />}
                                 />
                             </div>
 
                             {showServiceDropdown && (
                                 <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                    <Link to="/reproductive-manage"
+                                    <Link to="/consulation"
                                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
-                                        Quản lý khám và tư vấn sức khỏe sinh sản
+                                        Tư vấn và trị liệu
                                     </Link>
                                     <Link to="/test"
                                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
@@ -247,7 +249,7 @@ export default function Navigation() {
                             )}
                         </div>
 
-                        <NavItem label="Kiến thức" icon={<ChevronDown size={16} />} />
+                        <NavItem label="Kiến thức" icon={<ChevronUp size={16} />} />
                         {/* <NavItem label="Liên hệ" /> */}
                     </div>
 
@@ -325,15 +327,13 @@ export default function Navigation() {
                             )}
                         </div>
 
-                        {/* Auth Buttons - Wrapped in flex container */}
-                        <div className="flex items-center space-x-2"> {/* Giảm space giữa các buttons */}
-                            <Link
-                                to="/appointment"
-                                className="bg-red-600 text-white px-3 py-2 rounded font-medium hover:bg-red-700 transition-colors whitespace-nowrap text-sm"
-                            >
-                                Đặt lịch khám
-                            </Link>
-                        </div>
+
+                        <Link
+                            to="/appointment"
+                            className="bg-red-600 text-white px-3 py-2 rounded font-medium hover:bg-red-700 transition-colors whitespace-nowrap text-sm"
+                        >
+                            Đặt lịch khám
+                        </Link>
                     </div>
 
                     <button className="md:hidden text-gray-500">
