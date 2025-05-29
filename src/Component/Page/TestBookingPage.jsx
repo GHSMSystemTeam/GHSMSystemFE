@@ -3,6 +3,7 @@ import { Calendar, Clock, CheckCircle, Package, User, Phone, Mail, MapPin, Alert
 import Navigation from '../Nav/Navigation';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import Header from '../Header/Header';
+import Footer from '../Footer/Footer';
 
 const TestBookingPage = () => {
   const [selectedKit, setSelectedKit] = useState(null);
@@ -574,7 +575,7 @@ const TestBookingPage = () => {
           </div>
         </div>
       )}
-
+      <Footer/>
     </div>
   );
 };

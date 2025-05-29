@@ -15,8 +15,12 @@ export default function IntroductionPage() {
             <Header />
 
             {/* Hero Banner */}
-            <div className="w-full bg-indigo-500 text-white py-4">
-                <div className="container mx-auto px-4">
+            <div className="w-full bg-indigo-500 text-white py-24 bg-cover bg-center relative"
+            style={{
+                backgroundImage: "url('https://www.verywellhealth.com/thmb/D6iFpvkwAgRmo6l-3m-kohXfaz8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/chairs-arranged-in-medical-building-961288374-5c0ac61146e0fb0001e2e5a8.jpg')"
+            }}>
+                <div className="absolute inset-0 bg-black opacity-50"></div>    
+                <div className="container mx-auto px-4  relative z-10">
                     <div className="text-center text-white">
                         <div className="flex flex-col items-center justify-center">
                             <h1 className="text-4xl font-bold mb-4">Giới thiệu</h1>
@@ -145,7 +149,7 @@ export default function IntroductionPage() {
                                     được đào tạo bài bản tại các cơ sở y tế trong nước và quốc tế. Chúng tôi tự hào áp dụng phác đồ điều trị tiên tiến
                                     và các phương pháp kỹ thuật hiện đại trong chẩn đoán và điều trị.
                                 </p>
-                                
+
                                 <h2 className="text-2xl font-semibold text-blue-700 mb-4">Lĩnh vực chuyên môn</h2>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                                     <div className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
