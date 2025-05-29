@@ -227,7 +227,7 @@ export default function Navigation() {
 
                             {showServiceDropdown && (
                                 <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                    <Link to="/consulation"
+                                    <Link to="/consultation"
                                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                         Tư vấn và trị liệu

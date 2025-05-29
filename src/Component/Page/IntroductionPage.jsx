@@ -10,7 +10,7 @@ import Header from '../Header/Header';
 
 export default function IntroductionPage() {
     return (
-        <div className="min-h-screen flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50">
+        <div className="min-h-screen flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50 pt-24 mt-10 ">
             {/* Header */}
             <Header />
 

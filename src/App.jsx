@@ -36,7 +36,7 @@ function App() {
           <Route path="forgotpassword" element={<ForgotPassword />} />
           <Route path="signup" element={<SignUp />} />
           <Route path="/test" element={<TestBookingPage />} />
-          <Route path="/consulation" element={<Consulation />} />
+          <Route path="/consultation" element={<Consulation />} />
         </Routes>
       </AuthProvider>
     </>

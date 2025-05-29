@@ -279,7 +279,7 @@ export default function Consulation() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 pt-24 mt-10">
             <Header />
             {/* Features */}
             <div className="max-w-6xl mx-auto px-4 py-12">

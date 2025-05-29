@@ -47,7 +47,7 @@ export default function SearchPage() {
     }, [query]);
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50 pt-24 mt-10">
             {/* Header */}
             <Header />
             {/* Main Content */}

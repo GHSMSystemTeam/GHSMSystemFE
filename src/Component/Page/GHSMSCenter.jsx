@@ -145,13 +145,13 @@ export default function GHSMSCenter() {
     ];
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50">
+        <div className="min-h-screen flex flex-col bg-gray-50 pt-24 mt-10 ">
             <Header />
 
 
             <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 overflow-hidden">
                 {/* Background decorative elements */}
-                <div className="absolute inset-0 opacity-10">
+                <div className="absolute inset-0 opacity-10 mt-20">
                     <div className="absolute top-10 left-10 w-20 h-20 bg-blue-400 rounded-full"></div>
                     <div className="absolute top-32 right-20 w-16 h-16 bg-purple-400 rounded-full"></div>
                     <div className="absolute bottom-20 left-1/4 w-12 h-12 bg-pink-400 rounded-full"></div>
@@ -189,7 +189,7 @@ export default function GHSMSCenter() {
 
             {/* Hero Section */}
             <div className="relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50">
-                <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center">
+                {/* <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center"> */}
                     {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
                         <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
 
@@ -239,7 +239,7 @@ export default function GHSMSCenter() {
 
                     </div>
 
-                </div>
+                {/* </div> */}
 
                 {/* Main Menu Navigation Buttons
                 <div className="w-full bg-indigo-500 text-white py-2">
@@ -286,7 +286,7 @@ export default function GHSMSCenter() {
                     <h2 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Chăm sóc sức khỏe toàn diện</span>
                     </h2>
-                    <p className="text-xl text-gray-600 leading-relaxed mb-8">
+                    <p className="text-xl text-gray-600 leading-relaxed">
                         Đội ngũ chuyên gia hàng đầu với hơn 15 năm kinh nghiệm,
                         mang đến dịch vụ y tế chất lượng cao và tư vấn chuyên nghiệp
                     </p>
