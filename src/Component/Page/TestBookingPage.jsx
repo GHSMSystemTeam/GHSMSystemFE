@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, Clock, CheckCircle, Package, User, Phone, Mail, MapPin, AlertCircle } from 'lucide-react';
 import Navigation from '../Nav/Navigation';
 import LogoGHSMS from '../Logo/LogoGHSMS';
@@ -14,9 +14,30 @@ const TestBookingPage = () => {
     email: '',
     address: ''
   });
+  const [toast, setToast] = useState({
+    show: false,
+    message: '',
+    type: ''
+  });
+  const toastTimeoutRef = useRef(null);
+  const showLocalToast = (message, type = 'success') => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToast({ show: true, message, type });
+    toastTimeoutRef.current = setTimeout(() => {
+      setToast(prev => ({ ...prev, show: false }));
+    }, 5000);
+  };
+   const closeToast = () => {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    setToast(prev => ({ ...prev, show: false }));
+  };
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
+  }, []);
   const [bookings, setBookings] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
-
   const testKits = [
     {
       id: 1,
@@ -83,7 +104,7 @@ const TestBookingPage = () => {
 
   const handleBooking = () => {
     if (!selectedKit || !appointmentDate || !appointmentTime || !userInfo.name || !userInfo.phone) {
-      alert('Vui lòng điền đầy đủ thông tin bắt buộc!');
+      showLocalToast('Vui lòng điền đầy đủ thông tin bắt buộc!','error');
       return;
     }
 
@@ -106,7 +127,13 @@ const TestBookingPage = () => {
     setUserInfo({ name: '', phone: '', email: '', address: '' });
     setCurrentStep(1);
 
-    alert('Đặt lịch thành công! Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.');
+    //Show toast
+    showLocalToast(  'Đặt lịch thành công! Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.', 'success');
+    // Add to bell notification
+    if (window.addNotificationToNav) {
+    window.addNotificationToNav(`Bạn đã đặt lịch hẹn với gói ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}.`,
+    'success');
+    }
   };
 
   const updateBookingStatus = (bookingId, newStatus) => {
@@ -493,8 +520,63 @@ const TestBookingPage = () => {
           </div>
         </div>
       </div>
+      {/* Toast Notification */}
+      {toast.show && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className={`
+            max-w-md w-full mx-4 p-4 rounded-lg shadow-lg pointer-events-auto
+            ${toast.type === 'success' ? 'bg-green-100 border-l-4 border-green-500' :
+              toast.type === 'error' ? 'bg-red-100 border-l-4 border-red-500' :
+                'bg-blue-100 border-l-4 border-blue-500'}
+          `}>
+            <div className="flex items-start">
+              {toast.type === 'success' && (
+                <div className="flex-shrink-0 mr-3">
+                  <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              )}
+              {toast.type === 'error' && (
+                <div className="flex-shrink-0 mr-3">
+                  <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+              )}
+              {toast.type !== 'success' && toast.type !== 'error' && (
+                <div className="flex-shrink-0 mr-3">
+                  <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              )}
+              <div className="flex-1">
+                <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' :
+                  toast.type === 'error' ? 'text-red-800' :
+                    'text-blue-800'
+                  }`}>
+                  {toast.message}
+                </p>
+              </div>
+              <button
+                className={`ml-4 flex-shrink-0 ${toast.type === 'success' ? 'text-green-500 hover:text-green-700' :
+                  toast.type === 'error' ? 'text-red-500 hover:text-red-700' :
+                    'text-blue-500 hover:text-blue-700'
+                  }`}
+                onClick={closeToast}
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
 
-export default TestBookingPage;
+export default TestBookingPage ;
