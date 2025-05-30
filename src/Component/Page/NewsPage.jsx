@@ -113,7 +113,7 @@ export default function NewsPage() {
                       <h3 className="text-xl font-bold text-purple-600 mb-3">{article.title}</h3>
                       <p className="text-gray-700 mb-4">{article.shortDescription}</p>
                       <Link
-                        to={'/news/${article.slug}'}
+                        to={`/news/${article.slug}`}
                         className="inline-flex items-center text-indigo-600 font-medium hover:text-indigo-800 transition-colors"
                       >
                         Đọc thêm
