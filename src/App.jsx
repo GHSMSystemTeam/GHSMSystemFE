@@ -17,6 +17,7 @@ import { Search } from 'lucide-react'
 import SearchPage from './Component/Page/SearchPage'
 import { AuthProvider } from './Component/Auth/AuthContext'
 import Consulation from './Component/Page/Consulation'
+import NewsComponent1 from './Component/Page/NewsComponent1'
 function App() {
 
   return (
@@ -31,6 +32,7 @@ function App() {
           <Route path="/appointment" element={<DatLichKham />} />
           <Route path="/sti-management" element={<STDsPage />} />
           <Route path="/family-plan" element={<FamilyPlan />} />
+          <Route path="/news/:slug" element={<NewsComponent1 />} />
           <Route path="/reproductive-manage" element={<ReproductiveManage />} />
           <Route path="/login" element={<Login />} />
           <Route path="forgotpassword" element={<ForgotPassword />} />
