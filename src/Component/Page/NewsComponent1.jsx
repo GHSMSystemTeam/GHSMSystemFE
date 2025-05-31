@@ -70,6 +70,14 @@ export default function NewsComponent1() {
                         Chăm sóc sức khỏe toàn diện cho phụ nữ là hành trình lâu dài và cần sự đồng hành của gia đình, cộng đồng và các chuyên gia y tế. Hãy chủ động bảo vệ sức khỏe của mình để tận hưởng cuộc sống trọn vẹn và hạnh phúc!
                     </p>
                 </div>
+                <div className="max-w-5xl mx-auto rounded-lg shadow-md p-12 bg-gray-100 rounded mt-8 p-4">
+                    <div className="flex items-center text-gray-600 mb-2 md:mb-0">
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                        Cập nhật lần cuối: 15/05/2023
+                    </div>
+                </div>                
             </div>
         </main>
             <Footer/>

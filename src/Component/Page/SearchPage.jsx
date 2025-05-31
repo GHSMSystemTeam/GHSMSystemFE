@@ -53,9 +53,9 @@ export default function SearchPage() {
             {/* Header */}
             <Header />
             {/* Main Content */}
-            <main className="container mx-auto px-4 py-8 flex-1">
-                <div className="container mx-auto px-4 max-w-3xl">
-                    <h1 className="text-2xl font-bold mb-6">
+            <main className="flex-1 flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50 min-h-[600px]">
+                <div className="container mx-auto px-4 max-w-6xl">
+                    <h1 className="text-2xl font-bold mb-6 text-center">
                         Kết quả tìm kiếm cho: <span className="text-blue-600">"{query}"</span>
                     </h1>
                     {loading ? (
@@ -65,21 +65,23 @@ export default function SearchPage() {
                             Không tìm thấy kết quả phù hợp.
                         </div>
                     ) : (
-                        <ul className="space-y-6">
+                        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {results.map(item => (
                                 <li 
                                     key={item.type + item.id}
-                                    className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow min-h-[300px] transition-all duration-500 hover:scale-105">
+                                    className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow flex flex-col h-full overflow-hidden">
                                     <img
                                         src={item.img || "/images/default.jpg"}
                                         alt={item.title}
-                                        className="max-h-[420px] object-cover rounded-lg flex-shrink-0 border mb-4 min-h-[250px]"  
+                                        className="w-full h-48 object-cover rounded-t-2xl"  
                                      />
-                                    <Link to={item.link} className="block">
-                                        <span className="text-xs text-gray-400">{item.type}</span>
-                                        <h2 className="text-lg font-semibold text-blue-700 hover:underline mb-2">{item.title}</h2>
-                                        <p className="text-gray-600">{item.excerpt}</p>
-                                    </Link>
+                                    <div className="flex-1 flex flex-col px-4 py-3">
+                                        <span className="text-xs text-gray-400 mb-1">{item.type}</span>
+                                        <Link to={item.link} className="text-xl font-bold text-purple-700 mb-2 leading-snug break-words">
+                                            <h2 className="text-lg font-semibold text-blue-700 hover:underline mb-2 leading-snug break-words">{item.title}</h2>
+                                            <p className="text-gray-600 text-sm mb-2 break-words">{item.excerpt}</p>
+                                        </Link>
+                                    </div>
                                 </li>
                             ))}
                         </ul>
