@@ -29,7 +29,7 @@ export default function NewsComponent2() {
             {/* Article Content */}
                 <div className="container mx-auto px-4 py-12 flex-1">
                     <div className="max-w-5xl mx-auto bg-white rounded-lg shadow-md p-12">
-                        <h2 className="text-2xl font-semibold text-indigo-700 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-extrabold text-pink-600 mb-4 leading-tight">
                             Tầm quan trọng của sức khỏe sinh sản nam giới 
                         </h2>
                         <div className="rounded-lg w-full mb-6 bg-gray-200 flex items-center justify-center h-56 transition-all duration-500 hover:scale-105">

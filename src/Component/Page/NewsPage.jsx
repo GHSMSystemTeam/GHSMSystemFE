@@ -64,24 +64,20 @@ export default function NewsPage() {
       {/* Header */}
       <Header />
 
-      {/* Introduction Banner with Return Home */}
-      <div className="w-full bg-indigo-500 text-white py-2">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-white">
-            <div>
-              <h2 className="text-4xl font-bold mb-4">Tin Tức Báo Chí</h2>
-              <p className="text-indigo-100">Cập nhật thông tin mới nhất từ Trung tâm Y học Giới tính TPHCM</p>
-            </div>
-            <div className="flex items-center justify-center text-sm">
-              <Link
-                to="/"
-                className="mt-4 md:mt-0 inline-flex items-center bg-white text-indigo-700 px-6 py-2 rounded-full font-medium hover:bg-indigo-50 transition-colors transition-all duration-500 hover:scale-105"
-              >
-                Trang Chủ
-              </Link>
-            </div>
+      {/* Hero Banner */}
+      <div className="w-full bg-indigo-500 text-white py-24 bg-cover bg-center relative"
+        style={{
+          backgroundImage: "url('https://www.verywellhealth.com/thmb/D6iFpvkwAgRmo6l-3m-kohXfaz8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/chairs-arranged-in-medical-building-961288374-5c0ac61146e0fb0001e2e5a8.jpg')"
+        }}>
+                <div className="absolute inset-0 bg-black opacity-50"></div>    
+              <div className="container mx-auto px-4  relative z-10">
+                <div className="text-center text-white">
+                  <div className="flex flex-col items-center justify-center">
+                      <h1 className="text-4xl font-bold mb-4">Tin Tức Báo Chí</h1>
+                      <p className="text-lg mb-6">Cập nhật những thông tin mới nhất về sức khỏe giới tính và các dịch vụ của chúng tôi</p>
+                  </div>
+              </div>
           </div>
-        </div>
       </div>
 
       <main className="flex-grow">
