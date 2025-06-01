@@ -17,27 +17,33 @@ import { Search } from 'lucide-react'
 import SearchPage from './Component/Page/SearchPage'
 import { AuthProvider } from './Component/Auth/AuthContext'
 import Consulation from './Component/Page/Consulation'
+import ProtectedRoute from './Component/ProtectedRoute/ProtectedRoute'
+import { Toast } from 'bootstrap'
+import { ToastProvider } from './Component/Toast/ToastProvider'
 function App() {
 
   return (
     <>
       <AuthProvider>
-        <Routes>
-          <Route path="/" element={<GHSMSCenter />} />
-          <Route path="/about" element={<IntroductionPage />} />
-          <Route path="/dncm" element={<DNCM />} />
-          <Route path="/news" element={<NewsPage />} />
-          <Route path="/search" element={<SearchPage />} />
-          <Route path="/appointment" element={<DatLichKham />} />
-          <Route path="/sti-management" element={<STDsPage />} />
-          <Route path="/family-plan" element={<FamilyPlan />} />
-          <Route path="/reproductive-manage" element={<ReproductiveManage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="forgotpassword" element={<ForgotPassword />} />
-          <Route path="signup" element={<SignUp />} />
-          <Route path="/test" element={<TestBookingPage />} />
-          <Route path="/consultation" element={<Consulation />} />
-        </Routes>
+        <ToastProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<GHSMSCenter />} />
+            <Route path="/about" element={<IntroductionPage />} />
+            <Route path="/dncm" element={<DNCM />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="signup" element={<SignUp />} />
+            <Route path="forgotpassword" element={<ForgotPassword />} />
+            <Route path="/reproductive-manage" element={<ReproductiveManage />} />
+            <Route path="/sti-management" element={<STDsPage />} />
+            <Route path="/family-plan" element={<FamilyPlan />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/news" element={<NewsPage />} />
+            <Route path="/appointment" element={<DatLichKham />} />
+            <Route path="/test" element={<TestBookingPage />} />
+            <Route path="/consultation" element={<Consulation />} />
+          </Routes>
+        </ToastProvider>
       </AuthProvider>
     </>
   )

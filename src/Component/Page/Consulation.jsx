@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Auth/AuthContext';
 import {
     Send,
     MessageCircle,
@@ -19,8 +21,14 @@ import {
 } from 'lucide-react';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
+import { useAuthCheck } from '../Auth/UseAuthCheck';
+import { useToast } from '../Toast/ToastProvider';
+
 
 export default function Consulation() {
+    const { showToast } = useToast()
+    const { checkAuthAndShowPrompt } = useAuthCheck();
+
     const [selectedConsultant, setSelectedConsultant] = useState(null);
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
@@ -95,6 +103,10 @@ export default function Consulation() {
     }, [messages]);
 
     const handleSendMessage = async () => {
+        if (!checkAuthAndShowPrompt('gửi tin nhắn')) {
+            showToast('Vui lòng đăng nhập để sử dụng dịch vụ này', 'info');
+            return
+        }
         if (!newMessage.trim() || !selectedConsultant) return
 
         const userMessage = {
@@ -142,6 +154,7 @@ export default function Consulation() {
     }
 
     const startConsultation = (consultant) => {
+        if (!checkAuthAndShowPrompt('bắt đầu tư vấn')) return;
         setSelectedConsultant(consultant)
         setMessages([
             {

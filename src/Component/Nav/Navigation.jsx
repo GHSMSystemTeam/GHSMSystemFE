@@ -344,7 +344,7 @@ export default function Navigation() {
                 </div>
             </nav>
 
-            {/* Toast Notification */}
+            {/* Toast Notification
             {toast.show && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
                     <div className={`
@@ -395,7 +395,7 @@ export default function Navigation() {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
         </>
     )
 }

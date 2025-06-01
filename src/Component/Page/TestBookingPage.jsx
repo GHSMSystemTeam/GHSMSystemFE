@@ -4,8 +4,14 @@ import Navigation from '../Nav/Navigation';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
+import { useNavigate } from 'react-router-dom';
+import BookingRating from '../Rating/Rating';
+import { useAuthCheck } from '../Auth/UseAuthCheck';
+import { useToast } from '../Toast/ToastProvider';
 
 const TestBookingPage = () => {
+  const { showToast } = useToast();
+
   const [selectedKit, setSelectedKit] = useState(null);
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
@@ -15,30 +21,91 @@ const TestBookingPage = () => {
     email: '',
     address: ''
   });
-  const [toast, setToast] = useState({
-    show: false,
-    message: '',
-    type: ''
-  });
-  const toastTimeoutRef = useRef(null);
-  const showLocalToast = (message, type = 'success') => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast({ show: true, message, type });
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast(prev => ({ ...prev, show: false }));
-    }, 5000);
-  };
-   const closeToast = () => {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    setToast(prev => ({ ...prev, show: false }));
-  };
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-    };
-  }, []);
+
+
   const [bookings, setBookings] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
+  // Thêm state để lưu ratings
+  const [bookingRatings, setBookingRatings] = useState({});
+
+  // Thêm hàm xử lý submit rating
+  const handleSubmitRating = (bookingId, ratingData) => {
+    setBookingRatings(prev => ({
+      ...prev,
+      [bookingId]: ratingData
+    }));
+
+    // Hiển thị toast thông báo
+    showToast('Cảm ơn bạn đã đánh giá dịch vụ!', 'success');
+  };
+
+  // Trong phần render booking history, thêm component rating
+  {
+    bookings.map((booking) => (
+      <div key={booking.id} className="border border-gray-200 rounded-lg p-6">
+        {/* ...existing booking info... */}
+
+        {/* Chỉ hiện rating khi booking đã hoàn thành */}
+        {booking.status === 'completed' && (
+          <>
+            {bookingRatings[booking.id] ? (
+              <div className="mt-4 border-t pt-4">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">Đánh giá của bạn:</span>
+                  <div className="flex items-center">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={16}
+                        className={i < bookingRatings[booking.id].rating
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+                {bookingRatings[booking.id].feedback && (
+                  <p className="mt-2 text-sm text-gray-600 italic">
+                    "{bookingRatings[booking.id].feedback}"
+                  </p>
+                )}
+              </div>
+            ) : (
+              <BookingRating
+                booking={booking}
+                onSubmitRating={handleSubmitRating}
+              />
+            )}
+          </>
+        )}
+      </div>
+    ))
+  }
+
+  // const [toast, setToast] = useState({
+  //   show: false,
+  //   message: '',
+  //   type: ''
+  // });
+  // const toastTimeoutRef = useRef(null);
+  // const showLocalToast = (message, type = 'success') => {
+  //   if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+  //   setToast({ show: true, message, type });
+  //   toastTimeoutRef.current = setTimeout(() => {
+  //     setToast(prev => ({ ...prev, show: false }));
+  //   }, 5000);
+  // };
+  // const closeToast = () => {
+  //   if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+  //   setToast(prev => ({ ...prev, show: false }));
+  // };
+  // useEffect(() => {
+  //   return () => {
+  //     if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+  //   };
+  // }, []);
+
   const testKits = [
     {
       id: 1,
@@ -102,10 +169,15 @@ const TestBookingPage = () => {
       default: return 'Không xác định';
     }
   };
-
+  const { checkAuthAndShowPrompt } = useAuthCheck();
   const handleBooking = () => {
+    if (!checkAuthAndShowPrompt('booking')) {
+        showToast('Vui lòng đăng nhập để sử dụng dịch vụ này', 'info');
+      return;
+    }
+
     if (!selectedKit || !appointmentDate || !appointmentTime || !userInfo.name || !userInfo.phone) {
-      showLocalToast('Vui lòng điền đầy đủ thông tin bắt buộc!','error');
+      showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
       return;
     }
 
@@ -129,12 +201,17 @@ const TestBookingPage = () => {
     setCurrentStep(1);
 
     //Show toast
-    showLocalToast(  'Đặt lịch thành công! Chúng tôi sẽ liên hệ xác nhận trong thời gian sớm nhất.', 'success');
+    showToast('Đặt lịch thành công!', 'success');
     // Add to bell notification
     if (window.addNotificationToNav) {
-    window.addNotificationToNav(`Bạn đã đặt lịch hẹn với gói ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}.`,
-    'success');
+      window.addNotificationToNav(`Bạn đã đặt lịch hẹn với gói ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}.`,
+        'success');
     }
+  };
+  // Kiểm tra auth khi chuyển bước
+  const handleNextStep = () => {
+    if (!checkAuthAndShowPrompt('tiếp tục')) return;
+    setCurrentStep(currentStep + 1);
   };
 
   const updateBookingStatus = (bookingId, newStatus) => {
@@ -226,7 +303,7 @@ const TestBookingPage = () => {
 
                   <div className="mt-6 flex justify-end">
                     <button
-                      onClick={() => selectedKit && setCurrentStep(2)}
+                      onClick={handleNextStep}
                       disabled={!selectedKit}
                       className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
@@ -521,7 +598,7 @@ const TestBookingPage = () => {
           </div>
         </div>
       </div>
-      {/* Toast Notification */}
+      {/* Toast Notification
       {toast.show && (
         <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
           <div className={`
@@ -574,10 +651,10 @@ const TestBookingPage = () => {
             </div>
           </div>
         </div>
-      )}
-      <Footer/>
+      )} */}
+      <Footer />
     </div>
   );
 };
 
-export default TestBookingPage ;
+export default TestBookingPage;

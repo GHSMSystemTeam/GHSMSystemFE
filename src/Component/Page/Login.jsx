@@ -22,7 +22,7 @@ export default function Login() {
 
         // Here you would typically call your API for authentication
         console.log('Login attempt with:', { email, password });
-        
+
         // For demo, simulate successful login and redirect
         // Replace this with actual authentication logic
         if (email && password) {
@@ -36,6 +36,19 @@ export default function Login() {
         } else {
             setErrorMessage('Email hoặc mật khẩu không đúng');
         }
+
+        if (email && password) {
+            login({
+                fullName: 'Tên người dùng',
+                email: email,
+            });
+
+            // Redirect về trang trước đó hoặc trang chủ
+            const from = location.state?.from || '/';
+            navigate(from);
+        }
+
+
     };
 
     return (
@@ -46,17 +59,17 @@ export default function Login() {
                         <div className="flex justify-center mb-8">
                             <LogoGHSMS />
                         </div>
-                        
+
                         <h2 className="text-center text-2xl font-bold text-purple-600 mb-6">
                             Đăng nhập vào GHSMS
                         </h2>
-                        
+
                         {errorMessage && (
                             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
                                 <span className="block sm:inline">{errorMessage}</span>
                             </div>
                         )}
-                        
+
                         <form className="space-y-6" onSubmit={handleLogin}>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -75,7 +88,7 @@ export default function Login() {
                                     />
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Mật khẩu
@@ -106,7 +119,7 @@ export default function Login() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center">
                                     <input
@@ -119,14 +132,14 @@ export default function Login() {
                                         Ghi nhớ đăng nhập
                                     </label>
                                 </div>
-                                
+
                                 <div className="text-sm">
                                     <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                                         Quên mật khẩu?
                                     </Link>
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <button
                                     type="submit"
@@ -136,7 +149,7 @@ export default function Login() {
                                 </button>
                             </div>
                         </form>
-                        
+
                         <div className="mt-6">
                             <div className="relative">
                                 <div className="absolute inset-0 flex items-center">
@@ -148,7 +161,7 @@ export default function Login() {
                                     </span>
                                 </div>
                             </div>
-                            
+
                             <div className="mt-6 grid grid-cols-2 gap-3">
                                 <button
                                     type="button"
@@ -168,7 +181,7 @@ export default function Login() {
                                 </button>
                             </div>
                         </div>
-                        
+
                         <div className="mt-6 text-center">
                             <span className="text-sm text-gray-600">Chưa có tài khoản? </span>
                             <Link to="/register" className="text-sm font-medium text-blue-600 hover:text-blue-500">

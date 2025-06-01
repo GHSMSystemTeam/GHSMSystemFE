@@ -6,8 +6,16 @@ import Footer from '../Footer/Footer';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import { doctors } from '../Array/DoctorTeam';
 import Header from '../Header/Header';
+import { useAuth } from '../Auth/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { useAuthCheck } from '../Auth/UseAuthCheck';
+import { useToast } from '../Toast/ToastProvider';
 
 export default function DatLichKham() {
+    const {showToast} = useToast()
+    const { checkAuthAndShowPrompt } = useAuthCheck();
+
+
     const [formData, setFormData] = useState({
         name: '',
         phone: '',
@@ -54,40 +62,41 @@ export default function DatLichKham() {
     };
 
     // Show toast notification - moved from Navigation
-    const showLocalToast = (message, type = 'success') => {
-        // Clear any existing timeout
-        if (toastTimeoutRef.current) {
-            clearTimeout(toastTimeoutRef.current);
-        }
+    // const showLocalToast = (message, type = 'success') => {
+    //     // Clear any existing timeout
+    //     if (toastTimeoutRef.current) {
+    //         clearTimeout(toastTimeoutRef.current);
+    //     }
 
-        // Show the toast
-        setToast({ show: true, message, type });
+    //     // Show the toast
+    //     setToast({ show: true, message, type });
 
-        // Auto hide after 5 seconds
-        toastTimeoutRef.current = setTimeout(() => {
-            setToast(prev => ({ ...prev, show: false }));
-        }, 5000);
-    };
+    //     // Auto hide after 5 seconds
+    //     toastTimeoutRef.current = setTimeout(() => {
+    //         setToast(prev => ({ ...prev, show: false }));
+    //     }, 5000);
+    // };
 
     // Close toast manually - moved from Navigation
-    const closeToast = () => {
-        if (toastTimeoutRef.current) {
-            clearTimeout(toastTimeoutRef.current);
-        }
-        setToast(prev => ({ ...prev, show: false }));
-    };
+    // const closeToast = () => {
+    //     if (toastTimeoutRef.current) {
+    //         clearTimeout(toastTimeoutRef.current);
+    //     }
+    //     setToast(prev => ({ ...prev, show: false }));
+    // };
 
     // Clean up any timeouts when component unmounts
-    useEffect(() => {
-        return () => {
-            if (toastTimeoutRef.current) {
-                clearTimeout(toastTimeoutRef.current);
-            }
-        };
-    }, []);
+    // useEffect(() => {
+    //     return () => {
+    //         if (toastTimeoutRef.current) {
+    //             clearTimeout(toastTimeoutRef.current);
+    //         }
+    //     };
+    // }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        if (!checkAuthAndShowPrompt('đặt lịch khám')) return;
         setSubmitting(true);
 
         // Simulate API call
@@ -95,14 +104,14 @@ export default function DatLichKham() {
             console.log('Form submitted:', formData);
 
             // Hiển thị toast ở giữa màn hình
-            showLocalToast('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
+            showToast('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
 
-            // Show success toast
-            if (window.addNotificationToNav) {
-                window.addNotificationToNav('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
-            }
-            setSubmitting(false);
-            setSubmitted(true);
+            // // Show success toast
+            // if (window.addNotificationToNav) {
+            //     window.addNotificationToNav('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
+            // }
+            // setSubmitting(false);
+            // setSubmitted(true);
 
             // Reset form after submission
             setFormData({
@@ -452,7 +461,7 @@ export default function DatLichKham() {
                 </div>
             </main>
 
-            {/* Toast Notification - moved from Navigation */}
+            {/* Toast Notification - moved from Navigation
             {toast.show && (
                 <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
                     <div className={`
@@ -485,16 +494,16 @@ export default function DatLichKham() {
                             )}
                             <div className="flex-1">
                                 <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' :
-                                        toast.type === 'error' ? 'text-red-800' :
-                                            'text-blue-800'
+                                    toast.type === 'error' ? 'text-red-800' :
+                                        'text-blue-800'
                                     }`}>
                                     {toast.message}
                                 </p>
                             </div>
                             <button
                                 className={`ml-4 flex-shrink-0 ${toast.type === 'success' ? 'text-green-500 hover:text-green-700' :
-                                        toast.type === 'error' ? 'text-red-500 hover:text-red-700' :
-                                            'text-blue-500 hover:text-blue-700'
+                                    toast.type === 'error' ? 'text-red-500 hover:text-red-700' :
+                                        'text-blue-500 hover:text-blue-700'
                                     }`}
                                 onClick={closeToast}
                             >
@@ -503,7 +512,7 @@ export default function DatLichKham() {
                         </div>
                     </div>
                 </div>
-            )}
+            )} */}
 
             <Footer />
         </div>
