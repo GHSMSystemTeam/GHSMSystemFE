@@ -68,12 +68,15 @@ export default function Service() {
             <div className="container mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-7xl mx-auto">
                     {services.map((service) => (
-                        <div key={service.id} className={`relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br ${service.color}`}>
+                        <div 
+                        key={service.id} 
+                        className={`relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-500 hover:scale-105 bg-gradient-to-br ${service.color} min-h-[420px] flex flex-col`}
+                        >
                             {/* Background decoration */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16"></div>
                             <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-10 rounded-full -ml-12 -mb-12"></div>
 
-                            <div className="relative p-8 text-white">
+                            <div className="relative p-8 text-white flex flex-col">
                                 <div className="flex items-start justify-between mb-6">
                                     <div className="flex-1">
                                         <div className="text-4xl mb-4">{service.icon}</div>
@@ -84,7 +87,7 @@ export default function Service() {
                                     </div>
                                 </div>
 
-                                <div className="space-y-3 mb-8">
+                                <div className="space-y-3 mb-8 flex-1">
                                     {service.features.map((feature, idx) => (
                                         <div key={idx} className="flex items-start">
                                             <div className="w-2 h-2 bg-white rounded-full mt-2 mr-3 flex-shrink-0"></div>
@@ -93,7 +96,7 @@ export default function Service() {
                                     ))}
                                 </div>
 
-                                <div className="flex items-center justify-between">
+                                <div className="flex items-center justify-between mt-auto">
 
                                     <Link
                                         to={service.link}

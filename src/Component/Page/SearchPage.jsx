@@ -7,12 +7,14 @@ import Navigation from "../Nav/Navigation";
 import Header from "../Header/Header";
 
 // Replace these with your real data or import them
-const services = [
-    { id: 1, title: "Khám sức khỏe sinh sản", excerpt: "Dịch vụ khám sức khỏe sinh sản", link: "/reproductive-manage", img: "/images/service1.jpg" },
-    { id: 2, title: "Tư vấn STIs", excerpt: "Tư vấn điều trị các bệnh lây truyền qua đường tình dục.", link: "/sti-management", img: "/images/service2.jpg" },
-    { id: 3, title: "Quản lý kế hoạch hóa gia đình, tránh thai", excerpt: "Lợi ích của kế hoạch hóa gia đình", link: "/family-plan", img: "/images/service3.jpg" },
-    { id: 4, title: "Đặt lịch xét nghiệm trực tuyến", excerpt: "Đặt lịch xét nghiệm nhanh chóng, thuận tiện và bảo mật hoàn toàn chỉ với vài thao tác trực tuyến.", link: "/test", img: "/images/service4.jpg" },
-];
+const news = [
+    {id:1, title:"Chăm sóc sức khỏe toàn diện cho phụ nữ mọi lứa tuổi", excerpt:"Phòng khám của chúng tôi cung cấp dịch vụ chăm sóc sức khỏe toàn diện cho phụ nữ ở mọi giai đoạn cuộc sống, từ thanh thiếu niên đến tuổi trung niên và cao tuổi.", slug:"cham-soc-suc-khoe-phu-nu", img:"/images/news1.jpg"},
+    {id:2, title:"Tư vấn sức khỏe sinh sản cho nam giới", excerpt:"Dịch vụ tư vấn sức khỏe sinh sản dành cho nam giới giúp nâng cao nhận thức và đảm bảo sức khỏe tối ưu.", slug:"tu-van-suc-khoe-nam-gioi", img:"/images/news2.jpg"},
+    {id:3, title:"Tầm quan trọng của khám sức khỏe định kỳ cho phụ nữ", excerpt:"Khám sức khỏe định kỳ đóng vai trò quan trọng trong việc phát hiện sớm và phòng ngừa các vấn đề sức khỏe phụ nữ.", slug:"kham-suc-khoe-dinh-ky-phu-nu", img:"/images/news3.jpg"},
+    {id:4, title:"Sức khỏe tâm lý và giới tính - Mối liên hệ quan trọng", excerpt:"Nghiên cứu mới cho thấy mối liên hệ mật thiết giữa sức khỏe tâm lý và các vấn đề về giới tính, cách tiếp cận toàn diện.", slug:"suc-khoe-tam-ly-gioi-tinh", img:"/images/news4.jpg"},
+    {id:5, title:"Dinh dưỡng và sức khỏe sinh sản", excerpt:"Chế độ dinh dưỡng đóng vai trò quan trọng trong việc duy trì sức khỏe sinh sản cho cả nam và nữ.", slug:"dinh-duong-suc-khoe-sinh-san", img:"/images/news5.jpg"},
+    {id:6, title:"Các phương pháp tránh thai hiện đại và an toàn", excerpt:"Tổng quan về các phương pháp tránh thai hiện đại, ưu nhược điểm và cách lựa chọn phù hợp với từng cá nhân.", slug:"phuong-phap-tranh-thai", img:"/images/news6.jpg"},
+]
 const aboutPages = [
     { id: 1, title: "Về Trung tâm", excerpt: "Giới thiệu về Trung tâm Y học Giới tính TPHCM.", link: "/about", img: "/images/about1.jpg" },
     { id: 2, title: "Đội ngũ chuyên môn", excerpt: "Thông tin về đội ngũ bác sĩ, chuyên gia.", link: "/dncm", img: "/images/about2.jpg" },
@@ -33,15 +35,15 @@ export default function SearchPage() {
         setTimeout(() => {
             // Filter both sources
             const q = query.toLowerCase();
-            const serviceResults = services.filter(
+            const newsResults = news.filter(
                 item => item.title.toLowerCase().includes(q) || item.excerpt.toLowerCase().includes(q)
-            ).map(item => ({ ...item, type: "Dịch vụ" }));
+            ).map(item => ({ ...item, type: "Tin tức", link: `/news/${item.slug}`, img: item.img || "/images/default.jpg" }));
 
             const aboutResults = aboutPages.filter(
                 item => item.title.toLowerCase().includes(q) || item.excerpt.toLowerCase().includes(q)
             ).map(item => ({ ...item, type: "Giới thiệu" }));
 
-            setResults([...serviceResults, ...aboutResults]);
+            setResults([...aboutResults, ...newsResults]);
             setLoading(false);
         }, 400);
     }, [query]);
@@ -51,9 +53,9 @@ export default function SearchPage() {
             {/* Header */}
             <Header />
             {/* Main Content */}
-            <main className="container mx-auto px-4 py-8 flex-1">
-                <div className="container mx-auto px-4 max-w-3xl">
-                    <h1 className="text-2xl font-bold mb-6">
+            <main className="flex-1 flex flex-col relative bg-gradient-to-r from-purple-100 to-blue-50 min-h-[600px]">
+                <div className="container mx-auto px-4 max-w-6xl">
+                    <h1 className="text-2xl font-bold mb-6 text-center">
                         Kết quả tìm kiếm cho: <span className="text-blue-600">"{query}"</span>
                     </h1>
                     {loading ? (
@@ -63,21 +65,23 @@ export default function SearchPage() {
                             Không tìm thấy kết quả phù hợp.
                         </div>
                     ) : (
-                        <ul className="space-y-6">
+                        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                             {results.map(item => (
                                 <li 
                                     key={item.type + item.id}
-                                    className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow min-h-[300px] transition-all duration-500 hover:scale-105">
+                                    className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-shadow flex flex-col h-full overflow-hidden">
                                     <img
                                         src={item.img || "/images/default.jpg"}
                                         alt={item.title}
-                                        className="max-h-[420px] object-cover rounded-lg flex-shrink-0 border mb-4 min-h-[250px]"  
+                                        className="w-full h-48 object-cover rounded-t-2xl"  
                                      />
-                                    <a href={item.link} className="block">
-                                        <span className="text-xs text-gray-400">{item.type}</span>
-                                        <h2 className="text-lg font-semibold text-blue-700 hover:underline mb-2">{item.title}</h2>
-                                        <p className="text-gray-600">{item.excerpt}</p>
-                                    </a>
+                                    <div className="flex-1 flex flex-col px-4 py-3">
+                                        <span className="text-xs text-gray-400 mb-1">{item.type}</span>
+                                        <Link to={item.link} className="text-xl font-bold text-purple-700 mb-2 leading-snug break-words">
+                                            <h2 className="text-lg font-semibold text-blue-700 hover:underline mb-2 leading-snug break-words">{item.title}</h2>
+                                            <p className="text-gray-600 text-sm mb-2 break-words">{item.excerpt}</p>
+                                        </Link>
+                                    </div>
                                 </li>
                             ))}
                         </ul>

@@ -11,7 +11,7 @@ export default function Footer() {
                         <h3 className="text-xl font-semibold mb-6 text-white border-b border-white/40 pb-2">
                             Trung tâm Y học Giới tính TPHCM
                         </h3>
-                        <p className="mb-2">Địa chỉ: Đường 22, Thành phố Thủ Đức</p>
+                        <p className="mb-2">Địa chỉ: 123 Đường ABC, Quận 1, TP.HCM</p>
                         <p className="mb-2">Điện thoại: 0866.249.268</p>
                         <p className="mb-2">Email: ttyhgt@afTPHCM.com</p>
                     </div>
