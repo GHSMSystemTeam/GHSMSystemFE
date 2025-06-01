@@ -40,31 +40,32 @@ export default function Register() {
             return;
         }
 
-        // Email format validation
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            setErrorMessage('Email không hợp lệ');
-            return;
-        }
+        try {
+            // Lấy danh sách users đã đăng ký
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+            
+            // Kiểm tra email đã tồn tại
+            if (users.some(user => user.email === formData.email)) {
+                setErrorMessage('Email đã được sử dụng');
+                return;
+            }
 
-        // Phone number validation (Vietnam format)
-        const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
-        if (!phoneRegex.test(formData.phone)) {
-            setErrorMessage('Số điện thoại không hợp lệ');
-            return;
-        }
+            // Thêm user mới
+            users.push({
+                fullName: formData.fullName,
+                email: formData.email,
+                phone: formData.phone,
+                password: formData.password // Trong thực tế nên mã hóa mật khẩu
+            });
 
-        // Password strength validation
-        if (formData.password.length < 8) {
-            setErrorMessage('Mật khẩu phải có ít nhất 8 ký tự');
-            return;
-        }
+            // Lưu lại danh sách users
+            localStorage.setItem('users', JSON.stringify(users));
 
-        // Here you would typically call your API for registration
-        console.log('Registration attempt with:', formData);
-        
-        // For demo, simulate successful registration and redirect
-        navigate('/login');
+            // Chuyển đến trang đăng nhập
+            navigate('/login');
+        } catch (error) {
+            setErrorMessage('Có lỗi xảy ra khi đăng ký');
+        }
     };
 
     return (

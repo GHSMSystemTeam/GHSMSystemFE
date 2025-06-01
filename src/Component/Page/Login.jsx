@@ -11,6 +11,7 @@ export default function Login() {
     const [errorMessage, setErrorMessage] = useState('');
     const navigate = useNavigate();
     const { login } = useAuth();
+    const { user } = useAuth();
 
     const handleLogin = (e) => {
         e.preventDefault();
@@ -19,35 +20,34 @@ export default function Login() {
             setErrorMessage('Vui lòng nhập đầy đủ thông tin');
             return;
         }
+        try {
+            // Giả lập API call để lấy thông tin user
+            const userData = JSON.parse(localStorage.getItem('users') || '[]')
+                .find(user => user.email === email && user.password === password);
+
+            if (userData) {
+                login({
+                    fullName: userData.fullName, // Lấy tên thật của user từ dữ liệu đăng ký
+                    email: userData.email,
+                    phone: userData.phone
+                });
+
+                // Redirect về trang trước đó hoặc trang chủ
+                const from = location.state?.from || '/';
+                navigate(from);
+            } else {
+                setErrorMessage('Email hoặc mật khẩu không đúng');
+            }
+        } catch (error) {
+            setErrorMessage('Có lỗi xảy ra khi đăng nhập');
+        }
 
         // Here you would typically call your API for authentication
         console.log('Login attempt with:', { email, password });
 
         // For demo, simulate successful login and redirect
         // Replace this with actual authentication logic
-        if (email && password) {
-            // Navigate to home page after successful login
-            login({
-                fullName: 'Tên người dùng',
-                email: email,
-                // other user data
-            });
-            navigate('/');
-        } else {
-            setErrorMessage('Email hoặc mật khẩu không đúng');
-        }
-
-        if (email && password) {
-            login({
-                fullName: 'Tên người dùng',
-                email: email,
-            });
-
-            // Redirect về trang trước đó hoặc trang chủ
-            const from = location.state?.from || '/';
-            navigate(from);
-        }
-
+        
 
     };
 

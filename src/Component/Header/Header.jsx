@@ -44,13 +44,16 @@ export default function Header() {
                         </div>
                     ) : (
                         // Hiển thị thông tin user khi đã đăng nhập
+
                         <div className="relative">
                             <button
                                 className="flex items-center space-x-2 hover:bg-gray-100 px-3 py-2 rounded-lg"
                                 onClick={() => setShowUserMenu(!showUserMenu)}
                             >
                                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                    <User size={20} className="text-blue-600" />
+                                    <span className="text-blue-600 font-medium">
+                                        {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
+                                    </span>
                                 </div>
                                 <span className="text-gray-700 font-medium">{user.fullName}</span>
                             </button>

@@ -27,6 +27,7 @@ import NewsComponent3 from './Component/Page/NewsComponent3'
 import NewsComponent4 from './Component/Page/NewsComponent4'
 import NewsComponent5 from './Component/Page/NewsComponent5'
 import NewsComponent6 from './Component/Page/NewsComponent6'
+import UserProfile from './Component/Page/UserProfile'
 function App() {
 
   return (
@@ -56,6 +57,7 @@ function App() {
             <Route path="signup" element={<SignUp />} />
             <Route path="/test" element={<TestBookingPage />} />
             <Route path="/consultation" element={<Consulation />} />
+            <Route path='/profile' element={<UserProfile />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

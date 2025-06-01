@@ -7,6 +7,8 @@ import { useAuth } from '../Auth/AuthContext';
 
 export default function Navigation() {
 
+    const {user} = useAuth();
+
     // Tạo state riêng cho từng dropdown
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
