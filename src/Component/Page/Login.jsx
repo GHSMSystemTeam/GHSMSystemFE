@@ -101,22 +101,26 @@ export default function Login() {
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-10 pr-1 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="••••••••"
                                     />
-                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="text-gray-400 hover:text-gray-500"
-                                        >
-                                            {showPassword ? (
-                                                <EyeOff size={18} />
-                                            ) : (
-                                                <Eye size={18} />
-                                            )}
-                                        </button>
-                                    </div>
+                                    {/*
+                                    {password && (
+                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowPassword(!showPassword)}
+                                                className="text-gray-400 hover:text-gray-500"
+                                            >
+                                                {showPassword ? (
+                                                    <EyeOff size={18} />
+                                                ) : (
+                                                    <Eye size={18} />
+                                                )}
+                                            </button>
+                                        </div>
+                                    )}
+                                    */}
                                 </div>
                             </div>
 
@@ -184,7 +188,7 @@ export default function Login() {
 
                         <div className="mt-6 text-center">
                             <span className="text-sm text-gray-600">Chưa có tài khoản? </span>
-                            <Link to="/register" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                            <Link to="/signup" className="text-sm font-medium text-blue-600 hover:text-blue-500">
                                 Đăng ký ngay
                             </Link>
                         </div>

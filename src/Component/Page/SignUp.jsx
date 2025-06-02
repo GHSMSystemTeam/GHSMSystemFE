@@ -158,9 +158,10 @@ export default function Register() {
                                         name="password"
                                         value={formData.password}
                                         onChange={handleChange}
-                                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-10 pr-1 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="••••••••"
                                     />
+                                    {/*
                                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                                         <button
                                             type="button"
@@ -174,6 +175,7 @@ export default function Register() {
                                             )}
                                         </button>
                                     </div>
+                                    */}
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500">
                                     Mật khẩu phải có ít nhất 8 ký tự
@@ -193,9 +195,10 @@ export default function Register() {
                                         name="confirmPassword"
                                         value={formData.confirmPassword}
                                         onChange={handleChange}
-                                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-10 pr-1 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="••••••••"
                                     />
+                                    {/* 
                                     <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                                         <button
                                             type="button"
@@ -209,6 +212,7 @@ export default function Register() {
                                             )}
                                         </button>
                                     </div>
+                                    */}
                                 </div>
                             </div>
                             

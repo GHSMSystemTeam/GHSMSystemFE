@@ -1,12 +1,14 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { useState } from 'react';
 import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
 import { User, Camera, UserCheck, Edit3, Mail, Phone, Lock, X, Save } from 'lucide-react';
 import Footer from '../Footer/Footer';
+import { useNavigate } from 'react-router-dom';
 
 export default function UserProfile() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
     const [formData, setFormData] = useState({
@@ -17,7 +19,35 @@ export default function UserProfile() {
         address: 'TP. Hồ Chí Minh',
         gender: 'male',
         avatar: null,
-    })
+    });
+
+// Add this useEffect to handle redirection
+    useEffect(() => {
+        if (!user) {
+            navigate('/'); // Redirect to home page or login page
+        } else {
+            // If user is logged in, update formData if it hasn't been set yet
+            // or if user details change (e.g., after an update elsewhere)
+            setFormData({
+                fullName: user.fullName || 'Nguyễn Văn A',
+                email: user.email || 'nguyenvana@example.com',
+                phone: user.phone || '0912345678',
+                dateOfBirth: user.dateOfBirth || '1990-01-01', // Assuming user object might have these
+                address: user.address || 'TP. Hồ Chí Minh',
+                gender: user.gender || 'male',
+                avatar: user.avatar || null,
+            });
+            setOriginalData({
+                fullName: user.fullName || 'Nguyễn Văn A',
+                email: user.email || 'nguyenvana@example.com',
+                phone: user.phone || '0912345678',
+                dateOfBirth: user.dateOfBirth || '1990-01-01',
+                address: user.address || 'TP. Hồ Chí Minh',
+                gender: user.gender || 'male',
+                avatar: user.avatar || null,
+            });
+        }
+    }, [user, navigate]);
 
     const [originalData, setOriginalData] = useState(formData);
     const [passwordData, setPasswordData] = useState({
@@ -91,6 +121,7 @@ export default function UserProfile() {
             confirmPassword: ''
         });
     };
+
 
     return (
 
