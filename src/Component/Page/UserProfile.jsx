@@ -5,9 +5,11 @@ import { useAuth } from '../Auth/AuthContext';
 import { User, Camera, UserCheck, Edit3, Mail, Phone, Lock, X, Save } from 'lucide-react';
 import Footer from '../Footer/Footer';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '../Toast/ToastProvider';
 
 export default function UserProfile() {
-    const { user } = useAuth();
+    const { user, login } = useAuth();
+    const { showToast } = useToast();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
@@ -21,7 +23,7 @@ export default function UserProfile() {
         avatar: null,
     });
 
-// Add this useEffect to handle redirection
+    // Add this useEffect to handle redirection
     useEffect(() => {
         if (!user) {
             navigate('/'); // Redirect to home page or login page
@@ -73,12 +75,40 @@ export default function UserProfile() {
     };
 
     const handleSave = () => {
-        // Ở đây bạn sẽ gọi API để cập nhật thông tin
-        console.log('Saving user data:', formData);
-        setOriginalData(formData);
-        setIsEditing(false);
-        // Hiển thị thông báo thành công
-        alert('Cập nhật thông tin thành công!');
+        try {
+            // Lấy danh sách users từ localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+            // Tìm và cập nhật thông tin user hiện tại
+            const updatedUsers = users.map(u => {
+                if (u.email === user.email) {
+                    return {
+                        ...u,
+                        fullName: formData.fullName,
+                        phone: formData.phone
+                    };
+                }
+                return u;
+            });
+
+            // Lưu lại vào localStorage
+            localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+            // Cập nhật thông tin user trong AuthContext
+            const updatedUserData = {
+                ...user,
+                fullName: formData.fullName,
+                phone: formData.phone
+            };
+            localStorage.setItem('user', JSON.stringify(updatedUserData));
+            login(updatedUserData); // Cập nhật context
+
+            setOriginalData(formData);
+            setIsEditing(false);
+            showToast('Cập nhật thông tin thành công!');
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi cập nhật thông tin!', 'error');
+        }
     };
 
 
@@ -104,22 +134,49 @@ export default function UserProfile() {
 
     const handlePasswordUpdate = (e) => {
         e.preventDefault();
-        if (passwordData.newPassword !== passwordData.confirmPassword) {
-            alert('Mật khẩu mới không khớp!');
-            return;
+        try {
+            if (passwordData.newPassword !== passwordData.confirmPassword) {
+                alert('Mật khẩu mới không khớp!');
+                return;
+            }
+            if (passwordData.newPassword.length < 8) {
+                alert('Mật khẩu phải có ít nhất 8 ký tự!');
+                return;
+            }
+            // Lấy danh sách users từ localStorage
+            const users = JSON.parse(localStorage.getItem('users') || '[]');
+
+            // Tìm user hiện tại và kiểm tra mật khẩu
+            const currentUser = users.find(u => u.email === user.email);
+            if (!currentUser || currentUser.password !== passwordData.currentPassword) {
+                showToast('Mật khẩu hiện tại không đúng!', 'error');
+                return;
+            }
+
+            // Cập nhật mật khẩu mới
+            const updatedUsers = users.map(u => {
+                if (u.email === user.email) {
+                    return {
+                        ...u,
+                        password: passwordData.newPassword
+                    };
+                }
+                return u;
+            });
+            // Lưu lại vào localStorage
+            localStorage.setItem('users', JSON.stringify(updatedUsers));
+
+            // Reset form và hiển thị thông báo
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+            showToast('Cập nhật mật khẩu thành công!', 'success');
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi cập nhật mật khẩu!', 'error');
         }
-        if (passwordData.newPassword.length < 8) {
-            alert('Mật khẩu phải có ít nhất 8 ký tự!');
-            return;
-        }
-        // Gọi API cập nhật mật khẩu
-        console.log('Updating password');
-        alert('Cập nhật mật khẩu thành công!');
-        setPasswordData({
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: ''
-        });
+
     };
 
 
