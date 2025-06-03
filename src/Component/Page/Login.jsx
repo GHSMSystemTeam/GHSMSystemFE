@@ -21,6 +21,20 @@ export default function Login() {
             return;
         }
         try {
+            // Only allow admin login
+            const adminEmail = "admin@example.com";
+            const adminPassword = "admin123"; // Set your admin password here
+
+            if (email === adminEmail && password === adminPassword) {
+                login({
+                    fullName: "Admin User",
+                    email: adminEmail,
+                    role: "admin"
+                });
+                navigate("/admin-profile"); // Redirect to admin profile page
+            } else {
+                setErrorMessage('Chỉ tài khoản admin được phép đăng nhập');
+            }
             // Giả lập API call để lấy thông tin user
             const userData = JSON.parse(localStorage.getItem('users') || '[]')
                 .find(user => user.email === email && user.password === password);

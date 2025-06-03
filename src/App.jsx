@@ -28,6 +28,7 @@ import NewsComponent4 from './Component/Page/NewsComponent4'
 import NewsComponent5 from './Component/Page/NewsComponent5'
 import NewsComponent6 from './Component/Page/NewsComponent6'
 import UserProfile from './Component/Page/UserProfile'
+import AdminProfile from './Component/Page/AdminProfile'
 function App() {
 
   return (
@@ -45,6 +46,7 @@ function App() {
             <Route path="/sti-management" element={<STDsPage />} />
             <Route path="/family-plan" element={<FamilyPlan />} />
             <Route path="/news/:slug" element={<NewsDetails />} />
+            <Route path="/admin-profile" element={<AdminProfile />} />
             <Route path="/news/kham-suc-khoe-dinh-ky-phu-nu" element={<NewsComponent3 />} />
             <Route path="/news/cham-soc-suc-khoe-phu-nu" element={<NewsComponent1 />} />
             <Route path="/news/tu-van-suc-khoe-nam-gioi" element={<NewsComponent2 />} />
