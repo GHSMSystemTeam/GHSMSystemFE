@@ -2,7 +2,7 @@ import React, { useEffect } from 'react'
 import { useState } from 'react';
 import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
-import { User, Camera, UserCheck, Edit3, Mail, Phone, Lock, X, Save } from 'lucide-react';
+import { User, Camera, UserCheck, Edit3, Mail, Phone, Lock, X, Save, CalendarDays, Users } from 'lucide-react';
 import Footer from '../Footer/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
@@ -30,16 +30,7 @@ export default function UserProfile() {
         } else {
             // If user is logged in, update formData if it hasn't been set yet
             // or if user details change (e.g., after an update elsewhere)
-            setFormData({
-                fullName: user.fullName || 'Nguyễn Văn A',
-                email: user.email || 'nguyenvana@example.com',
-                phone: user.phone || '0912345678',
-                dateOfBirth: user.dateOfBirth || '1990-01-01', // Assuming user object might have these
-                address: user.address || 'TP. Hồ Chí Minh',
-                gender: user.gender || 'male',
-                avatar: user.avatar || null,
-            });
-            setOriginalData({
+            const initialData = {
                 fullName: user.fullName || 'Nguyễn Văn A',
                 email: user.email || 'nguyenvana@example.com',
                 phone: user.phone || '0912345678',
@@ -47,7 +38,9 @@ export default function UserProfile() {
                 address: user.address || 'TP. Hồ Chí Minh',
                 gender: user.gender || 'male',
                 avatar: user.avatar || null,
-            });
+            };
+            setFormData(initialData);
+            setOriginalData(initialData);
         }
     }, [user, navigate]);
 
@@ -75,22 +68,44 @@ export default function UserProfile() {
     };
 
     const handleSave = () => {
-        try {
+            try {
+            // Validate required fields
+            if (
+                !formData.fullName.trim() ||
+                !formData.email.trim() ||
+                !formData.phone.trim() ||
+                !formData.dateOfBirth.trim() ||
+                !formData.address.trim() ||
+                !formData.gender.trim()
+            ) {
+                showToast('Có lỗi xảy ra khi cập nhật thông tin!', 'error');
+                return;
+            }
             // Lấy danh sách users từ localStorage
             const users = JSON.parse(localStorage.getItem('users') || '[]');
-
+            let userFoundAndUpdated = false;
             // Tìm và cập nhật thông tin user hiện tại
             const updatedUsers = users.map(u => {
                 if (u.email === user.email) {
+                    userFoundAndUpdated = true;
                     return {
                         ...u,
                         fullName: formData.fullName,
-                        phone: formData.phone
+                        phone: formData.phone,
+                        dateOfBirth: formData.dateOfBirth,
+                        address: formData.address,
+                        gender: formData.gender,
+                        avatar: formData.avatar,
                     };
                 }
                 return u;
             });
 
+            if (!userFoundAndUpdated) {
+                // Handle case where user might not be in 'users' list, though unlikely if logged in
+                // Or if email was changed and lookup key needs adjustment
+                console.warn("User not found in users list for update, or email key mismatch.");
+            }
             // Lưu lại vào localStorage
             localStorage.setItem('users', JSON.stringify(updatedUsers));
 
@@ -98,7 +113,11 @@ export default function UserProfile() {
             const updatedUserData = {
                 ...user,
                 fullName: formData.fullName,
-                phone: formData.phone
+                phone: formData.phone,
+                dateOfBirth: formData.dateOfBirth,
+                address: formData.address,
+                gender: formData.gender,
+                avatar: formData.avatar,
             };
             localStorage.setItem('user', JSON.stringify(updatedUserData));
             login(updatedUserData); // Cập nhật context
@@ -107,6 +126,7 @@ export default function UserProfile() {
             setIsEditing(false);
             showToast('Cập nhật thông tin thành công!');
         } catch (error) {
+            console.error("Error saving profile:", error);
             showToast('Có lỗi xảy ra khi cập nhật thông tin!', 'error');
         }
     };
@@ -354,6 +374,56 @@ export default function UserProfile() {
                                                     : 'border-gray-200 bg-gray-50'
                                                     }`}
                                             />
+                                        </div>
+                                    </div>
+
+                                    {/* Ngày sinh */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Ngày sinh
+                                        </label>
+                                        <div className="relative">
+                                            <CalendarDays size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            <input
+                                                type="date"
+                                                name="dateOfBirth"
+                                                value={formData.dateOfBirth}
+                                                onChange={handleInputChange}
+                                                disabled={!isEditing}
+                                                className={`w-full pl-10 pr-3 py-2.5 border rounded-lg ${isEditing
+                                                    ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                                    : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                    }`}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Giới tính */}
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Giới tính
+                                        </label>
+                                        <div className="relative">
+                                            <Users size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                                            {isEditing ? (
+                                                <select
+                                                    name="gender"
+                                                    value={formData.gender}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                >
+                                                    <option value="male">Nam</option>
+                                                    <option value="female">Nữ</option>
+                                                </select>
+                                            ) : (
+                                                <input
+                                                    type="text"
+                                                    name="gender"
+                                                    value={formData.gender === 'male' ? 'Nam' : formData.gender === 'female' ? 'Nữ' : 'Khác'}
+                                                    disabled
+                                                    className="w-full pl-10 pr-3 py-2.5 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
+                                                />
+                                            )}
                                         </div>
                                     </div>
                                 </div>
