@@ -28,7 +28,11 @@ import NewsComponent4 from './Component/Page/NewsComponent4'
 import NewsComponent5 from './Component/Page/NewsComponent5'
 import NewsComponent6 from './Component/Page/NewsComponent6'
 import UserProfile from './Component/Page/UserProfile'
+<<<<<<< HEAD
 import AdminProfile from './Component/Page/AdminProfile'
+=======
+import UserAppointments from './Component/Page/UserAppointments'
+>>>>>>> dec549ba5294d7c55ec44ef368aa2f1c45b30260
 function App() {
 
   return (
@@ -60,6 +64,7 @@ function App() {
             <Route path="/test" element={<TestBookingPage />} />
             <Route path="/consultation" element={<Consulation />} />
             <Route path='/profile' element={<UserProfile />} />
+            <Route path="/appointments" element={<UserAppointments />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

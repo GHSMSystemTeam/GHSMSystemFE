@@ -34,20 +34,20 @@ export default function Service() {
             link: "/test",
             image: "/api/placeholder/400/300"
         },
-        {
-            id: 3,
-            title: "Quản lý kế hoạch hóa gia đình, tránh thai",
-            subtitle: "",
-            icon: "🌈",
-            color: "from-purple-400 to-pink-400",
-            features: [
-                "Quản lý hồ sơ kế hoạch hóa gia đình",
-                "Quản lý phương pháp tránh thai",
-                "Nhắc lịch dùng thuốc / tái khám",
-            ],
-            link: "#",
-            image: "/api/placeholder/400/300"
-        },
+        // {
+        //     id: 3,
+        //     title: "Quản lý kế hoạch hóa gia đình, tránh thai",
+        //     subtitle: "",
+        //     icon: "🌈",
+        //     color: "from-purple-400 to-pink-400",
+        //     features: [
+        //         "Quản lý hồ sơ kế hoạch hóa gia đình",
+        //         "Quản lý phương pháp tránh thai",
+        //         "Nhắc lịch dùng thuốc / tái khám",
+        //     ],
+        //     link: "#",
+        //     image: "/api/placeholder/400/300"
+        // },
         // {
         //     id: 4,
         //     title: "Hỗ trợ quản lý bệnh nhân",

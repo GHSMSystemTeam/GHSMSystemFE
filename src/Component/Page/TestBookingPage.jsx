@@ -8,9 +8,23 @@ import { useNavigate } from 'react-router-dom';
 import BookingRating from '../Rating/Rating';
 import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
+import { useAuth } from '../Auth/AuthContext';
 
 const TestBookingPage = () => {
   const { showToast } = useToast();
+
+  const { user } = useAuth()
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.fullName || '',
+        phone: user.phone || '',
+        email: user.email || '',
+        address: userInfo.address
+      });
+    }
+  }, [user]);
 
   const [selectedKit, setSelectedKit] = useState(null);
   const [appointmentDate, setAppointmentDate] = useState('');
@@ -172,7 +186,7 @@ const TestBookingPage = () => {
   const { checkAuthAndShowPrompt } = useAuthCheck();
   const handleBooking = () => {
     if (!checkAuthAndShowPrompt('booking')) {
-        showToast('Vui lòng đăng nhập để sử dụng dịch vụ này', 'info');
+      showToast('Vui lòng đăng nhập để sử dụng dịch vụ này', 'info');
       return;
     }
 
@@ -186,10 +200,21 @@ const TestBookingPage = () => {
       kit: selectedKit,
       date: appointmentDate,
       time: appointmentTime,
-      userInfo: { ...userInfo },
+      userInfo: {
+
+        name: user.fullName,
+        phone: user.phone,
+        email: user.email,
+        address: userInfo.address
+      },
       status: 'pending',
       createdAt: new Date().toISOString()
     };
+
+
+    // Lưu vào localStorage
+    const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+    localStorage.setItem('bookings', JSON.stringify([...existingBookings, newBooking]));
 
     setBookings([...bookings, newBooking]);
 
@@ -231,13 +256,13 @@ const TestBookingPage = () => {
           {/* Progress Steps */}
           <div className="mb-8">
             <div className="flex items-center justify-center space-x-4">
-              {[1, 2, 3].map((step) => (
+              {[1, 2].map((step) => (
                 <div key={step} className="flex items-center">
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${currentStep >= step ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'
                     }`}>
                     {step}
                   </div>
-                  {step < 3 && (
+                  {step < 2 && (
                     <div className={`w-16 h-1 mx-2 ${currentStep > step ? 'bg-blue-600' : 'bg-gray-200'}`} />
                   )}
                 </div>
@@ -434,7 +459,7 @@ const TestBookingPage = () => {
                 </div>
               )}
 
-              {currentStep === 3 && (
+              {/* {currentStep === 3 && (
                 <div className="bg-white rounded-xl shadow-lg p-6">
                   <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
                     <CheckCircle className="mr-3 text-green-600" />
@@ -511,7 +536,7 @@ const TestBookingPage = () => {
                     </div>
                   )}
                 </div>
-              )}
+              )} */}
             </div>
 
             {/* Right Panel - Info & Quick Actions */}
@@ -535,13 +560,13 @@ const TestBookingPage = () => {
                   >
                     2. Đặt lịch hẹn
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => setCurrentStep(3)}
                     className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${currentStep === 3 ? 'bg-blue-100 text-blue-700' : 'hover:bg-gray-100'
                       }`}
                   >
                     3. Theo dõi lịch hẹn
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
