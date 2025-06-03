@@ -22,7 +22,7 @@ export default function SlideShow() {
                 <img
                     src={images[current]}
                     alt={`slide-${current + 1}`}
-                    className="w-full h-64 md:h-96 object-cover transition-all duration-700"
+                    className="w-full h-80 md:h-[28rem] object-cover transition-all duration-700"
                 />
                 <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2">
                     {images.map((_, idx) => (
