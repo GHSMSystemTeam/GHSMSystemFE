@@ -3,15 +3,22 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import NavItem from './NavItem'
 import { Search, ChevronUp, Bell, X, LogOut, User } from 'lucide-react';
-import { useAuth } from '../Auth/AuthContext';
+{/*import { useAuth } from '../Auth/AuthContext';*/}
 
 export default function Navigation() {
 
+    {/*
     const {user} = useAuth();
+    */}
 
     // Tạo state riêng cho từng dropdown
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
+
+    // Thêm state, ref, timeout cho "Kiến thức"
+    const [showKnowledgeDropdown, setShowKnowledgeDropdown] = useState(false);
+    const knowledgeDropdownRef = useRef(null);
+    const knowledgeTimeoutRef = useRef(null);
 
     // Tạo notification
     const [notifications, setNotifications] = useState([]);
@@ -19,7 +26,9 @@ export default function Navigation() {
     const [unreadCount, setUnreadCount] = useState(0);
 
     // Toast notification state
+    {/*
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
+    */}
 
     // Tạo ref riêng cho từng dropdown
     const aboutDropdownRef = useRef(null);
@@ -34,6 +43,7 @@ export default function Navigation() {
     const location = useLocation();
     const currentPath = location.pathname;
 
+    
     // Search 
     const [search, setSearch] = useState("");
     const navigate = useNavigate();
@@ -57,6 +67,18 @@ export default function Navigation() {
             return true;
         }
         return false;
+    };
+    // Handler cho dropdown "Kiến thức"
+    const handleKnowledgeMouseEnter = () => {
+        if (knowledgeTimeoutRef.current) {
+            clearTimeout(knowledgeTimeoutRef.current);
+        }
+        setShowKnowledgeDropdown(true);
+    };
+    const handleKnowledgeMouseLeave = () => {
+        knowledgeTimeoutRef.current = setTimeout(() => {
+            setShowKnowledgeDropdown(false);
+        }, 50);
     };
 
     // Handler cho dropdown "Giới thiệu"
@@ -96,6 +118,7 @@ export default function Navigation() {
     };
 
     // Add a notification
+    {/*}
     const addNotification = (message, type = 'success') => {
         const newNotification = {
             id: Date.now(),
@@ -111,7 +134,9 @@ export default function Navigation() {
         // Show toast notification
         showToast(message, type);
     };
-    // Show toast notification in the middle of the screen
+    */}
+    // Show toast notification in the middle of the screen\
+    {/*
     const showToast = (message, type = 'success') => {
         // Clear any existing timeout
         if (toastTimeoutRef.current) {
@@ -126,20 +151,26 @@ export default function Navigation() {
             setToast(prev => ({ ...prev, show: false }));
         }, 5000);
     };
+    */}
 
     // Close toast manually
+    {/*
     const closeToast = () => {
         if (toastTimeoutRef.current) {
             clearTimeout(toastTimeoutRef.current);
         }
         setToast(prev => ({ ...prev, show: false }));
     };
+    */}
 
     useEffect(() => {
 
         function handleClickOutside(event) {
             if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
                 setShowNotifications(false);
+            }
+            if (knowledgeTimeoutRef.current) {
+                clearTimeout(knowledgeTimeoutRef.current);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -158,13 +189,14 @@ export default function Navigation() {
     }, []);
 
     // addNotification globally
+    {/*}
     useEffect(() => {
         window.addNotificationToNav = addNotification;
         return () => {
             window.addNotificationToNav = null;
         };
     }, []);
-
+    */}
     // Format the timestamp for notifications
     const formatTimestamp = (timestamp) => {
         const date = new Date(timestamp);
@@ -251,8 +283,39 @@ export default function Navigation() {
                             )}
                         </div>
 
-                        <NavItem label="Kiến thức" icon={<ChevronUp size={16} />} />
-                        {/* <NavItem label="Liên hệ" /> */}
+                    <div className="relative"
+                        ref={knowledgeDropdownRef}
+                        onMouseEnter={handleKnowledgeMouseEnter}
+                        onMouseLeave={handleKnowledgeMouseLeave}
+                    >
+                        <div className="flex items-center cursor-pointer">
+                            <NavItem
+                                label="Kiến thức"
+                                icon={<ChevronUp size={16} />}
+                                active={isActive('/kien-thuc')}
+                            />
+                        </div>
+                        {showKnowledgeDropdown && (
+                            <div className="absolute top-full left-0 w-64 bg-white shadow-lg rounded-lg mt-1 z-50">
+                                <Link to="/suc-khoe-gioi-tinh"
+                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                    Sức khỏe giới tính
+                                </Link>
+                                <Link to="/tu-van-tien-hon-nhan"
+                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                    Tư vấn tiền hôn nhân 
+                                </Link>
+                                <Link to="/benh-lay-truyen"
+                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                    Bệnh lây truyền 
+                                </Link>
+                                <Link to="/suc-khoe-tam-ly"
+                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                    Sức khỏe tâm lý 
+                                </Link>
+                            </div>
+                        )}
+                    </div>
                     </div>
 
                     <div className="hidden md:flex items-center space-x-4">
