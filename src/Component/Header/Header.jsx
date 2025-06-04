@@ -6,10 +6,21 @@ import { Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../Auth/AuthContext';
 import { User, LogOut } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export default function Header() {
     const { user, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = useState(false);
+
+    const blogCategories = [
+        { name: 'Sức khỏe sinh sản', slug: 'suc-khoe-sinh-san' },
+        { name: 'Sức khỏe giới tính', slug: 'suc-khoe-gioi-tinh' },
+        { name: 'Tư vấn tiền hôn nhân', slug: 'tu-van-tien-hon-nhan' },
+        { name: 'Kế hoạch hóa gia đình', slug: 'ke-hoach-hoa-gia-dinh' },
+        { name: 'Bệnh lây truyền', slug: 'benh-lay-truyen' },
+        { name: 'Sức khỏe tâm lý', slug: 'suc-khoe-tam-ly' },
+    ];
+
     return (
         <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
             <div className="container mx-auto px-4 flex justify-between items-center">
@@ -103,6 +114,29 @@ export default function Header() {
 
             {/* Navigation */}
             <Navigation />
+            <nav className="container mx-auto px-4 py-4 flex items-center justify-between">
+                <div className="relative group">
+                    <Link
+                        to="/blog"
+                        className="flex items-center px-4 py-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                    >
+                        Kiến thức
+                        <ChevronDown className="ml-1 w-4 h-4" />
+                    </Link>
+
+                    <div className="absolute left-0 mt-2 w-56 bg-white rounded-lg shadow-lg py-2 invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-200">
+                        {blogCategories.map((category) => (
+                            <Link
+                                key={category.slug}
+                                to={`/blog?category=${category.slug}`}
+                                className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                                {category.name}
+                            </Link>
+                        ))}
+                    </div>
+                </div>
+            </nav>
         </header>
     )
 }

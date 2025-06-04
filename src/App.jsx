@@ -30,6 +30,7 @@ import NewsComponent6 from './Component/Page/NewsComponent6'
 import UserProfile from './Component/Page/UserProfile'
 import AdminProfile from './Component/Page/AdminProfile'
 import UserAppointments from './Component/Page/UserAppointments'
+import Blog from './Component/Page/Blog'
 function App() {
 
   return (
@@ -62,6 +63,7 @@ function App() {
             <Route path="/consultation" element={<Consulation />} />
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/appointments" element={<UserAppointments />} />
+            <Route path="/blog" element={<Blog />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>
