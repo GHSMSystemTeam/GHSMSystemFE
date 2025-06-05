@@ -4,22 +4,40 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
 import { Calendar, Clock, Package, User, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function UserAppointments() {
     const { user } = useAuth();
     const navigate = useNavigate();
-    const [bookings, setBookings] = useState([]);
+    const [appointments, setAppointments] = useState({ medical: [], test: [] });
+
+    const loadUserAppointments = () => {
+        try {
+            // Lấy lịch khám
+            const medicalBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]')
+                .filter(booking => booking.userInfo.email === user.email)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            // Lấy lịch xét nghiệm
+            const testBookings = JSON.parse(localStorage.getItem('bookings') || '[]')
+                .filter(booking => booking.userInfo.email === user.email)
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            setAppointments({
+                medical: medicalBookings,
+                test: testBookings
+            });
+        } catch (error) {
+            showToast('Có lỗi khi tải lịch hẹn', 'error');
+        }
+    };
 
     useEffect(() => {
         if (!user) {
             navigate('/login');
             return;
         }
-        // Lấy bookings từ localStorage
-        const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-        // Lọc ra các booking của user hiện tại
-        const userBookings = allBookings.filter(booking => booking.userInfo.email === user.email);
-        setBookings(userBookings);
+        loadUserAppointments();
     }, [user, navigate]);
 
     const loadUserBookings = () => {
@@ -73,92 +91,76 @@ export default function UserAppointments() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-24">
+        <div className="min-h-screen bg-gray-50 pt-24 mt-10">
             <Header />
             <div className="container mx-auto px-4 py-8">
                 <div className="max-w-4xl mx-auto">
+                    {/* Lịch khám bệnh */}
                     <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800 mb-4">Lịch hẹn của tôi</h1>
-                        <p className="text-gray-600 mb-6">
-                            Quản lý và theo dõi các lịch hẹn xét nghiệm của bạn
-                        </p>
-
-                        {bookings.length === 0 ? (
-                            <div className="text-center py-8">
-                                <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                                <p className="text-gray-600">Bạn chưa có lịch hẹn nào</p>
-                            </div>
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Lịch khám bệnh</h2>
+                        {appointments.medical.length === 0 ? (
+                            <p className="text-gray-500">Không có lịch khám bệnh nào</p>
                         ) : (
                             <div className="space-y-4">
-                                {bookings.map((booking) => (
-                                    <div key={booking.id} className="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                                        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                                {appointments.medical.map((booking) => (
+                                    <div key={booking.id} className="border rounded-lg p-4">
+                                        <div className="flex justify-between">
                                             <div>
-                                                <h3 className="font-semibold text-lg text-gray-800">{booking.kit.name}</h3>
-                                                <p className="text-gray-600">{booking.userInfo.name} - {booking.userInfo.phone}</p>
+                                                <h3 className="font-medium">{booking.doctor.name}</h3>
+                                                <p className="text-sm text-gray-600">Dịch vụ: {booking.service}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
+                                                </p>
                                             </div>
-                                            <div className="mt-2 md:mt-0">
-                                                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(booking.status)}`}>
+                                            <div>
+                                                <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
                                                     {getStatusText(booking.status)}
                                                 </span>
                                             </div>
                                         </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                            <div className="flex items-center space-x-2">
-                                                <Calendar className="w-4 h-4 text-gray-500" />
-                                                <span>{new Date(booking.date).toLocaleDateString('vi-VN')}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Clock className="w-4 h-4 text-gray-500" />
-                                                <span>{booking.time}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <Package className="w-4 h-4 text-gray-500" />
-                                                <span>{booking.kit.price}</span>
-                                            </div>
-                                            <div className="flex items-center space-x-2">
-                                                <User className="w-4 h-4 text-gray-500" />
-                                                <span>{booking.kit.duration}</span>
-                                            </div>
-                                        </div>
-
-                                        {booking.status === 'pending' && (
-                                            <div className="mt-4 border-t pt-4">
-                                                <button
-                                                    onClick={() => handleCancelBooking(booking.id)}
-                                                    className="text-red-600 hover:text-red-700 text-sm font-medium"
-                                                >
-                                                    Hủy lịch hẹn
-                                                </button>
-                                            </div>
-                                        )}
                                     </div>
                                 ))}
                             </div>
                         )}
                     </div>
 
-                    <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
-                        <h3 className="text-lg font-semibold text-blue-800 mb-4">Lưu ý</h3>
-                        <ul className="space-y-2 text-blue-700 text-sm">
-                            <li className="flex items-start">
-                                <span className="mr-2">•</span>
-                                Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục
-                            </li>
-                            <li className="flex items-start">
-                                <span className="mr-2">•</span>
-                                Mang theo CMND/CCCD và giấy tờ liên quan
-                            </li>
-                            <li className="flex items-start">
-                                <span className="mr-2">•</span>
-                                Nhịn ăn 8-12 tiếng trước khi xét nghiệm máu
-                            </li>
-                            <li className="flex items-start">
-                                <span className="mr-2">•</span>
-                                Liên hệ hotline nếu cần thay đổi lịch hẹn
-                            </li>
-                        </ul>
+                    {/* Lịch xét nghiệm */}
+                    <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+                        <h2 className="text-xl font-bold text-gray-800 mb-4">Lịch xét nghiệm</h2>
+                        {appointments.test.length === 0 ? (
+                            <p className="text-gray-500">Không có lịch xét nghiệm nào</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {appointments.test.map((booking) => (
+                                    <div key={booking.id} className="border rounded-lg p-4">
+                                        <div className="flex justify-between">
+                                            <div>
+                                                <h3 className="font-medium">{booking.kit.name}</h3>
+                                                <p className="text-sm text-gray-600">{booking.kit.price}</p>
+                                                <p className="text-sm text-gray-600">
+                                                    Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
+                                                    {getStatusText(booking.status)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Các nút tác vụ */}
+                    <div className="flex justify-center space-x-4">
+                        <Link to="/appointment" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Đặt lịch khám
+                        </Link>
+                        <Link to="/test" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            Đặt lịch xét nghiệm
+                        </Link>
                     </div>
                 </div>
             </div>

@@ -404,6 +404,7 @@ const TestBookingPage = () => {
                             onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="Nhập họ và tên"
+                            readOnly
                           />
                         </div>
                         <div>
@@ -416,6 +417,7 @@ const TestBookingPage = () => {
                             onChange={(e) => setUserInfo({ ...userInfo, phone: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="Nhập số điện thoại"
+                            readOnly
                           />
                         </div>
                         <div>
@@ -426,6 +428,7 @@ const TestBookingPage = () => {
                             onChange={(e) => setUserInfo({ ...userInfo, email: e.target.value })}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                             placeholder="Nhập email"
+                            readOnly
                           />
                         </div>
                         <div>

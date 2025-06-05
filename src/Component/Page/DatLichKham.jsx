@@ -12,8 +12,21 @@ import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
 
 export default function DatLichKham() {
-    const {showToast} = useToast()
+    const { showToast } = useToast()
     const { checkAuthAndShowPrompt } = useAuthCheck();
+    const { user } = useAuth()
+
+    // Cập nhật formData khi có thông tin user
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                name: user.fullName || '',
+                phone: user.phone || '',
+                email: user.email || ''
+            }));
+        }
+    }, [user]);
 
 
     const [formData, setFormData] = useState({
@@ -99,6 +112,40 @@ export default function DatLichKham() {
         if (!checkAuthAndShowPrompt('đặt lịch khám')) return;
         setSubmitting(true);
 
+        // Tạo một booking mới
+        const newBooking = {
+            id: Date.now(),
+            type: 'medical', // Thêm type để phân biệt với lịch xét nghiệm
+            service: formData.service,
+            date: formData.date,
+            time: formData.time,
+            userInfo: {
+                name: user.fullName,
+                phone: user.phone,
+                email: user.email
+            },
+            doctor: formData.doctor !== 'any' ?
+                availableDoctors.find(d => d.id.toString() === formData.doctor) :
+                { name: 'Bất kỳ' },
+            notes: formData.notes,
+            status: 'pending',
+            createdAt: new Date().toISOString()
+        };
+
+        try {
+            // Lưu vào localStorage
+            const existingBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
+            localStorage.setItem('medicalBookings', JSON.stringify([...existingBookings, newBooking]));
+
+            // Reset form và hiển thị thông báo
+            setSubmitting(false);
+            setSubmitted(true);
+            showToast('Đặt lịch khám thành công!', 'success');
+        } catch (error) {
+            setSubmitting(false);
+            showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
+        }
+
         // Simulate API call
         setTimeout(() => {
             console.log('Form submitted:', formData);
@@ -114,16 +161,6 @@ export default function DatLichKham() {
             // setSubmitted(true);
 
             // Reset form after submission
-            setFormData({
-                name: '',
-                phone: '',
-                email: '',
-                date: '',
-                time: '',
-                service: '',
-                doctor: '',
-                notes: '',
-            });
         }, 1500);
     };
 
@@ -169,7 +206,7 @@ export default function DatLichKham() {
                                                         onChange={handleChange}
                                                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         placeholder="Nhập họ và tên"
-                                                        required
+                                                        readOnly
                                                     />
                                                 </div>
                                             </div>
@@ -189,7 +226,7 @@ export default function DatLichKham() {
                                                         onChange={handleChange}
                                                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         placeholder="Nhập số điện thoại"
-                                                        required
+                                                        readOnly
                                                     />
                                                 </div>
                                             </div>
@@ -209,7 +246,7 @@ export default function DatLichKham() {
                                                         onChange={handleChange}
                                                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                                                         placeholder="Nhập email"
-                                                        required
+                                                        readOnly
                                                     />
                                                 </div>
                                             </div>
