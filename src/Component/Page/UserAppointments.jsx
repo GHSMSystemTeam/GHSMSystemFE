@@ -91,9 +91,13 @@ export default function UserAppointments() {
     };
 
     return (
+<<<<<<< HEAD
         <div className="min-h-screen bg-gray-50 pt-24 mt-10">
+=======
+        <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 pt-24">
+>>>>>>> 1d9a8304431bf69decacf69a650e1375ce9d482b
             <Header />
-            <div className="container mx-auto px-4 py-8">
+            <div className="container mx-auto px-4 py-8 ">
                 <div className="max-w-4xl mx-auto">
                     {/* Lịch khám bệnh */}
                     <div className="bg-white rounded-xl shadow-lg p-6 mb-6">

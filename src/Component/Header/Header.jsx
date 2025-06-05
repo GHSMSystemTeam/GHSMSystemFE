@@ -6,10 +6,12 @@ import { Mail, Phone } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../Auth/AuthContext';
 import { User, LogOut } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export default function Header() {
     const { user, logout } = useAuth();
     const [showUserMenu, setShowUserMenu] = useState(false);
+
     return (
         <header className="fixed top-0 left-0 right-0 bg-white shadow-md z-50">
             <div className="container mx-auto px-4 flex justify-between items-center">

@@ -30,6 +30,9 @@ import NewsComponent6 from './Component/Page/NewsComponent6'
 import UserProfile from './Component/Page/UserProfile'
 import AdminProfile from './Component/Page/AdminProfile'
 import UserAppointments from './Component/Page/UserAppointments'
+import SucKhoeGioiTinh from './Component/Page/SucKhoeGioiTinh'
+import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
+import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
 function App() {
 
   return (
@@ -44,7 +47,7 @@ function App() {
             <Route path="/news" element={<NewsPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/appointment" element={<DatLichKham />} />
-            <Route path="/sti-management" element={<STDsPage />} />
+            <Route path="/benh-lay-truyen" element={<STDsPage />} />
             <Route path="/family-plan" element={<FamilyPlan />} />
             <Route path="/news/:slug" element={<NewsDetails />} />
             <Route path="/admin-profile" element={<AdminProfile />} />
@@ -62,6 +65,9 @@ function App() {
             <Route path="/consultation" element={<Consulation />} />
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/appointments" element={<UserAppointments />} />
+            <Route path="/suc-khoe-gioi-tinh" element={<SucKhoeGioiTinh />} />
+            <Route path="/tu-van-tien-hon-nhan" element={<TuVanTienHonNhan />} />
+            <Route path="/suc-khoe-tam-ly" element={<SucKhoeTamLy />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>

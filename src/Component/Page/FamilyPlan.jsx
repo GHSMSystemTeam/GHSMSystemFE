@@ -12,19 +12,19 @@ export default function FamilyPlan() {
         <div className="min-h-screen flex flex-col bg-gray-50 pt-24 mt-10">
             {/* Header */}
             <Header />
-        <div className="w-full bg-indigo-500 text-white py-24 bg-cover bg-center relative"
-            style={{
-            backgroundImage: "url('https://www.verywellhealth.com/thmb/D6iFpvkwAgRmo6l-3m-kohXfaz8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/chairs-arranged-in-medical-building-961288374-5c0ac61146e0fb0001e2e5a8.jpg')"
-            }}>
-                    <div className="absolute inset-0 bg-black opacity-50"></div>    
-                <div className="container mx-auto px-4  relative z-10">
-                    <div className="text-center text-white">
-                    <div className="flex flex-col items-center justify-center">
-                        <h1 className="text-4xl font-bold mb-4">Quản lý kế hoạch hóa gia đình, tránh thai</h1>
+            <div className="w-full bg-indigo-500 text-white py-24 bg-cover bg-center relative"
+                style={{
+                backgroundImage: "url('https://www.verywellhealth.com/thmb/D6iFpvkwAgRmo6l-3m-kohXfaz8=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/chairs-arranged-in-medical-building-961288374-5c0ac61146e0fb0001e2e5a8.jpg')"
+                }}>
+                        <div className="absolute inset-0 bg-black opacity-50"></div>    
+                    <div className="container mx-auto px-4  relative z-10">
+                        <div className="text-center text-white">
+                        <div className="flex flex-col items-center justify-center">
+                            <h1 className="text-4xl font-bold mb-4">Quản lý kế hoạch hóa gia đình, tránh thai</h1>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
             <main className="flex-grow flex items-center justify-center bg-gradient-to-r from-purple-100 to-blue-50 py-16">
                 <div className="bg-white rounded-lg shadow-sm p-4">
