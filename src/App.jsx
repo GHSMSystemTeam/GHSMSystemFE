@@ -33,6 +33,7 @@ import UserAppointments from './Component/Page/UserAppointments'
 import SucKhoeGioiTinh from './Component/Page/SucKhoeGioiTinh'
 import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
 import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
+import Blog from './Component/Page/Blog'
 function App() {
 
   return (
@@ -68,6 +69,7 @@ function App() {
             <Route path="/suc-khoe-gioi-tinh" element={<SucKhoeGioiTinh />} />
             <Route path="/tu-van-tien-hon-nhan" element={<TuVanTienHonNhan />} />
             <Route path="/suc-khoe-tam-ly" element={<SucKhoeTamLy />} />
+            <Route path="/blog" element={<Blog />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>
