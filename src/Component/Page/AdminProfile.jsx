@@ -1,9 +1,63 @@
 import { useAuth } from "../Auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star } from "lucide-react";
+import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper } from "lucide-react";
 import { Search, Users as PeopleIcon } from "lucide-react";
 
+// Placeholder Components
+const ServiceManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Service Management</h2>
+            <p>Manage services here...</p>
+        </div>
+    );
+};
+
+const BookingManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Booking Management</h2>
+            <p>Manage bookings here...</p>
+        </div>
+    );
+};
+
+const PostManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Post Management</h2>
+            <p>Manage posts here...</p>
+        </div>
+    );
+};
+
+const TestResultManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Test Result Management</h2>
+            <p>Manage test results here...</p>
+        </div>
+    );
+};
+
+const FeedbackManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Feedback Management</h2>
+            <p>Manage feedback here...</p>
+        </div>
+    );
+};
+
+const ReportManagementComponent = () => {
+    return (
+        <div className="bg-white rounded-xl shadow p-6">
+            <h2 className="text-xl font-semibold">Report Management</h2>
+            <p>View and generate reports here...</p>
+        </div>
+    );
+};
 // New component for the Filter Interface
 const FilterInterface = ({ title }) => {
     const [activeTab, setActiveTab] = useState('find'); // 'find' or 'all'
@@ -38,40 +92,23 @@ const FilterInterface = ({ title }) => {
                         {/* Left Column */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                            <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Andrew Salgado" />
+                            <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Type a name here" />
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
                             <input type="email" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="example@mail.com" />
                         </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Login</label>
-                            <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Login" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Branch</label>
-                            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                <option>Select</option>
-                                {/* Add branches */}
-                            </select>
-                        </div>
-                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
                             <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Id" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Practice</label>
-                            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                <option>Select</option>
-                                {/* Add practices */}
-                            </select>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">User type</label>
                             <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
                                 <option>Any</option>
-                                {/* Add user types */}
-                            </select>
+                                <option value="consultant">Consultant</option>
+                                <option value="customer">Customer</option>
+                            </select>                     
                         </div>
                     </div>
                 </div>
@@ -81,6 +118,36 @@ const FilterInterface = ({ title }) => {
                     <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
                     {/* Placeholder for list of all doctors/customers */}
                     <p className="text-gray-500">List of all {title}s will be displayed here.</p>
+                        <table className="w-full text-left mt-4">
+                            <thead>
+                                <tr className="text-gray-600 border-b">
+                                    <th className="py-2">Name</th>
+                                    <th>Email</th>
+                                    <th>Type</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr className="border-b">
+                                    <td className="py-2">Dr. Smith (Example)</td>
+                                    <td>consultant1@example.com</td>
+                                    <td>Consultant</td>
+                                    <td>
+                                        <button className="text-blue-600 hover:underline mr-2">View</button>
+                                        <button className="text-red-600 hover:underline">Disable</button>
+                                    </td>
+                                </tr>
+                                <tr className="border-b">
+                                    <td className="py-2">Nguyen Van A (Example)</td>
+                                    <td>customer1@example.com</td>
+                                    <td>Customer</td>
+                                    <td>
+                                        <button className="text-blue-600 hover:underline mr-2">Edit</button>
+                                        <button className="text-red-600 hover:underline">Delete</button>
+                                    </td>
+                                </tr>
+                            </tbody> 
+                        </table>  
                 </div>
             )}
         </div>
@@ -109,7 +176,7 @@ export default function AdminProfile() {
                                 <div className="text-2xl font-bold text-blue-700">1,234</div>
                             </div>
                             <div className="bg-white rounded-xl shadow p-6">
-                                <div className="text-gray-500">Doctors</div>
+                                <div className="text-gray-500">Consultant</div>
                                 <div className="text-2xl font-bold text-blue-700">120</div>
                             </div>
                             <div className="bg-white rounded-xl shadow p-6">
@@ -123,48 +190,88 @@ export default function AdminProfile() {
                         </div>
                     </>
                 );
-            case 'accounts':
-                return (
-                    <div className="bg-white rounded-xl shadow p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="font-semibold">Account Management</div>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Account</button>
+                case 'accounts': // Added this case
+                return <FilterInterface title="Account" />;
+                case 'consultantAccounts':
+                    return (
+                        <div className="bg-white rounded-xl shadow p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="font-semibold">Consultant Management</div>
+                                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Consultant</button>
+                            </div>
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="text-gray-600 border-b">
+                                        <th className="py-2">Email</th>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Gender</th>
+                                        <th>Specialty</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Example row */}
+                                    <tr className="border-b">
+                                        <td className="py-2">consultant1@hospital.com</td>
+                                        <td>Dr. Smith</td>
+                                        <td>0901234567</td>
+                                        <td>Male</td>
+                                        <td>Psychology</td>
+                                        <td>
+                                            <button className="text-blue-600 hover:underline mr-2">Edit</button>
+                                            <button className="text-red-600 hover:underline">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="text-gray-600 border-b">
-                                    <th className="py-2">Email</th>
-                                    <th>Username</th>
-                                    <th>Phone</th>
-                                    <th>Gender</th>
-                                    <th>Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-b">
-                                    <td className="py-2">doctor1@hospital.com</td>
-                                    <td>Dr. Smith</td>
-                                    <td>0901234567</td>
-                                    <td>Male</td>
-                                    <td>Doctor</td>
-                                    <td>
-                                        <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                        <button className="text-red-600 hover:underline">Delete</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                );
-            case 'doctors':
-                return <FilterInterface title="Doctor" />;
-            case 'customers':
-                return <FilterInterface title="Customer" />;
-            case 'reports':
-                return <div className="bg-white rounded-xl shadow p-6"><h2 className="text-xl font-semibold">Reports</h2><p>Reports content goes here.</p></div>;
+                    );
+                case 'customerAccounts':
+                    return (
+                        <div className="bg-white rounded-xl shadow p-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <div className="font-semibold">Customer Management</div>
+                                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Customer</button>
+                            </div>
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="text-gray-600 border-b">
+                                        <th className="py-2">Email</th>
+                                        <th>Name</th>
+                                        <th>Phone</th>
+                                        <th>Gender</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {/* Example row */}
+                                    <tr className="border-b">
+                                        <td className="py-2">customer1@gmail.com</td>
+                                        <td>Nguyen Van A</td>
+                                        <td>0912345678</td>
+                                        <td>Female</td>
+                                        <td>
+                                            <button className="text-blue-600 hover:underline mr-2">Edit</button>
+                                            <button className="text-red-600 hover:underline">Delete</button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    );
+            case 'services':
+                return <ServiceManagementComponent />;
+            case 'bookings':
+                return <BookingManagementComponent />;
+            case 'posts':
+                return <PostManagementComponent />;
+            case 'testResults':
+                return <TestResultManagementComponent />;
             case 'feedback':
-                return <div className="bg-white rounded-xl shadow p-6"><h2 className="text-xl font-semibold">Feedback & Ratings</h2><p>Feedback content goes here.</p></div>;
+                return <FeedbackManagementComponent />;
+            case 'reports':
+                return <ReportManagementComponent />;
             case 'help':
                 return <div className="bg-white rounded-xl shadow p-6"><h2 className="text-xl font-semibold">Help</h2><p>Help content goes here.</p></div>;
             default:
@@ -206,31 +313,80 @@ export default function AdminProfile() {
                 {/* Sidebar */}
                 <aside className="w-64 bg-white shadow-lg pt-8 px-4 hidden md:block">
                     <nav className="flex flex-col gap-1">
-                        <button onClick={() => setActiveView('dashboard')} className="flex items-center gap-3 px-4 py-2 rounded-xl font-semibold text-blue-700 bg-blue-100">
+                        <button onClick={() => setActiveView('dashboard')}
+                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'dashboard' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <BarChart2 size={18} />
                             <span>Dashboard</span>
                         </button>
-                        <button onClick={() => setActiveView('accounts')} className="flex items-center gap-3 px-4 py-2 rounded-xl border-2 border-blue-300 bg-white font-medium text-blue-700 my-1">
+                        <button onClick={() => setActiveView('accounts')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'accounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <Users size={18} />
-                            <span>Account Management</span>
+                            <span>Accounts</span>
                         </button>
-                        <button onClick={() => setActiveView('doctors')} className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50">
+                        <button onClick={() => setActiveView('consultantAccounts')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'consultantAccounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <User size={18} />
-                            <span>Doctors</span>
+                            <span>Consultant</span>
                         </button>
-                        <button onClick={() => setActiveView('customers')} className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50">
+                        <button onClick={() => setActiveView('customerAccounts')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'customerAccounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <User size={18} />
                             <span>Customers</span>
                         </button>
-                        <button onClick={() => setActiveView('reports')} className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50">
+                        <button onClick={() => setActiveView('services')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'services' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
+                            <Briefcase size={18} />
+                            <span>Services</span>
+                        </button>
+                        <button onClick={() => setActiveView('bookings')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'bookings' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
+                            <CalendarDays size={18} />
+                            <span>Bookings</span>
+                        </button>
+                        <button onClick={() => setActiveView('testResults')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'testResults' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
+                            <ClipboardCheck size={18} />
+                            <span>Test Results</span>
+                        </button>
+                        <button onClick={() => setActiveView('posts')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'posts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
+                            <Newspaper size={18} />
+                            <span>Posts</span>
+                        </button>
+                        <button onClick={() => setActiveView('reports')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'reports' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <FileText size={18} />
                             <span>Reports</span>
                         </button>
-                        <button onClick={() => setActiveView('feedback')} className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50">
-                        <Star size={18} /> {/* Changed from Settings to Star */}
+                        <button onClick={() => setActiveView('feedback')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50${
+                            activeView === 'feedback' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
+                        <Star size={18} /> 
                         <span>Feedback</span>
                         </button>
-                        <button onClick={() => setActiveView('help')} className="flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50">
+                        <button onClick={() => setActiveView('help')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50${
+                            activeView === 'help' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>
                             <HelpCircle size={18} />
                             <span>Help</span>
                         </button>
@@ -247,7 +403,7 @@ export default function AdminProfile() {
                             <div className="text-2xl font-bold text-blue-700">1,234</div>
                         </div>
                         <div className="bg-white rounded-xl shadow p-6">
-                            <div className="text-gray-500">Doctors</div>
+                            <div className="text-gray-500">Consultant</div>
                             <div className="text-2xl font-bold text-blue-700">120</div>
                         </div>
                         <div className="bg-white rounded-xl shadow p-6">
@@ -260,40 +416,6 @@ export default function AdminProfile() {
                         <div className="font-semibold mb-2">Gender Distribution</div>
                         {/* Replace with your chart component */}
                         <div className="h-40 flex items-center justify-center text-gray-400">[Chart Here]</div>
-                    </div>
-                    {/* Example table for account management */}
-                    <div className="bg-white rounded-xl shadow p-6">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="font-semibold">Account Management</div>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Account</button>
-                        </div>
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="text-gray-600 border-b">
-                                    <th className="py-2">Email</th>
-                                    <th>Username</th>
-                                    <th>Phone</th>
-                                    <th>Gender</th>
-                                    <th>Role</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {/* Example row */}
-                                <tr className="border-b">
-                                    <td className="py-2">doctor1@hospital.com</td>
-                                    <td>Dr. Smith</td>
-                                    <td>0901234567</td>
-                                    <td>Male</td>
-                                    <td>Doctor</td>
-                                    <td>
-                                        <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                        <button className="text-red-600 hover:underline">Delete</button>
-                                    </td>
-                                </tr>
-                                {/* More rows... */}
-                            </tbody>
-                        </table>
                     </div>
                 </main>
             </div>
