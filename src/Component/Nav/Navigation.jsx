@@ -16,9 +16,9 @@ export default function Navigation() {
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
 
     // Thêm state, ref, timeout cho "Kiến thức"
-    const [showKnowledgeDropdown, setShowKnowledgeDropdown] = useState(false);
-    const knowledgeDropdownRef = useRef(null);
-    const knowledgeTimeoutRef = useRef(null);
+    const [showBlogDropdown, setShowBlogDropdown] = useState(false);
+    const blogDropdownRef = useRef(null);
+    const blogTimeoutRef = useRef(null);
 
     // Tạo notification
     const [notifications, setNotifications] = useState([]);
@@ -69,15 +69,15 @@ export default function Navigation() {
         return false;
     };
     // Handler cho dropdown "Kiến thức"
-    const handleKnowledgeMouseEnter = () => {
-        if (knowledgeTimeoutRef.current) {
-            clearTimeout(knowledgeTimeoutRef.current);
+    const handleBlogMouseEnter = () => {
+        if (blogTimeoutRef.current) {
+            clearTimeout(blogTimeoutRef.current);
         }
-        setShowKnowledgeDropdown(true);
+        setShowBlogDropdown(true);
     };
-    const handleKnowledgeMouseLeave = () => {
-        knowledgeTimeoutRef.current = setTimeout(() => {
-            setShowKnowledgeDropdown(false);
+    const handleBlogMouseLeave = () => {
+        blogTimeoutRef.current = setTimeout(() => {
+            setShowBlogDropdown(false);
         }, 50);
     };
 
@@ -169,8 +169,8 @@ export default function Navigation() {
             if (notificationDropdownRef.current && !notificationDropdownRef.current.contains(event.target)) {
                 setShowNotifications(false);
             }
-            if (knowledgeTimeoutRef.current) {
-                clearTimeout(knowledgeTimeoutRef.current);
+            if (blogTimeoutRef.current) {
+                clearTimeout(blogTimeoutRef.current);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -284,34 +284,26 @@ export default function Navigation() {
                         </div>
 
                     <div className="relative"
-                        ref={knowledgeDropdownRef}
-                        onMouseEnter={handleKnowledgeMouseEnter}
-                        onMouseLeave={handleKnowledgeMouseLeave}
+                        ref={blogDropdownRef}
+                        onMouseEnter={handleBlogMouseEnter}
+                        onMouseLeave={handleBlogMouseLeave}
                     >
                         <div className="flex items-center cursor-pointer">
                             <NavItem
-                                label="Kiến thức"
+                                label="Blog"
                                 icon={<ChevronUp size={16} />}
-                                active={isActive('/kien-thuc')}
+                                active={isActive('/blog')}
                             />
                         </div>
-                        {showKnowledgeDropdown && (
+                        {showBlogDropdown && (
                             <div className="absolute top-full left-0 w-64 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                <Link to="/suc-khoe-gioi-tinh"
+                                <Link to="/blog"
                                     className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Sức khỏe giới tính
+                                    Kiến thức y khoa 
                                 </Link>
-                                <Link to="/tu-van-tien-hon-nhan"
+                                <Link to="/tin-tuc"
                                     className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Tư vấn tiền hôn nhân 
-                                </Link>
-                                <Link to="/benh-lay-truyen"
-                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Bệnh lây truyền 
-                                </Link>
-                                <Link to="/suc-khoe-tam-ly"
-                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Sức khỏe tâm lý 
+                                    Tin tức  
                                 </Link>
                             </div>
                         )}
