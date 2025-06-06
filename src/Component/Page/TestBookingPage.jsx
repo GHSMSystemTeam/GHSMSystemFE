@@ -212,21 +212,36 @@ const TestBookingPage = () => {
     };
 
 
-    // Lưu vào localStorage
-    const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    localStorage.setItem('bookings', JSON.stringify([...existingBookings, newBooking]));
+    try {
+      // Lưu vào localStorage
+      const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+      localStorage.setItem('bookings', JSON.stringify([...existingBookings, newBooking]));
+      setBookings([...bookings, newBooking]);
 
-    setBookings([...bookings, newBooking]);
+      // Thêm thông báo vào Navigation
+      const notification = `Đặt lịch xét nghiệm thành công: ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}`;
+      const savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+      const newNotification = {
+        id: Date.now(),
+        message: notification,
+        type: 'success',
+        timestamp: new Date(),
+        read: false
+      };
+      localStorage.setItem('notifications', JSON.stringify([newNotification, ...savedNotifications]));
+      
+      // Reset form
+      setSelectedKit(null);
+      setAppointmentDate('');
+      setAppointmentTime('');
+      setUserInfo({ name: '', phone: '', email: '', address: '' });
+      setCurrentStep(1);
 
-    // Reset form
-    setSelectedKit(null);
-    setAppointmentDate('');
-    setAppointmentTime('');
-    setUserInfo({ name: '', phone: '', email: '', address: '' });
-    setCurrentStep(1);
-
-    //Show toast
-    showToast('Đặt lịch thành công!', 'success');
+      //Show toast
+      showToast('Đặt lịch thành công!', 'success');
+    } catch (error) {
+      showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
+    }
     // Add to bell notification
     if (window.addNotificationToNav) {
       window.addNotificationToNav(`Bạn đã đặt lịch hẹn với gói ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}.`,
