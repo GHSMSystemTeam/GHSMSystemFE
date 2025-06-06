@@ -3,13 +3,70 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Clock, Package, User, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Package, User, AlertCircle, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useToast } from '../Toast/ToastProvider';
 
 export default function UserAppointments() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [appointments, setAppointments] = useState({ medical: [], test: [] });
+    const { showToast } = useToast();
+
+    // Thêm hai hàm xử lý hủy lịch riêng biệt
+    const handleCancelMedical = (bookingId) => {
+        try {
+            const allBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
+            const updatedBookings = allBookings.map(booking =>
+                booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
+            );
+
+            localStorage.setItem('medicalBookings', JSON.stringify(updatedBookings));
+            loadUserAppointments(); // Tải lại danh sách
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi hủy lịch khám', 'error');
+        }
+    };
+
+    const handleCancelTest = (bookingId) => {
+        try {
+            const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const updatedBookings = allBookings.map(booking =>
+                booking.id === bookingId ? { ...booking, status: 'cancelled' } : booking
+            );
+
+            localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+            loadUserAppointments(); // Tải lại danh sách
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi hủy lịch xét nghiệm', 'error');
+        }
+    };
+
+    // Thêm hàm xóa lịch khám
+    const handleDeleteMedical = (bookingId) => {
+        try {
+            const allBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
+            const updatedBookings = allBookings.filter(booking => booking.id !== bookingId);
+            
+            localStorage.setItem('medicalBookings', JSON.stringify(updatedBookings));
+            loadUserAppointments();
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi xóa lịch khám', 'error');
+        }
+    };
+
+    // Thêm hàm xóa lịch xét nghiệm
+    const handleDeleteTest = (bookingId) => {
+        try {
+            const allBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
+            const updatedBookings = allBookings.filter(booking => booking.id !== bookingId);
+            
+            localStorage.setItem('bookings', JSON.stringify(updatedBookings));
+            loadUserAppointments();
+        } catch (error) {
+            showToast('Có lỗi xảy ra khi xóa lịch xét nghiệm', 'error');
+        }
+    };
 
     const loadUserAppointments = () => {
         try {
@@ -103,7 +160,15 @@ export default function UserAppointments() {
                         ) : (
                             <div className="space-y-4">
                                 {appointments.medical.map((booking) => (
-                                    <div key={booking.id} className="border rounded-lg p-4">
+                                    <div key={booking.id} className="border rounded-lg p-4 relative">
+                                        {booking.status === 'cancelled' && (
+                                            <button
+                                                onClick={() => handleDeleteMedical(booking.id)}
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                         <div className="flex justify-between">
                                             <div>
                                                 <h3 className="font-medium">{booking.doctor.name}</h3>
@@ -112,10 +177,23 @@ export default function UserAppointments() {
                                                     Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
                                                 </p>
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col items-end space-y-2">
                                                 <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
                                                     {getStatusText(booking.status)}
                                                 </span>
+                                                {booking.status === 'pending' && (
+                                                    <button
+                                                        onClick={() => handleCancelMedical(booking.id)}
+                                                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Hủy lịch
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteMedical(booking.id)}
+                                                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                                >
+                                                </button>
                                             </div>
                                         </div>
                                     </div>
@@ -132,7 +210,15 @@ export default function UserAppointments() {
                         ) : (
                             <div className="space-y-4">
                                 {appointments.test.map((booking) => (
-                                    <div key={booking.id} className="border rounded-lg p-4">
+                                    <div key={booking.id} className="border rounded-lg p-4 relative">
+                                        {booking.status === 'cancelled' && (
+                                            <button
+                                                onClick={() => handleDeleteTest(booking.id)}
+                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                            >
+                                                <X size={14} />
+                                            </button>
+                                        )}
                                         <div className="flex justify-between">
                                             <div>
                                                 <h3 className="font-medium">{booking.kit.name}</h3>
@@ -141,10 +227,23 @@ export default function UserAppointments() {
                                                     Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
                                                 </p>
                                             </div>
-                                            <div>
+                                            <div className="flex flex-col items-end space-y-2">
                                                 <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
                                                     {getStatusText(booking.status)}
                                                 </span>
+                                                {booking.status === 'pending' && (
+                                                    <button
+                                                        onClick={() => handleCancelTest(booking.id)}
+                                                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                                    >
+                                                        Hủy lịch
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDeleteTest(booking.id)}
+                                                    className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                                >
+                                                </button>
                                             </div>
                                         </div>
                                     </div>

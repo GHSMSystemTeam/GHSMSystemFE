@@ -137,6 +137,19 @@ export default function DatLichKham() {
             const existingBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
             localStorage.setItem('medicalBookings', JSON.stringify([...existingBookings, newBooking]));
 
+            // Thêm thông báo vào Navigation
+            const notification = `Đặt lịch khám thành công: ${formData.service} vào ngày ${formData.date} lúc ${formData.time}`;
+            const savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
+            const newNotification = {
+                id: Date.now(),
+                message: notification,
+                type: 'success',
+                timestamp: new Date(),
+                read: false
+            };
+            localStorage.setItem('notifications', JSON.stringify([newNotification, ...savedNotifications]));
+
+
             // Reset form và hiển thị thông báo
             setSubmitting(false);
             setSubmitted(true);
@@ -162,6 +175,8 @@ export default function DatLichKham() {
 
             // Reset form after submission
         }, 1500);
+
+
     };
 
     return (
