@@ -238,10 +238,7 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                         Đội ngũ chuyên môn
                                     </Link>
-                                    <Link to="/news" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                        Tin tức báo chí
-                                    </Link>
+                                    
                                 </div>
                             )}
                         </div>
@@ -290,7 +287,7 @@ export default function Navigation() {
                     >
                         <div className="flex items-center cursor-pointer">
                             <NavItem
-                                label="Blog"
+                                label="Kiến thức"
                                 icon={<ChevronUp size={16} />}
                                 active={isActive('/blog')}
                             />
@@ -301,7 +298,7 @@ export default function Navigation() {
                                     className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
                                     Kiến thức y khoa 
                                 </Link>
-                                <Link to="/tin-tuc"
+                                <Link to="/news"
                                     className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
                                     Tin tức  
                                 </Link>

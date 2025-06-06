@@ -14,10 +14,10 @@ export default function Blog() {
     const blogCategories = [
         { name: 'Sức khỏe sinh sản', slug: 'suc-khoe-sinh-san', count: 156 },
         { name: 'Sức khỏe giới tính', slug: 'suc-khoe-gioi-tinh', count: 127 },
-        { name: 'Tư vấn tiền hôn nhân', slug: 'tu-van-tien-hon-nhan', count: 98 },
-        { name: 'Kế hoạch hóa gia đình', slug: 'ke-hoach-hoa-gia-dinh', count: 112 },
-        { name: 'Bệnh lây truyền', slug: 'benh-lay-truyen', count: 192 },
-        { name: 'Sức khỏe tâm lý', slug: 'suc-khoe-tam-ly', count: 122 },
+        { name: 'Nam khoa', slug: 'nam-khoa', count: 98 },
+        { name: 'Nữ khoa', slug: 'nu-khoa', count: 112 },
+        { name: 'Bệnh xã hội', slug: 'benh-xa-hoi', count: 192 },
+        
     ];
 
     const recentPosts = [
