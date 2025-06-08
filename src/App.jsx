@@ -34,13 +34,13 @@ import SucKhoeGioiTinh from './Component/Page/SucKhoeGioiTinh'
 import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
 import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
 import Blog from './Component/Page/Blog'
+import AdminProtectedRoute from './Component/Page/AdminProtectRoute'
 function App() {
 
   return (
     <>
       <AuthProvider>
         <ToastProvider>
-
           <Routes>
             <Route path="/" element={<GHSMSCenter />} />
             <Route path="/about" element={<IntroductionPage />} />
@@ -51,7 +51,6 @@ function App() {
             <Route path="/benh-lay-truyen" element={<STDsPage />} />
             <Route path="/family-plan" element={<FamilyPlan />} />
             <Route path="/news/:slug" element={<NewsDetails />} />
-            <Route path="/admin-profile" element={<AdminProfile />} />
             <Route path="/news/kham-suc-khoe-dinh-ky-phu-nu" element={<NewsComponent3 />} />
             <Route path="/news/cham-soc-suc-khoe-phu-nu" element={<NewsComponent1 />} />
             <Route path="/news/tu-van-suc-khoe-nam-gioi" element={<NewsComponent2 />} />
@@ -70,6 +69,9 @@ function App() {
             <Route path="/tu-van-tien-hon-nhan" element={<TuVanTienHonNhan />} />
             <Route path="/suc-khoe-tam-ly" element={<SucKhoeTamLy />} />
             <Route path="/blog" element={<Blog />} />
+            <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin-profile" element={<AdminProfile />} />
+            </Route>
           </Routes>
         </ToastProvider>
       </AuthProvider>
