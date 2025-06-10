@@ -20,13 +20,7 @@ import Consulation from './Component/Page/Consulation'
 import ProtectedRoute from './Component/ProtectedRoute/ProtectedRoute'
 import { Toast } from 'bootstrap'
 import { ToastProvider } from './Component/Toast/ToastProvider'
-import NewsComponent1 from './Component/Page/NewsComponent1'
-import NewsComponent2 from './Component/Page/NewsComponent2'
 import NewsDetails from './Component/Page/NewsDetails'
-import NewsComponent3 from './Component/Page/NewsComponent3'
-import NewsComponent4 from './Component/Page/NewsComponent4'
-import NewsComponent5 from './Component/Page/NewsComponent5'
-import NewsComponent6 from './Component/Page/NewsComponent6'
 import UserProfile from './Component/Page/UserProfile'
 import AdminProfile from './Component/Page/AdminProfile'
 import UserAppointments from './Component/Page/UserAppointments'
@@ -35,6 +29,14 @@ import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
 import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
 import Blog from './Component/Page/Blog'
 import AdminProtectedRoute from './Component/Page/AdminProtectRoute'
+import {
+  NewsComponent1,
+  NewsComponent2,
+  NewsComponent3,
+  NewsComponent4,
+  NewsComponent5,
+  NewsComponent6,
+} from './Component/Page/ArticlePage';
 function App() {
 
   return (
