@@ -4,50 +4,187 @@ import { useState } from "react";
 import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper } from "lucide-react";
 import { Search, Users as PeopleIcon } from "lucide-react";
 
-
-const sampleBookings = [
+   const sampleBookings = [
+        {
+            id: 'bk001',
+            date: '2025-06-10', // YYYY-MM-DD format for easier comparison
+            time: '10:00',
+            type: 'Consultation', // 'Consultation' or 'Test'
+            patientName: 'Nguyen Van X',
+            consultantId: 'c1', // Link to consultantsData
+            serviceName: 'Sexual Health Consultation',
+            status: 'Scheduled', // e.g., Scheduled, Completed, Cancelled
+            notes: 'Follow-up discussion required.'
+        },
+        {
+            id: 'bk002',
+            date: '2025-06-10',
+            time: '14:00',
+            type: 'Test',
+            patientName: 'Tran Thi Y',
+            consultantId: null, // Tests might not always have a specific consultant assigned initially
+            serviceName: 'STD Panel Basic',
+            status: 'Scheduled',
+            notes: 'Patient requested discretion.'
+        },
+        {
+            id: 'bk003',
+            date: '2025-06-18',
+            time: '11:30',
+            type: 'Consultation',
+            patientName: 'Le Van Z',
+            consultantId: 'c2',
+            serviceName: 'Pre-test Counseling',
+            status: 'Completed',
+        },
+        {
+            id: 'bk004',
+            date: '2025-07-05', // A booking in the next month
+            time: '09:00',
+            type: 'Test',
+            patientName: 'Pham Thi Q',
+            serviceName: 'Advanced Hormone Test',
+            status: 'Scheduled',
+        }
+    ];
+const updatedSampleBookings = [
+    ...sampleBookings, 
     {
-        id: 'bk001',
-        date: '2025-06-10', // YYYY-MM-DD format for easier comparison
-        time: '10:00',
-        type: 'Consultation', // 'Consultation' or 'Test'
-        patientName: 'Nguyen Van X',
-        consultantId: 'c1', // Link to consultantsData
-        serviceName: 'Sexual Health Consultation',
-        status: 'Scheduled', // e.g., Scheduled, Completed, Cancelled
-        notes: 'Follow-up discussion required.'
-    },
-    {
-        id: 'bk002',
-        date: '2025-06-10',
-        time: '14:00',
+        id: 'bk_test_005',
+        date: '2025-06-20',
+        time: '09:30',
         type: 'Test',
-        patientName: 'Tran Thi Y',
-        consultantId: null, // Tests might not always have a specific consultant assigned initially
-        serviceName: 'STD Panel Basic',
-        status: 'Scheduled',
-        notes: 'Patient requested discretion.'
-    },
-    {
-        id: 'bk003',
-        date: '2025-06-18',
-        time: '11:30',
-        type: 'Consultation',
-        patientName: 'Le Van Z',
-        consultantId: 'c2',
-        serviceName: 'Pre-test Counseling',
+        patientName: 'Hoang Van E',
+        consultantId: null,
+        serviceName: 'Basic Blood Panel',
         status: 'Completed',
+        notes: 'Routine check-up.'
     },
     {
-        id: 'bk004',
-        date: '2025-07-05', // A booking in the next month
-        time: '09:00',
+        id: 'bk_test_006',
+        date: '2025-06-22',
+        time: '11:00',
         type: 'Test',
-        patientName: 'Pham Thi Q',
-        serviceName: 'Advanced Hormone Test',
-        status: 'Scheduled',
+        patientName: 'Dang Thi F',
+        consultantId: null,
+        serviceName: 'Urinalysis',
+        status: 'Scheduled', // A test that might not have results yet
+        notes: ''
     }
 ];
+
+const sampleTestResults = [
+    {
+        id: 'res001',
+        serviceAppointmentOrderId: 'bk002', // Links to an existing 'Test' in sampleBookings
+        content: 'All markers within normal limits. No abnormalities detected.',
+        isActive: true, // True = result is published/active
+        resultDate: '2025-06-12',
+        recordedBy: 'Dr. Smith (Lab)', // Optional: who recorded the result
+    },
+    {
+        id: 'res002',
+        serviceAppointmentOrderId: 'bk_test_005', // Links to the new test booking
+        content: 'Slightly elevated cholesterol. Lifestyle adjustment recommended.',
+        isActive: true,
+        resultDate: '2025-06-22',
+        recordedBy: 'LabTech Unit 2',
+    },
+    {
+        id: 'res003',
+        serviceAppointmentOrderId: 'bk004', // Links to another existing 'Test'
+        content: 'Hormone panel results pending further analysis for specific markers.',
+        isActive: false, // False = result is pending or draft
+        resultDate: null, // No result date yet if pending
+        recordedBy: null,
+    }
+];
+
+
+
+// Sample Dashboard Overview Data
+const dashboardOverviewData = {
+        totalAccounts: 1234,
+        totalConsultants: 120, 
+        totalCustomers: 1114,
+        totalBookingsThisMonth: 45,
+        monthlyRevenue: 78515000, 
+        averageServiceRating: 4.5, 
+        totalFeedback: 87,
+        totalActiveUsers: 1234,
+        pendingTestResults: 15, 
+        newFeedbackToday: 5,  
+    };
+    const bookingTrendsData = { // For a bar chart or line chart
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
+        consultationBookings: [18, 22, 20, 25, 30, 15, 10],
+        testBookings: [10, 12, 8, 15, 12, 20, 18],
+    };
+
+    const genderDistributionData = { // For a pie chart
+        labels: ['Male', 'Female', 'Other'],
+        counts: [650, 720, 34], // Number of customers or all users
+    };
+
+    const topPerformingConsultants = [
+        { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
+        { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
+        { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
+        // ... more consultants
+    ];
+
+    const popularServicesData = [
+        { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
+        { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
+        { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
+        // ... more services
+    ];
+    // Sample Booking Data    
+ 
+// --- Sample Data for Feedback ---
+const sampleFeedback = [
+    {
+        id: 'fb001',
+        customerId: 'cust1', // Links to customersData
+        serviceAppointmentOrderId: 'bk001', // Links to a completed/relevant booking in updatedSampleBookings
+        title: 'Great Consultation Experience',
+        content: 'The consultation with Dr. Tu was very insightful and helpful. He addressed all my concerns with patience and professionalism. The booking process was also very smooth. Highly recommend!',
+        createDate: '2025-06-11',
+        isPublic: true, // Admin can toggle this
+        isActive: true, // Admin can toggle this (e.g., to hide inappropriate feedback)
+    },
+    {
+        id: 'fb002',
+        customerId: 'cust2',
+        serviceAppointmentOrderId: 'bk003', // Link to another booking
+        title: 'Follow-up on Test Results',
+        content: 'The pre-test counseling was good, but I am still awaiting a detailed explanation of my test results. The online portal shows them as available but I would appreciate a call.',
+        createDate: '2025-06-19',
+        isPublic: false,
+        isActive: true,
+    },
+    {
+        id: 'fb003',
+        customerId: 'cust3',
+        serviceAppointmentOrderId: 'bk004', // Link to a test booking
+        title: 'Suggestion for Improvement',
+        content: 'The clinic environment is very clean and welcoming. However, the waiting time for my scheduled test was a bit longer than expected. Perhaps scheduling could be optimized.',
+        createDate: '2025-07-06',
+        isPublic: true,
+        isActive: true,
+    },
+    {
+        id: 'fb004',
+        customerId: 'cust1',
+        serviceAppointmentOrderId: 'bk_test_005',
+        title: 'Quick and Efficient Testing',
+        content: 'The blood panel test was done very quickly and the staff were very professional. Results were also delivered promptly online. Good service.',
+        createDate: '2025-06-21',
+        isPublic: false, // Example of feedback admin might keep private
+        isActive: true,
+    }
+];
+// Sample Consultant Data
 const consultantsData = [
     {
         id: 'c1',
@@ -315,19 +452,372 @@ const PostManagementComponent = () => {
 };
 
 const TestResultManagementComponent = () => {
+    const [testResults, setTestResults] = useState(sampleTestResults);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [selectedResult, setSelectedResult] = useState(null);
+    const [currentFormData, setCurrentFormData] = useState({});
+
+    // Helper to format date (can be moved to a utility file)
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+    };
+
+    const getBookingDetails = (orderId) => {
+        // Use updatedSampleBookings which includes all bookings
+        return updatedSampleBookings.find(b => b.id === orderId);
+    };
+
+    const openAddResultModal = () => {
+        setSelectedResult(null);
+        setCurrentFormData({
+            serviceAppointmentOrderId: '',
+            content: '',
+            isActive: true,
+            resultDate: new Date().toISOString().split('T')[0],
+            recordedBy: 'Admin', // Default recorder
+        });
+        setShowResultModal(true);
+    };
+
+    const openEditResultModal = (result) => {
+        setSelectedResult(result);
+        setCurrentFormData({ ...result, resultDate: result.resultDate || new Date().toISOString().split('T')[0] });
+        setShowResultModal(true);
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setCurrentFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+    };
+
+    const handleSaveResult = (e) => {
+        e.preventDefault();
+        if (selectedResult) {
+            // Update existing result
+            setTestResults(testResults.map(r => r.id === selectedResult.id ? { ...selectedResult, ...currentFormData } : r));
+        } else {
+            // Add new result
+            const newResult = { ...currentFormData, id: `res${Date.now()}` };
+            setTestResults([...testResults, newResult]);
+        }
+        setShowResultModal(false);
+    };
+
+    const handleDeleteResult = (resultId) => {
+        // Add confirmation logic here
+        if (window.confirm('Are you sure you want to delete this test result?')) {
+            setTestResults(testResults.filter(r => r.id !== resultId));
+        }
+    };
+    
+    // Filter bookings that are of type 'Test' for the dropdown
+    const testAppointments = updatedSampleBookings.filter(b => b.type === 'Test');
+
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold">Test Result Management</h2>
-            <p>Manage test results here...</p>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Test Result Management</h2>
+                <button
+                    onClick={openAddResultModal}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                >
+                    Add New Result
+                </button>
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" className="px-6 py-3">Patient Name</th>
+                            <th scope="col" className="px-6 py-3">Service Name</th>
+                            <th scope="col" className="px-6 py-3">Appt. Date</th>
+                            <th scope="col" className="px-6 py-3">Result Date</th>
+                            <th scope="col" className="px-6 py-3">Content Summary</th>
+                            <th scope="col" className="px-6 py-3">Status</th>
+                            <th scope="col" className="px-6 py-3">Recorded By</th>
+                            <th scope="col" className="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {testResults.length > 0 ? testResults.map(result => {
+                            const booking = getBookingDetails(result.serviceAppointmentOrderId);
+                            return (
+                                <tr key={result.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                        {booking ? booking.patientName : 'N/A'}
+                                    </td>
+                                    <td className="px-6 py-4">{booking ? booking.serviceName : 'N/A'}</td>
+                                    <td className="px-6 py-4">{booking ? formatDate(booking.date) : 'N/A'}</td>
+                                    <td className="px-6 py-4">{formatDate(result.resultDate)}</td>
+                                    <td className="px-6 py-4 max-w-xs truncate" title={result.content}>
+                                        {result.content ? `${result.content.substring(0, 50)}...` : 'Pending'}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                            result.isActive ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
+                                        }`}>
+                                            {result.isActive ? 'Available' : 'Pending/Draft'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4">{result.recordedBy || 'N/A'}</td>
+                                    <td className="px-6 py-4 flex items-center gap-2">
+                                        <button onClick={() => openEditResultModal(result)} className="text-sm text-blue-600 hover:underline">Edit</button>
+                                        <button onClick={() => handleDeleteResult(result.id)} className="text-sm text-red-600 hover:underline">Delete</button>
+                                    </td>
+                                </tr>
+                            );
+                        }) : (
+                            <tr>
+                                <td colSpan="8" className="px-6 py-4 text-center text-gray-500">No test results found.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {showResultModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <h3 className="text-xl font-semibold mb-4">{selectedResult ? 'Edit Test Result' : 'Add New Test Result'}</h3>
+                        <form onSubmit={handleSaveResult}>
+                            <div className="mb-4">
+                                <label htmlFor="serviceAppointmentOrderId" className="block text-sm font-medium text-gray-700 mb-1">Test Appointment</label>
+                                <select
+                                    name="serviceAppointmentOrderId"
+                                    id="serviceAppointmentOrderId"
+                                    value={currentFormData.serviceAppointmentOrderId}
+                                    onChange={handleFormChange}
+                                    className="border p-2 rounded w-full"
+                                    required
+                                >
+                                    <option value="">Select Test Appointment</option>
+                                    {testAppointments.map(appt => {
+                                        // Check if a result already exists for this appointment to avoid duplicates if needed
+                                        // const resultExists = testResults.some(r => r.serviceAppointmentOrderId === appt.id && (!selectedResult || r.id !== selectedResult.id));
+                                        // if (resultExists && !selectedResult) return null; // Don't show if adding new and result exists
+
+                                        return (
+                                            <option key={appt.id} value={appt.id}>
+                                                {appt.patientName} - {appt.serviceName} ({formatDate(appt.date)})
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="resultDate" className="block text-sm font-medium text-gray-700 mb-1">Result Date</label>
+                                <input
+                                    type="date"
+                                    name="resultDate"
+                                    id="resultDate"
+                                    value={currentFormData.resultDate || ''}
+                                    onChange={handleFormChange}
+                                    className="border p-2 rounded w-full"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Result Content</label>
+                                <textarea
+                                    name="content"
+                                    id="content"
+                                    rows="5"
+                                    value={currentFormData.content}
+                                    onChange={handleFormChange}
+                                    placeholder="Enter full test result details here..."
+                                    className="border p-2 rounded w-full"
+                                    required={currentFormData.isActive} // Content required if result is active
+                                ></textarea>
+                            </div>
+                             <div className="mb-4">
+                                <label htmlFor="recordedBy" className="block text-sm font-medium text-gray-700 mb-1">Recorded By</label>
+                                <input
+                                    type="text"
+                                    name="recordedBy"
+                                    id="recordedBy"
+                                    value={currentFormData.recordedBy}
+                                    onChange={handleFormChange}
+                                    placeholder="Name or ID of recorder"
+                                    className="border p-2 rounded w-full"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label htmlFor="isActive" className="flex items-center text-sm font-medium text-gray-700">
+                                    <input
+                                        type="checkbox"
+                                        name="isActive"
+                                        id="isActive"
+                                        checked={currentFormData.isActive}
+                                        onChange={handleFormChange}
+                                        className="mr-2 h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                                    />
+                                    Result is Active/Published
+                                </label>
+                            </div>
+                            <div className="flex justify-end gap-3 mt-6">
+                                <button type="button" onClick={() => setShowResultModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                                    {selectedResult ? 'Save Changes' : 'Add Result'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
 const FeedbackManagementComponent = () => {
+    const [feedbackItems, setFeedbackItems] = useState(sampleFeedback);
+    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+    const [selectedFeedback, setSelectedFeedback] = useState(null);
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+    };
+
+    const getCustomerName = (customerId) => {
+        const customer = customersData.find(c => c.id === customerId);
+        return customer ? customer.name : 'Unknown Customer';
+    };
+
+    const getAppointmentService = (orderId) => {
+        const booking = updatedSampleBookings.find(b => b.id === orderId);
+        return booking ? `${booking.serviceName} (${booking.type})` : 'N/A';
+    };
+
+    const openViewFeedbackModal = (feedback) => {
+        setSelectedFeedback(feedback);
+        setShowFeedbackModal(true);
+    };
+
+    const toggleFeedbackStatus = (feedbackId, field) => {
+        setFeedbackItems(prevItems =>
+            prevItems.map(item =>
+                item.id === feedbackId ? { ...item, [field]: !item[field] } : item
+            )
+        );
+    };
+
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold">Feedback Management</h2>
-            <p>Manage feedback here...</p>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Feedback Management</h2>
+                {/* Add button for "Add New Feedback" if admin can create feedback, otherwise remove */}
+            </div>
+
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th scope="col" className="px-6 py-3">Date</th>
+                            <th scope="col" className="px-6 py-3">Customer</th>
+                            <th scope="col" className="px-6 py-3">Appointment/Service</th>
+                            <th scope="col" className="px-6 py-3">Title</th>
+                            <th scope="col" className="px-6 py-3">Public</th>
+                            <th scope="col" className="px-6 py-3">Active</th>
+                            <th scope="col" className="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {feedbackItems.length > 0 ? feedbackItems.sort((a,b) => new Date(b.createDate) - new Date(a.createDate)).map(fb => (
+                            <tr key={fb.id} className="bg-white border-b hover:bg-gray-50">
+                                <td className="px-6 py-4 whitespace-nowrap">{formatDate(fb.createDate)}</td>
+                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                    {getCustomerName(fb.customerId)}
+                                </td>
+                                <td className="px-6 py-4">{getAppointmentService(fb.serviceAppointmentOrderId)}</td>
+                                <td className="px-6 py-4">{fb.title}</td>
+                                <td className="px-6 py-4">
+                                    <button
+                                        onClick={() => toggleFeedbackStatus(fb.id, 'isPublic')}
+                                        className={`px-2 py-1 text-xs rounded-full ${
+                                            fb.isPublic ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                        }`}
+                                    >
+                                        {fb.isPublic ? 'Yes' : 'No'}
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <button
+                                        onClick={() => toggleFeedbackStatus(fb.id, 'isActive')}
+                                        className={`px-2 py-1 text-xs rounded-full ${
+                                            fb.isActive ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300'
+                                        }`}
+                                    >
+                                        {fb.isActive ? 'Active' : 'Inactive'}
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                    <button
+                                        onClick={() => openViewFeedbackModal(fb)}
+                                        className="text-sm text-indigo-600 hover:underline"
+                                    >
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">No feedback found.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {showFeedbackModal && selectedFeedback && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold">{selectedFeedback.title}</h3>
+                            <button onClick={() => setShowFeedbackModal(false)} className="text-gray-500 hover:text-gray-700">&times;</button>
+                        </div>
+                        <div className="space-y-3 text-sm">
+                            <p><strong>Customer:</strong> {getCustomerName(selectedFeedback.customerId)}</p>
+                            <p><strong>Appointment:</strong> {getAppointmentService(selectedFeedback.serviceAppointmentOrderId)}</p>
+                            <p><strong>Date:</strong> {formatDate(selectedFeedback.createDate)}</p>
+                            <p><strong>Public:</strong> {selectedFeedback.isPublic ? 'Yes' : 'No'}</p>
+                            <p><strong>Active:</strong> {selectedFeedback.isActive ? 'Yes' : 'No'}</p>
+                            <div className="mt-2 pt-2 border-t">
+                                <p className="font-semibold">Content:</p>
+                                <p className="whitespace-pre-wrap">{selectedFeedback.content}</p>
+                            </div>
+                        </div>
+                        <div className="flex justify-end gap-3 mt-6">
+                            <button
+                                onClick={() => {
+                                    toggleFeedbackStatus(selectedFeedback.id, 'isPublic');
+                                    // Optionally update selectedFeedback state if modal stays open
+                                    setSelectedFeedback(prev => ({...prev, isPublic: !prev.isPublic}));
+                                }}
+                                className={`px-4 py-2 rounded ${selectedFeedback.isPublic ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
+                            >
+                                {selectedFeedback.isPublic ? 'Make Private' : 'Make Public'}
+                            </button>
+                            <button
+                                onClick={() => {
+                                    toggleFeedbackStatus(selectedFeedback.id, 'isActive');
+                                    setSelectedFeedback(prev => ({...prev, isActive: !prev.isActive}));
+                                }}
+                                className={`px-4 py-2 rounded ${selectedFeedback.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
+                            >
+                                {selectedFeedback.isActive ? 'Deactivate' : 'Activate'}
+                            </button>
+                            <button type="button" onClick={() => setShowFeedbackModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -451,23 +941,137 @@ export default function AdminProfile() {
             case 'dashboard':
                 return (
                     <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-4">
-                            <div className="bg-white rounded-xl shadow p-6">
-                                <div className="text-gray-500">Total Accounts</div>
-                                <div className="text-2xl font-bold text-blue-700">1,234</div>
+                        {/* Row 1: Key Metric Cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-gray-500">Total Active Users</div>
+                                    <Users size={24} className="text-blue-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-blue-700 mt-2">{dashboardOverviewData.totalActiveUsers.toLocaleString()}</div>
+                                <div className="text-sm text-green-500 mt-1">+2.5% vs last month</div>
                             </div>
-                            <div className="bg-white rounded-xl shadow p-6">
-                                <div className="text-gray-500">Consultant</div>
-                                <div className="text-2xl font-bold text-blue-700">120</div>
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-gray-500">Bookings (This Month)</div>
+                                    <CalendarDays size={24} className="text-purple-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-purple-700 mt-2">{dashboardOverviewData.totalBookingsThisMonth.toLocaleString()}</div>
+                                <div className="text-sm text-green-500 mt-1">+5% vs last month</div>
                             </div>
-                            <div className="bg-white rounded-xl shadow p-6">
-                                <div className="text-gray-500">Feedback</div>
-                                <div className="text-2xl font-bold text-blue-700">87</div>
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-gray-500">Revenue (This Month)</div>
+                                    <BarChart2 size={24} className="text-green-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-green-700 mt-2">{dashboardOverviewData.monthlyRevenue.toLocaleString()} VND</div>
+                                <div className="text-sm text-red-500 mt-1">-1.2% vs last month</div>
+                            </div>
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center justify-between">
+                                    <div className="text-gray-500">Avg. Service Rating</div>
+                                    <Star size={24} className="text-yellow-500" />
+                                </div>
+                                <div className="text-3xl font-bold text-yellow-700 mt-2">{dashboardOverviewData.averageServiceRating}/5</div>
+                                <div className="text-sm text-gray-500 mt-1">Based on all services</div>
                             </div>
                         </div>
-                        <div className="bg-white rounded-xl shadow p-6 mb-8">
-                            <div className="font-semibold mb-2">Gender Distribution</div>
-                            <div className="h-40 flex items-center justify-center text-gray-400">[Chart Here]</div>
+
+                        {/* Row 2: Charts */}
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                            {/* Booking Trends Chart */}
+                            <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Booking Trends (Last 7 Days)</h3>
+                                <div className="h-64 flex items-center justify-center text-gray-400">
+                                    {/* Placeholder for Bar Chart (e.g., using Recharts or Chart.js) */}
+                                    [Bar Chart: Consultation vs Test Bookings per Day]
+                                    <p className="text-sm">(Data: Mon C:{bookingTrendsData.consultationBookings[0]} T:{bookingTrendsData.testBookings[0]}, ...)</p>
+                                </div>
+                            </div>
+                            {/* Gender Distribution Chart */}
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4">User Gender Distribution</h3>
+                                <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+                                    {/* Placeholder for Pie Chart */}
+                                    [Pie Chart Here]
+                                    <ul className="text-sm mt-2">
+                                        <li>Male: {genderDistributionData.counts[0]}</li>
+                                        <li>Female: {genderDistributionData.counts[1]}</li>
+                                        <li>Other: {genderDistributionData.counts[2]}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Row 3: Tables/Lists - Top Consultants & Popular Services */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Performing Consultants</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-xs text-gray-500 uppercase">
+                                            <tr>
+                                                <th className="py-2 px-1">Name</th>
+                                                <th className="py-2 px-1">Appointments</th>
+                                                <th className="py-2 px-1">Rating</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {topPerformingConsultants.slice(0, 3).map(c => ( // Show top 3-5
+                                                <tr key={c.id} className="border-b border-gray-200 hover:bg-gray-50">
+                                                    <td className="py-2 px-1 font-medium text-gray-800">{c.name}</td>
+                                                    <td className="py-2 px-1 text-gray-600">{c.appointmentsThisMonth}</td>
+                                                    <td className="py-2 px-1 text-yellow-600 flex items-center"><Star size={14} className="mr-1 fill-current"/>{c.rating}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Popular Services</h3>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm text-left">
+                                        <thead className="text-xs text-gray-500 uppercase">
+                                            <tr>
+                                                <th className="py-2 px-1">Service Name</th>
+                                                <th className="py-2 px-1">Bookings</th>
+                                                <th className="py-2 px-1">Revenue</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {popularServicesData.slice(0, 3).map(s => (
+                                                <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
+                                                    <td className="py-2 px-1 font-medium text-gray-800">{s.name}</td>
+                                                    <td className="py-2 px-1 text-gray-600">{s.bookingsThisMonth}</td>
+                                                    <td className="py-2 px-1 text-green-600">{s.revenue.toLocaleString()} VND</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                         {/* Optional: Quick Stats/Alerts */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                             <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                    <ClipboardCheck size={20} className="text-orange-500 mr-3"/>
+                                    <div>
+                                        <div className="text-gray-500 text-sm">Pending Test Results</div>
+                                        <div className="text-xl font-semibold text-orange-700">{dashboardOverviewData.pendingTestResults}</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+                                <div className="flex items-center">
+                                    <Bell size={20} className="text-red-500 mr-3"/>
+                                    <div>
+                                        <div className="text-gray-500 text-sm">New Feedback Today</div>
+                                        <div className="text-xl font-semibold text-red-700">{dashboardOverviewData.newFeedbackToday}</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </>
                 );
