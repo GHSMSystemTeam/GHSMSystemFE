@@ -1,20 +1,15 @@
 import { useParams } from 'react-router-dom';
-import NewsComponent1 from './NewsComponent1';
-import NewsComponent2 from './NewsComponent2';
-import NewsComponent3 from './NewsComponent3';
-import NewsComponent4 from './NewsComponent4';
-import NewsComponent5 from './NewsComponent5';
-import NewsComponent6 from './NewsComponent6';
+import Article from './NewsComponent';
 // Import other news components
 
 const newsComponents = {
-  'cham-soc-suc-khoe-phu-nu': NewsComponent1,
-  'tu-van-suc-khoe-nam-gioi': NewsComponent2,
-  'kham-suc-khoe-dinh-ky-phu-nu': NewsComponent3,
-  'suc-khoe-tam-ly-gioi-tinh': NewsComponent4,
-  'dinh-duong-suc-khoe-sinh-san': NewsComponent5,
-  'phuong-phap-tranh-thai': NewsComponent6,
-  // Add other mappings
+  'kham-suc-khoe-dinh-ky-phu-nu': Article,
+  'cham-soc-suc-khoe-phu-nu': Article,
+  'tu-van-suc-khoe-nam-gioi': Article,
+  'suc-khoe-tam-ly-gioi-tinh': Article,
+  'dinh-duong-suc-khoe-sinh-san': Article,
+  'phuong-phap-tranh-thai': Article,
+  // Add more mappings as needed
 };
 
 export default function NewsDetail() {
@@ -25,5 +20,5 @@ export default function NewsDetail() {
     return <div>Article not found</div>;
   }
   
-  return <NewsComponent />;
+  return <Article/>
 }
