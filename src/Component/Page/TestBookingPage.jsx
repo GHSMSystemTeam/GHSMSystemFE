@@ -333,11 +333,6 @@ const TestBookingPage = () => {
           </div>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-16">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" className="w-full h-full">
-            <path fill="#f8fafc" fillOpacity="1" d="M0,96L80,106.7C160,117,320,139,480,133.3C640,128,800,96,960,90.7C1120,85,1280,107,1360,117.3L1440,128L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z"></path>
-          </svg>
-        </div>
       </div>
 
       <div className="container mx-auto px-4 py-8" id="booking-section">
@@ -846,47 +841,6 @@ const TestBookingPage = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Selected Kit Info (only when selected) */}
-              {selectedKit && (
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-purple-500 to-pink-500 py-3 px-4">
-                    <h3 className="font-semibold text-white flex items-center">
-                      <Package className="mr-2" size={18} />
-                      Gói xét nghiệm đã chọn
-                    </h3>
-                  </div>
-                  <div className="p-4">
-                    <img
-                      src={selectedKit.image}
-                      alt={selectedKit.name}
-                      className="w-full h-32 object-cover rounded-lg mb-3"
-                    />
-                    <h4 className="font-medium text-gray-800 mb-2">{selectedKit.name}</h4>
-                    <div className="text-sm text-gray-600 space-y-2">
-                      <div className="flex justify-between">
-                        <span>Giá:</span>
-                        <span className="font-medium text-blue-600">{selectedKit.price}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Thời gian:</span>
-                        <span>{selectedKit.duration}</span>
-                      </div>
-                    </div>
-                    <div className="mt-3 pt-3 border-t">
-                      <p className="text-xs text-gray-500 mb-2">Bao gồm các xét nghiệm:</p>
-                      <div className="space-y-1">
-                        {selectedKit.tests.map((test, index) => (
-                          <div key={index} className="flex items-center">
-                            <Check size={14} className="text-green-500 mr-1.5" />
-                            <span className="text-sm">{test}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Contact Info */}
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">

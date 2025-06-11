@@ -849,42 +849,6 @@ export default function Consulation() {
                     )}
                 </div>
 
-                {/* Đội ngũ bác sĩ */}
-                <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Đội ngũ bác sĩ tư vấn</h2>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {doctors.map(doctor => (
-                            <div key={doctor.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                                <div className="flex items-start space-x-4">
-                                    <div className="relative">
-                                        <img
-                                            src={doctor.avatar}
-                                            alt={doctor.name}
-                                            className="w-16 h-16 rounded-full object-cover"
-                                        />
-                                        {doctor.isOnline && (
-                                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
-                                        )}
-                                    </div>
-
-                                    <div>
-                                        <div className="flex items-center">
-                                            <h3 className="font-semibold text-blue-700">{doctor.name}</h3>
-                                            <svg className="w-4 h-4 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <p className="text-gray-600 text-sm">{doctor.specialty}</p>
-                                        <p className="text-gray-500 text-xs mt-1">{doctor.position}</p>
-                                        <p className="text-gray-500 text-xs">{doctor.hospital}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
                 {/* FAQ Section */}
                 <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
                     <h2 className="text-2xl font-bold text-gray-800 mb-6">Câu hỏi thường gặp</h2>
