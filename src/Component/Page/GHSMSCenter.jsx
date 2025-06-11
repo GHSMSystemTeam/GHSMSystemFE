@@ -190,7 +190,7 @@ export default function GHSMSCenter() {
             {/* Hero Section */}
             <div className="relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50">
                 {/* <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center"> */}
-                    {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
+                {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
                         <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
 
                         <div className="space-y-4">
@@ -221,23 +221,23 @@ export default function GHSMSCenter() {
 
 
 
-                    <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center">
+                <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center">
 
-                        {/* nên chèn ảnh ở đây */}
+                    {/* nên chèn ảnh ở đây */}
 
-                        {/* Floating contact buttons */}
-                        <div className="fixed right-4 bottom-4 flex flex-col space-y-2 z-50">
-                            <button className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                                <MessageCircle size={24} className="text-white" />
-                            </button>
-                            <button className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
-                                <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" fill="none" strokeWidth="2">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-                                </svg>
-                            </button>
-                        </div>
-
+                    {/* Floating contact buttons */}
+                    <div className="fixed right-4 bottom-4 flex flex-col space-y-2 z-50">
+                        <button className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
+                            <MessageCircle size={24} className="text-white" />
+                        </button>
+                        <button className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
+                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" fill="none" strokeWidth="2">
+                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                        </button>
                     </div>
+
+                </div>
 
                 {/* </div> */}
 
