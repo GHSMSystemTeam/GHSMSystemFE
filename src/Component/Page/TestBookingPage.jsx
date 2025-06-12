@@ -300,7 +300,7 @@ const TestBookingPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pt-24 mt-10">
+    <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 to-indigo-50 pt-24 mt-10">
       <Header />
 
       {/* Hero section */}

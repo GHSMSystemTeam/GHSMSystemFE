@@ -53,7 +53,7 @@ export default function Consulation() {
     const [filterTag, setFilterTag] = useState('');
     const [expandedAnswers, setExpandedAnswers] = useState({});
 
-    const tags = ["Sức khỏe sinh sản", "Nam khoa", "Phụ khoa", "Bệnh lây truyền", "Sức khỏe tình dục", "Tâm lý", "Tư vấn"];
+    const tags = ["Sức khỏe sinh sản", "Nam khoa", "Phụ khoa", "Bệnh lây truyền", "Sức khỏe tình dục", "Tâm lý"];
 
     // Tải dữ liệu câu hỏi từ localStorage khi component được mount
     useEffect(() => {
@@ -370,10 +370,10 @@ export default function Consulation() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 pt-24 mt-10">
+        <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 pt-24 mt-10">
             <Header />
 
-            <main className="container mx-auto px-4 py-8">
+            <main className="container  mx-auto px-4 py-8">
                 <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
                     <h1 className="text-3xl font-bold text-gray-800 mb-2">Cộng đồng hỏi đáp sức khỏe</h1>
                     <p className="text-gray-600 mb-6">
