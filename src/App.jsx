@@ -37,6 +37,7 @@ import {
   NewsComponent5,
   NewsComponent6,
 } from './Component/Page/ArticlePage';
+import ConsultantDashboard from './Component/Page/ConsultantDashboard'
 function App() {
 
   return (
@@ -74,6 +75,7 @@ function App() {
             <Route element={<AdminProtectedRoute />}>
             <Route path="/admin-profile" element={<AdminProfile />} />
             </Route>
+            <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
           </Routes>
         </ToastProvider>
       </AuthProvider>
