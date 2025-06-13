@@ -63,27 +63,58 @@ export default function Header() {
                             {/* User dropdown menu */}
                             {showUserMenu && (
                                 <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                                    <Link
-                                        to="/profile"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                    >
-                                        Thông tin cá nhân
-                                    </Link>
-                                    <Link
-                                        to="/appointments"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
-                                    >
-                                        Lịch hẹn của tôi
-                                    </Link>
-                                    <button
-                                        onClick={logout}
-                                        className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center"
-                                    >
-                                        <LogOut size={16} className="mr-2" />
-                                        Đăng xuất
-                                    </button>
-                                </div>
-                            )}
+                                {user.role === 'admin' ? (
+                                    // Admin-specific menu items
+                                    <>
+                                        <Link
+                                            to="/admin-profile"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            Quản lý phần mềm
+                                        </Link>
+                                    </>
+                                ) : user.role === 'consultant' ? (
+                                    // Consultant-specific menu items
+                                    <>
+                                        <Link
+                                            to="/profile"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            Thông tin cá nhân
+                                        </Link>
+                                        <Link
+                                            to="/my-schedule"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            Lịch làm việc
+                                        </Link>
+                                    </>
+                                ) : (
+                                    // Customer-specific menu items
+                                    <>
+                                        <Link
+                                            to="/profile"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            Thông tin cá nhân
+                                        </Link>
+                                        <Link
+                                            to="/appointments"
+                                            className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600"
+                                        >
+                                            Lịch hẹn của tôi
+                                        </Link>
+                                    </>
+                                )}
+                                <button
+                                    onClick={logout}
+                                    className="w-full text-left px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 flex items-center"
+                                >
+                                    <LogOut size={16} className="mr-2" />
+                                    Đăng xuất
+                                </button>
+                            </div>
+                            )}    
                         </div>
                     )}
                     <div className="hidden md:flex items-center space-x-1">

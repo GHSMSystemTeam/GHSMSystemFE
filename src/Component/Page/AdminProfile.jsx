@@ -1,8 +1,17 @@
 import { useAuth } from "../Auth/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper, HomeIcon } from "lucide-react";
 import { Search, Users as PeopleIcon } from "lucide-react";
+import { 
+    Plus, 
+    Edit, 
+    Trash2, 
+    Eye, 
+    Calendar,
+    Tag,
+    X
+} from 'lucide-react';
 
    const sampleBookings = [
         {
@@ -443,10 +452,717 @@ const BookingManagementComponent = () => {
 };
 
 const PostManagementComponent = () => {
+    const [posts, setPosts] = useState([]);
+    const [categories, setCategories] = useState([]);
+    const [consultants, setConsultants] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedConsultant, setSelectedConsultant] = useState('');
+    const [showModal, setShowModal] = useState(false);
+    const [modalType, setModalType] = useState(''); // 'add', 'edit', 'view'
+    const [selectedPost, setSelectedPost] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+
+    const [formData, setFormData] = useState({
+        title: '',
+        category: '',
+        content: '',
+        consultantId: '',
+        ratings: 0,
+        feedback: ''
+    });
+
+    // Mock data - replace with actual API calls
+    useEffect(() => {
+        fetchPosts();
+        fetchCategories();
+        fetchConsultants();
+    }, []);
+
+    const fetchPosts = async () => {
+        setLoading(true);
+        // Mock data - replace with actual API call
+        const mockPosts = [
+    {
+        id: 1,
+        title: "Hướng dẫn chăm sóc sức khỏe tâm lý cho phụ nữ",
+        category: "Tâm lý học",
+        content: "Phụ nữ thường đối mặt với nhiều thay đổi tâm lý trong các giai đoạn khác nhau của cuộc đời. Bài viết này cung cấp hướng dẫn chi tiết về cách chăm sóc sức khỏe tâm lý, quản lý căng thẳng và duy trì tinh thần tích cực.",
+        consultantId: 1,
+        consultantName: "Dr. Nguyen Van A",
+        ratings: 4.5,
+        feedback: "Bài viết rất hữu ích và thực tế",
+        createdDate: "2024-01-15",
+        isActive: true
+    },
+    {
+        id: 2,
+        title: "Dinh dưỡng trong thai kỳ: Những điều cần biết",
+        category: "Dinh dưỡng",
+        content: "Thai kỳ là giai đoạn quan trọng cần chế độ dinh dưỡng đặc biệt. Hướng dẫn chi tiết về các chất dinh dưỡng cần thiết, thực phẩm nên ăn và tránh trong 9 tháng mang thai.",
+        consultantId: 2,
+        consultantName: "Dr. Tran Thi B",
+        ratings: 4.8,
+        feedback: "Thông tin chi tiết và dễ hiểu cho mẹ bầu",
+        createdDate: "2024-01-10",
+        isActive: true
+    },
+    {
+        id: 3,
+        title: "Sức khỏe sinh sản nam giới: Những vấn đề thường gặp",
+        category: "Sức khỏe sinh sản",
+        content: "Nam giới cũng cần quan tâm đến sức khỏe sinh sản. Bài viết phân tích các vấn đề thường gặp như rối loạn cương dương, vô sinh và cách phòng ngừa, điều trị hiệu quả.",
+        consultantId: 3,
+        consultantName: "Dr. Le Van C",
+        ratings: 4.3,
+        feedback: "Bài viết giúp nam giới hiểu rõ hơn về sức khỏe sinh sản",
+        createdDate: "2024-01-08",
+        isActive: true
+    },
+    {
+        id: 4,
+        title: "Mãn kinh: Triệu chứng và cách điều trị tự nhiên",
+        category: "Nội tiết tố",
+        content: "Mãn kinh là giai đoạn tự nhiên trong đời phụ nữ. Tìm hiểu về các triệu chứng, biến đổi hormone và phương pháp điều trị tự nhiên để vượt qua giai đoạn này một cách dễ dàng.",
+        consultantId: 4,
+        consultantName: "Dr. Pham Thi D",
+        ratings: 4.6,
+        feedback: "Rất hữu ích cho phụ nữ trung niên",
+        createdDate: "2024-01-05",
+        isActive: true
+    },
+    {
+        id: 5,
+        title: "Chăm sóc sức khỏe tiền mãn kinh",
+        category: "Nội tiết tố",
+        content: "Giai đoạn tiền mãn kinh đòi hỏi sự chăm sóc đặc biệt. Hướng dẫn về chế độ ăn uống, tập luyện và theo dõi sức khỏe để chuẩn bị cho giai đoạn mãn kinh.",
+        consultantId: 4,
+        consultantName: "Dr. Pham Thi D",
+        ratings: 4.4,
+        feedback: "Thông tin hữu ích cho phụ nữ độ tuổi 40+",
+        createdDate: "2024-01-03",
+        isActive: true
+    },
+    {
+        id: 6,
+        title: "Sức khỏe tình dục an toàn cho teen",
+        category: "Giáo dục giới tính",
+        content: "Giáo dục giới tính cho thanh thiếu niên về quan hệ tình dục an toàn, phòng tránh thai và các bệnh lây truyền qua đường tình dục. Thông tin khoa học và phù hợp với lứa tuổi.",
+        consultantId: 5,
+        consultantName: "Dr. Hoang Van E",
+        ratings: 4.2,
+        feedback: "Cần thiết cho giáo dục giới tính thanh thiếu niên",
+        createdDate: "2024-01-01",
+        isActive: true
+    },
+    {
+        id: 7,
+        title: "Rối loạn kinh nguyệt: Nguyên nhân và điều trị",
+        category: "Phụ khoa",
+        content: "Rối loạn kinh nguyệt ảnh hưởng đến nhiều phụ nữ. Phân tích các nguyên nhân từ căng thẳng, dinh dưỡng đến bệnh lý nội tiết và đưa ra phương pháp điều trị phù hợp.",
+        consultantId: 6,
+        consultantName: "Dr. Vo Thi F",
+        ratings: 4.7,
+        feedback: "Giải thích rõ ràng và dễ hiểu",
+        createdDate: "2023-12-28",
+        isActive: true
+    },
+    {
+        id: 8,
+        title: "Testosterone thấp ở nam giới: Dấu hiệu và điều trị",
+        category: "Nội tiết tố",
+        content: "Testosterone thấp ảnh hưởng đến sức khỏe nam giới. Nhận biết các dấu hiệu như giảm ham muốn, mệt mỏi, giảm khối lượng cơ và các phương pháp tăng testosterone tự nhiên.",
+        consultantId: 7,
+        consultantName: "Dr. Bui Van G",
+        ratings: 4.5,
+        feedback: "Thông tin quan trọng cho nam giới trung niên",
+        createdDate: "2023-12-25",
+        isActive: true
+    },
+    {
+        id: 9,
+        title: "Chăm sóc sức khỏe sau sinh cho mẹ",
+        category: "Sản khoa",
+        content: "Giai đoạn sau sinh đòi hỏi sự chăm sóc đặc biệt. Hướng dẫn về phục hồi thể chất, tinh thần, chăm sóc vết mổ và điều chỉnh hormone sau sinh.",
+        consultantId: 8,
+        consultantName: "Dr. Dang Thi H",
+        ratings: 4.9,
+        feedback: "Rất cần thiết cho các mẹ sau sinh",
+        createdDate: "2023-12-22",
+        isActive: true
+    },
+    {
+        id: 10,
+        title: "Phòng ngừa ung thư cổ tử cung",
+        category: "Phòng chống ung thư",
+        content: "Ung thư cổ tử cung có thể phòng ngừa được. Hướng dẫn về tầm soát định kỳ, vaccine HPV, các yếu tố nguy cơ và lối sống lành mạnh để phòng ngừa bệnh.",
+        consultantId: 9,
+        consultantName: "Dr. Luong Van I",
+        ratings: 4.8,
+        feedback: "Thông tin quan trọng cho phụ nữ",
+        createdDate: "2023-12-20",
+        isActive: true
+    },
+    {
+        id: 11,
+        title: "Hội chứng buồng trứng đa nang (PCOS)",
+        category: "Phụ khoa",
+        content: "PCOS là rối loạn hormone thường gặp ở phụ nữ. Tìm hiểu về triệu chứng, nguyên nhân, ảnh hưởng đến khả năng sinh sản và phương pháp quản lý bệnh hiệu quả.",
+        consultantId: 6,
+        consultantName: "Dr. Vo Thi F",
+        ratings: 4.6,
+        feedback: "Giúp hiểu rõ về PCOS",
+        createdDate: "2023-12-18",
+        isActive: true
+    },
+    {
+        id: 12,
+        title: "Sức khỏe tình dục cho người cao tuổi",
+        category: "Geriatrics",
+        content: "Sức khỏe tình dục không chỉ quan trọng ở tuổi trẻ. Hướng dẫn duy trì đời sống tình dục lành mạnh ở tuổi cao, xử lý các vấn đề về hormone và tâm lý.",
+        consultantId: 10,
+        consultantName: "Dr. Tran Van J",
+        ratings: 4.1,
+        feedback: "Chủ đề ít được quan tâm nhưng rất cần thiết",
+        createdDate: "2023-12-15",
+        isActive: true
+    },
+    {
+        id: 13,
+        title: "Viêm đường tiết niệu ở phụ nữ: Nguyên nhân và phòng ngừa",
+        category: "Tiết niệu học",
+        content: "Phụ nữ dễ mắc viêm đường tiết niệu hơn nam giới. Phân tích nguyên nhân, triệu chứng và các biện pháp phòng ngừa hiệu quả, bao gồm vệ sinh cá nhân và chế độ ăn uống.",
+        consultantId: 11,
+        consultantName: "Dr. Mai Thi K",
+        ratings: 4.4,
+        feedback: "Hướng dẫn thực tế và dễ áp dụng",
+        createdDate: "2023-12-12",
+        isActive: true
+    },
+    {
+        id: 14,
+        title: "Rối loạn cương dương: Nguyên nhân tâm lý và sinh lý",
+        category: "Nam khoa",
+        content: "Rối loạn cương dương có thể do nhiều nguyên nhân. Phân biệt nguyên nhân tâm lý và sinh lý, đánh giá mức độ nghiêm trọng và đưa ra phương pháp điều trị phù hợp.",
+        consultantId: 3,
+        consultantName: "Dr. Le Van C",
+        ratings: 4.3,
+        feedback: "Giúp nam giới hiểu rõ vấn đề của mình",
+        createdDate: "2023-12-10",
+        isActive: true
+    },
+    {
+        id: 15,
+        title: "Kế hoạch hóa gia đình: Các phương pháp tránh thai",
+        category: "Kế hoạch hóa gia đình",
+        content: "Tổng quan về các phương pháp tránh thai hiện đại, từ thuốc tránh thai, IUD, bao cao su đến các phương pháp tự nhiên. So sánh hiệu quả và tác dụng phụ của từng phương pháp.",
+        consultantId: 12,
+        consultantName: "Dr. Nguyen Thi L",
+        ratings: 4.7,
+        feedback: "Thông tin đầy đủ về tránh thai",
+        createdDate: "2023-12-08",
+        isActive: true
+    },
+    {
+        id: 16,
+        title: "Sàng lọc ung thư vú: Hướng dẫn tự khám",
+        category: "Phòng chống ung thư",
+        content: "Phát hiện sớm ung thư vú rất quan trọng. Hướng dẫn chi tiết cách tự khám vú tại nhà, nhận biết các dấu hiệu bất thường và lịch trình tầm soát định kỳ.",
+        consultantId: 13,
+        consultantName: "Dr. Phan Van M",
+        ratings: 4.8,
+        feedback: "Kiến thức quan trọng mọi phụ nữ cần biết",
+        createdDate: "2023-12-05",
+        isActive: true
+    },
+    {
+        id: 17,
+        title: "Chăm sóc sức khỏe trong chu kỳ kinh nguyệt",
+        category: "Phụ khoa",
+        content: "Mỗi giai đoạn trong chu kỳ kinh nguyệt có những đặc điểm riêng. Hướng dẫn chăm sóc sức khỏe, điều chỉnh hoạt động và chế độ ăn uống phù hợp với từng giai đoạn.",
+        consultantId: 6,
+        consultantName: "Dr. Vo Thi F",
+        ratings: 4.5,
+        feedback: "Giúp phụ nữ hiểu rõ hơn về cơ thể mình",
+        createdDate: "2023-12-03",
+        isActive: true
+    },
+    {
+        id: 18,
+        title: "Sức khỏe tâm lý nam giới: Vượt qua áp lực xã hội",
+        category: "Tâm lý học",
+        content: "Nam giới thường ít thể hiện cảm xúc và áp lực tâm lý. Phân tích các áp lực xã hội đối với nam giới và cách quản lý stress, duy trì sức khỏe tinh thần tích cực.",
+        consultantId: 1,
+        consultantName: "Dr. Nguyen Van A",
+        ratings: 4.2,
+        feedback: "Chủ đề ít được quan tâm nhưng rất cần thiết",
+        createdDate: "2023-12-01",
+        isActive: true
+    },
+    {
+        id: 19,
+        title: "Dinh dưỡng cho phụ nữ mãn kinh",
+        category: "Dinh dưỡng",
+        content: "Phụ nữ mãn kinh cần chế độ dinh dưỡng đặc biệt để duy trì sức khỏe. Hướng dẫn về calcium, vitamin D, phytoestrogen và các chất dinh dưỡng quan trọng khác.",
+        consultantId: 2,
+        consultantName: "Dr. Tran Thi B",
+        ratings: 4.6,
+        feedback: "Rất hữu ích cho phụ nữ trung niên",
+        createdDate: "2023-11-28",
+        isActive: true
+    },
+    {
+        id: 20,
+        title: "Vô sinh nam: Nguyên nhân và phương pháp điều trị",
+        category: "Sức khỏe sinh sản",
+        content: "Vô sinh nam chiếm 40% các trường hợp vô sinh. Phân tích các nguyên nhân từ chất lượng tinh trùng, hormone đến lối sống và các phương pháp hỗ trợ sinh sản hiện đại.",
+        consultantId: 3,
+        consultantName: "Dr. Le Van C",
+        ratings: 4.4,
+        feedback: "Thông tin quan trọng cho các cặp vợ chồng hiếm muộn",
+        createdDate: "2023-11-25",
+        isActive: true
+    }
+        ];
+        setPosts(mockPosts);
+        setLoading(false);
+    };
+
+    const fetchCategories = async () => {
+        // Mock data - replace with actual API call
+        const mockCategories = [
+            { id: 1, name: "Tâm lý học", isActive: true },
+            { id: 2, name: "Dinh dưỡng", isActive: true },
+            { id: 3, name: "Sức khỏe", isActive: true }
+        ];
+        setCategories(mockCategories);
+    };
+
+    const fetchConsultants = async () => {
+        // Mock data - replace with actual API call
+        const mockConsultants = [
+            { id: 1, name: "Dr. Nguyen Van A", specialization: "Tâm lý học" },
+            { id: 2, name: "Dr. Tran Thi B", specialization: "Dinh dưỡng" },
+            { id: 3, name: "Dr. Le Van C", specialization: "Sức khỏe tổng quát" }
+        ];
+        setConsultants(mockConsultants);
+    };
+
+    const handleAddPost = () => {
+        setModalType('add');
+        setFormData({
+            title: '',
+            category: '',
+            content: '',
+            consultantId: '',
+            ratings: 0,
+            feedback: ''
+        });
+        setShowModal(true);
+    };
+
+    const handleEditPost = (post) => {
+        setModalType('edit');
+        setSelectedPost(post);
+        setFormData({
+            title: post.title,
+            category: post.category,
+            content: post.content,
+            consultantId: post.consultantId,
+            ratings: post.ratings,
+            feedback: post.feedback
+        });
+        setShowModal(true);
+    };
+
+    const handleViewPost = (post) => {
+        setModalType('view');
+        setSelectedPost(post);
+        setShowModal(true);
+    };
+
+    const handleDeletePost = async (postId) => {
+        if (window.confirm('Bạn có chắc chắn muốn xóa bài viết này?')) {
+            // API call to delete post
+            setPosts(posts.filter(post => post.id !== postId));
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        // API call to create/update post
+        setShowModal(false);
+        fetchPosts(); // Refresh the list
+    };
+
+    const filteredPosts = posts.filter(post => {
+        const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            post.content.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesCategory = !selectedCategory || post.category === selectedCategory;
+        const matchesConsultant = !selectedConsultant || post.consultantId.toString() === selectedConsultant;
+        
+        return matchesSearch && matchesCategory && matchesConsultant;
+    });
+
     return (
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold">Post Management</h2>
-            <p>Manage posts here...</p>
+        <div className="p-6">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Quản lý bài viết</h1>
+                    <p className="text-gray-600">Quản lý tất cả bài viết từ các chuyên gia tư vấn</p>
+                </div>
+                <button
+                    onClick={handleAddPost}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
+                >
+                    <Plus size={20} />
+                    Thêm bài viết
+                </button>
+            </div>
+
+            {/* Filters */}
+            <div className="bg-white rounded-lg shadow p-4 mb-6">
+                <div className="flex flex-col md:flex-row gap-4">
+                    {/* Search */}
+                    <div className="flex-1 relative">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm bài viết..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        />
+                    </div>
+
+                    {/* Category Filter */}
+                    <select
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Tất cả danh mục</option>
+                        {categories.map(category => (
+                            <option key={category.id} value={category.name}>
+                                {category.name}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Consultant Filter */}
+                    <select
+                        value={selectedConsultant}
+                        onChange={(e) => setSelectedConsultant(e.target.value)}
+                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    >
+                        <option value="">Tất cả chuyên gia</option>
+                        {consultants.map(consultant => (
+                            <option key={consultant.id} value={consultant.id}>
+                                {consultant.name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {/* Posts Table */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 sticky top-0 z-10">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Bài viết
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Danh mục
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Chuyên gia
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Đánh giá
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Ngày tạo
+                                </th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Trạng thái
+                                </th>
+                                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    Thao tác
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-4 text-center">
+                                        <div className="flex justify-center">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ) : filteredPosts.length === 0 ? (
+                                <tr>
+                                    <td colSpan="7" className="px-6 py-4 text-center text-gray-500">
+                                        Không có bài viết nào
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredPosts.map((post) => (
+                                    <tr key={post.id} className="hover:bg-gray-50">
+                                        <td className="px-6 py-4">
+                                            <div>
+                                                <div className="text-sm font-medium text-gray-900">
+                                                    {post.title}
+                                                </div>
+                                                <div className="text-sm text-gray-500 truncate max-w-xs">
+                                                    {post.content}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                <Tag size={12} className="mr-1" />
+                                                {post.category}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center">
+                                                <User size={16} className="mr-2 text-gray-400" />
+                                                <span className="text-sm text-gray-900">{post.consultantName}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center">
+                                                <Star size={16} className="text-yellow-400 mr-1" />
+                                                <span className="text-sm text-gray-900">{post.ratings}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex items-center text-sm text-gray-500">
+                                                <Calendar size={16} className="mr-2" />
+                                                {post.createdDate}
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                                post.isActive 
+                                                    ? 'bg-green-100 text-green-800' 
+                                                    : 'bg-red-100 text-red-800'
+                                            }`}>
+                                                {post.isActive ? 'Hoạt động' : 'Tạm dừng'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-right text-sm font-medium">
+                                            <div className="flex items-center justify-end space-x-2">
+                                                <button
+                                                    onClick={() => handleViewPost(post)}
+                                                    className="text-blue-600 hover:text-blue-900"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEditPost(post)}
+                                                    className="text-green-600 hover:text-green-900"
+                                                >
+                                                    <Edit size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeletePost(post.id)}
+                                                    className="text-red-600 hover:text-red-900"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+                {/* Scroll indicator */}
+                {filteredPosts.length > 8 && (
+                    <div className="bg-gray-50 px-6 py-2 text-center text-sm text-gray-500">
+                        Cuộn xuống để xem thêm bài viết ({filteredPosts.length} tổng cộng)
+                    </div>
+                )}
+            </div>
+
+            {/* Modal for Add/Edit/View Post */}
+            {showModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold">
+                                {modalType === 'add' && 'Thêm bài viết mới'}
+                                {modalType === 'edit' && 'Chỉnh sửa bài viết'}
+                                {modalType === 'view' && 'Chi tiết bài viết'}
+                            </h2>
+                            <button
+                                onClick={() => setShowModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {modalType === 'view' ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Tiêu đề
+                                    </label>
+                                    <p className="text-gray-900">{selectedPost?.title}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Danh mục
+                                    </label>
+                                    <p className="text-gray-900">{selectedPost?.category}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Chuyên gia
+                                    </label>
+                                    <p className="text-gray-900">{selectedPost?.consultantName}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Nội dung
+                                    </label>
+                                    <p className="text-gray-900 whitespace-pre-wrap">{selectedPost?.content}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Đánh giá
+                                    </label>
+                                    <p className="text-gray-900">{selectedPost?.ratings} ⭐</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Phản hồi
+                                    </label>
+                                    <p className="text-gray-900">{selectedPost?.feedback}</p>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Tiêu đề *
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.title}
+                                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Danh mục *
+                                    </label>
+                                    <select
+                                        value={formData.category}
+                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    >
+                                        <option value="">Chọn danh mục</option>
+                                        {categories.map(category => (
+                                            <option key={category.id} value={category.name}>
+                                                {category.name}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Chuyên gia *
+                                    </label>
+                                    <select
+                                        value={formData.consultantId}
+                                        onChange={(e) => setFormData({...formData, consultantId: e.target.value})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    >
+                                        <option value="">Chọn chuyên gia</option>
+                                        {consultants.map(consultant => (
+                                            <option key={consultant.id} value={consultant.id}>
+                                                {consultant.name} - {consultant.specialization}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Nội dung *
+                                    </label>
+                                    <textarea
+                                        value={formData.content}
+                                        onChange={(e) => setFormData({...formData, content: e.target.value})}
+                                        rows={6}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Đánh giá (0-5)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="0"
+                                        max="5"
+                                        step="0.1"
+                                        value={formData.ratings}
+                                        onChange={(e) => setFormData({...formData, ratings: parseFloat(e.target.value)})}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                                        Phản hồi
+                                    </label>
+                                    <textarea
+                                        value={formData.feedback}
+                                        onChange={(e) => setFormData({...formData, feedback: e.target.value})}
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
+
+                                <div className="flex justify-end space-x-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                                    >
+                                        Hủy
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                    >
+                                        {modalType === 'add' ? 'Thêm' : 'Cập nhật'}
+                                    </button>
+                                </div>
+                            </form>
+                        )}
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -1283,27 +1999,6 @@ export default function AdminProfile() {
                 {/* Dashboard Content */}
                 <main className="flex-1 p-8">
                     {renderMainContent()}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                        {/* Example widgets */}
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <div className="text-gray-500">Total Accounts</div>
-                            <div className="text-2xl font-bold text-blue-700">1,234</div>
-                        </div>
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <div className="text-gray-500">Consultant</div>
-                            <div className="text-2xl font-bold text-blue-700">120</div>
-                        </div>
-                        <div className="bg-white rounded-xl shadow p-6">
-                            <div className="text-gray-500">Feedback</div>
-                            <div className="text-2xl font-bold text-blue-700">87</div>
-                        </div>
-                    </div>
-                    {/* Example chart area */}
-                    <div className="bg-white rounded-xl shadow p-6 mb-8">
-                        <div className="font-semibold mb-2">Gender Distribution</div>
-                        {/* Replace with your chart component */}
-                        <div className="h-40 flex items-center justify-center text-gray-400">[Chart Here]</div>
-                    </div>
                 </main>
             </div>
         </div>
