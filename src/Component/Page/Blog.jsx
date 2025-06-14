@@ -70,7 +70,7 @@ export default function Blog() {
     }, [categorySlug, searchQuery]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50">
             <Header />
 
             <main className="container mx-auto px-4 py-8 mt-24">
