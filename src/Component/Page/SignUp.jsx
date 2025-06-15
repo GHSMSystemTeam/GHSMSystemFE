@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
+import api from '../config/axios';
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -9,11 +10,13 @@ export default function Register() {
         email: '',
         phone: '',
         password: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        gender: 0,
     });
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
@@ -24,47 +27,47 @@ export default function Register() {
         }));
     };
 
-    const handleRegister = (e) => {
+    const handleRegister = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
         setErrorMessage('');
 
-        // Basic validation
         if (!formData.fullName || !formData.email || !formData.phone || !formData.password || !formData.confirmPassword) {
             setErrorMessage('Vui lòng nhập đầy đủ thông tin');
+            setIsLoading(false);
             return;
         }
 
         // Password match validation
         if (formData.password !== formData.confirmPassword) {
             setErrorMessage('Mật khẩu không khớp');
+            setIsLoading(false);
             return;
         }
 
         try {
-            // Lấy danh sách users đã đăng ký
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            
-            // Kiểm tra email đã tồn tại
-            if (users.some(user => user.email === formData.email)) {
-                setErrorMessage('Email đã được sử dụng');
-                return;
-            }
+        // Map frontend fields to backend payload
+        const payload = {
+            name: formData.fullName,
+            email: formData.email,
+            password: formData.password,
+            gender: formData.gender,
+            phone: formData.phone
+        };
+        //formData dữ liệu người dùng nhập
+        //Đẩy cái dữ liệu. này xuống cho BE xử lý
 
-            // Thêm user mới
-            users.push({
-                fullName: formData.fullName,
-                email: formData.email,
-                phone: formData.phone,
-                password: formData.password // Trong thực tế nên mã hóa mật khẩu
-            });
-
-            // Lưu lại danh sách users
-            localStorage.setItem('users', JSON.stringify(users));
-
-            // Chuyển đến trang đăng nhập
-            navigate('/login');
-        } catch (error) {
-            setErrorMessage('Có lỗi xảy ra khi đăng ký');
+        const response = await api.post('/api/register', payload);
+        console.log(response);
+        // => thành công
+        // => show message
+        toast.success("Successfully create new account!");
+        navigate("/login");
+        } catch (err) {
+        console.error("Registration error:", err);
+        toast.error(err.response.data);
+        } finally {
+        setIsLoading(false);
         }
     };
 
