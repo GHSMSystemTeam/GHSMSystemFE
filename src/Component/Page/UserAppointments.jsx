@@ -3,7 +3,7 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Clock, Package, User, AlertCircle, X, Eye, FileText, Stethoscope, Phone, Mail, MapPin } from 'lucide-react';
+import { Calendar, Clock, Package, User, AlertCircle, X, Eye, FileText, Stethoscope, Phone, Mail, MapPin, Plus, CheckCircle, XCircle, Search, ChevronDown, Grid, List, Edit } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 
@@ -163,63 +163,168 @@ export default function UserAppointments() {
         }
     };
 
+    const getStatusColorBg = (status) => {
+        switch (status) {
+            case 'pending': return 'bg-yellow-400';
+            case 'confirmed': return 'bg-blue-400';
+            case 'completed': return 'bg-green-400';
+            case 'cancelled': return 'bg-red-400';
+            default: return 'bg-gray-400';
+        }
+    };
+
+    const [viewMode, setViewMode] = useState('cards');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+    const [dateFilter, setDateFilter] = useState('');
+    const [showFilters, setShowFilters] = useState(false);
+
     return (
-        <div className="min-h-screen bg-gray-50 pt-24 mt-10">
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-24 mt-10">
             <Header />
+
+            <div className="bg-white shadow-sm border-b border-gray-100 pt-24 mt-10">
+                <div className="container mx-auto px-4 py-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                        <div className="flex items-center space-x-4 mb-4 lg:mb-0">
+                            <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                                <Calendar className="text-white" size={24} />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-800">Lịch khám của tôi</h1>
+                                <p className="text-gray-600">Quản lý và theo dõi các lịch hẹn của bạn</p>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center space-x-3">
+                            <div className="hidden md:flex items-center space-x-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-100">
+                                <User className="text-blue-600" size={16} />
+                                <span className="text-blue-800 font-medium">{user?.fullName || 'Người dùng'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div className="container mx-auto px-4 py-8 ">
                 <div className="max-w-4xl mx-auto">
                     {/* Lịch khám bệnh */}
-                    <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">Lịch khám bệnh</h2>
+                    {/* Enhanced Medical Appointments */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <Stethoscope className="text-blue-600" size={18} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800">Lịch khám bệnh</h2>
+                                <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                                    {appointments.medical.length} lịch hẹn
+                                </span>
+                            </div>
+                        </div>
+
                         {appointments.medical.length === 0 ? (
-                            <p className="text-gray-500">Không có lịch khám bệnh nào</p>
+                            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Stethoscope className="text-gray-400" size={32} />
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có lịch khám bệnh</h3>
+                                <p className="text-gray-600 mb-6">Đặt lịch khám với đội ngũ bác sĩ chuyên nghiệp của chúng tôi</p>
+                                <Link
+                                    to="/appointment"
+                                    className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+                                >
+                                    <Plus size={18} />
+                                    <span>Đặt lịch khám ngay</span>
+                                </Link>
+                            </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className={viewMode === 'cards' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                                 {appointments.medical.map((booking) => (
-                                    <div key={booking.id} className="border rounded-lg p-4 relative">
+                                    <div key={booking.id} className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 group relative ${viewMode === 'list' ? 'flex items-center p-4' : 'p-6'}`}>
+                                        {/* Status Banner */}
+                                        <div className={`${viewMode === 'cards' ? 'h-1 w-full' : 'w-1 h-16 mr-4'} ${getStatusColorBg(booking.status)}`}></div>
+
                                         {booking.status === 'cancelled' && (
                                             <button
                                                 onClick={() => handleDeleteMedical(booking.id)}
-                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                                className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
                                             >
                                                 <X size={14} />
                                             </button>
                                         )}
-                                        <div className="flex justify-between">
-                                            <div>
-                                                <h3 className="font-medium">{booking.doctor.name}</h3>
-                                                <p className="text-sm text-gray-600">Dịch vụ: {booking.service}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
-                                                </p>
+
+                                        <div className={viewMode === 'cards' ? 'pt-4' : 'flex-1'}>
+                                            {/* Doctor Info */}
+                                            <div className="flex items-center space-x-3 mb-4">
+                                                <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl flex items-center justify-center shadow-md">
+                                                    <Stethoscope className="text-white" size={20} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-gray-800 text-lg">{booking.doctor.name}</h3>
+                                                    <p className="text-sm text-gray-600">{booking.doctor.specialty || 'Bác sĩ chuyên khoa'}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-end space-y-2">
-                                                <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
+
+                                            {/* Service Info */}
+                                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                                                <p className="text-sm font-medium text-gray-700 mb-1">Dịch vụ khám</p>
+
+                                            </div>
+
+                                            {/* DateTime */}
+                                            <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
+                                                <div className="flex items-center space-x-2">
+                                                    <Calendar size={16} className="text-blue-500" />
+                                                    <span>{new Date(booking.date).toLocaleDateString('vi-VN', {
+                                                        weekday: 'short',
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric'
+                                                    })}</span>
+                                                </div>
+                                                {booking.time && (
+                                                    <div className="flex items-center space-x-2">
+                                                        <Clock size={16} className="text-purple-500" />
+                                                        <span>{booking.time}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Status and Actions */}
+                                            <div className="flex items-center justify-between">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                                                     {getStatusText(booking.status)}
                                                 </span>
 
-                                                <div className="flex space-x-2">
-                                                    {/* Thêm nút xem chi tiết */}
+                                                <div className="flex items-center space-x-2">
                                                     <button
                                                         onClick={() => handleViewDetail(booking)}
-                                                        className='text-blue-600 hover:text-blue-800 text-sm font-medium'>
-                                                        <Eye size={18} />
-
-                                                    </button>
-                                                </div>
-                                                {booking.status === 'pending' && (
-                                                    <button
-                                                        onClick={() => handleCancelMedical(booking.id)}
-                                                        className="text-red-600 hover:text-red-700 text-sm font-medium"
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Xem chi tiết"
                                                     >
-                                                        Hủy lịch
+                                                        <Eye size={16} />
                                                     </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDeleteMedical(booking.id)}
-                                                    className="text-red-600 hover:text-red-700 text-sm font-medium"
-                                                >
-                                                </button>
+
+                                                    {booking.status === 'pending' && (
+                                                        <>
+                                                            <button
+                                                                onClick={() => handleEditAppointment(booking)}
+                                                                className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                                                                title="Chỉnh sửa"
+                                                            >
+                                                                <Edit size={16} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCancelMedical(booking.id)}
+                                                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                                title="Hủy lịch"
+                                                            >
+                                                                <XCircle size={16} />
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -227,90 +332,149 @@ export default function UserAppointments() {
                             </div>
                         )}
                     </div>
-
                     {/* Lịch xét nghiệm */}
-                    <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <h2 className="text-xl font-bold text-gray-800 mb-4">Lịch xét nghiệm</h2>
+                    {/* Enhanced Test Appointments */}
+                    <div className="mb-8">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-3">
+                                <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <Package className="text-green-600" size={18} />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-800">Lịch xét nghiệm</h2>
+                                <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                                    {appointments.test.length} lịch hẹn
+                                </span>
+                            </div>
+                        </div>
+
                         {appointments.test.length === 0 ? (
-                            <p className="text-gray-500">Không có lịch xét nghiệm nào</p>
+                            <div className="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Package className="text-gray-400" size={32} />
+                                </div>
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có lịch xét nghiệm</h3>
+                                <p className="text-gray-600 mb-6">Đặt lịch xét nghiệm với các gói dịch vụ toàn diện</p>
+                                <Link
+                                    to="/test"
+                                    className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+                                >
+                                    <Plus size={18} />
+                                    <span>Đặt lịch xét nghiệm</span>
+                                </Link>
+                            </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className={viewMode === 'cards' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
                                 {appointments.test.map((booking) => (
-                                    <div key={booking.id} className="border rounded-lg p-4 relative">
+                                    <div key={booking.id} className={`bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-100 group relative ${viewMode === 'list' ? 'flex items-center p-4' : 'p-6'}`}>
+                                        {/* Status Banner */}
+                                        <div className={`${viewMode === 'cards' ? 'h-1 w-full' : 'w-1 h-16 mr-4'} ${getStatusColorBg(booking.status)}`}></div>
+
                                         {booking.status === 'cancelled' && (
                                             <button
                                                 onClick={() => handleDeleteTest(booking.id)}
-                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                                                className="absolute top-2 right-2 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors shadow-md"
                                             >
                                                 <X size={14} />
                                             </button>
                                         )}
-                                        <div className="flex justify-between">
-                                            <div>
-                                                <h3 className="font-medium">{booking.kit.name}</h3>
-                                                <p className="text-sm text-gray-600">{booking.kit.price}</p>
-                                                <p className="text-sm text-gray-600">
-                                                    Ngày: {new Date(booking.date).toLocaleDateString('vi-VN')} - {booking.time}
-                                                </p>
+
+                                        <div className={viewMode === 'cards' ? 'pt-4' : 'flex-1'}>
+                                            {/* Kit Info */}
+                                            <div className="flex items-center space-x-3 mb-4">
+                                                <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-md">
+                                                    <Package className="text-white" size={20} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <h3 className="font-semibold text-gray-800 text-lg">{booking.kit.name}</h3>
+                                                    <p className="text-sm text-gray-600">{booking.kit.duration}</p>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-col items-end space-y-2">
-                                                <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(booking.status)}`}>
+
+                                            {/* Price */}
+                                            <div className="mb-4 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                                                <p className="text-sm font-medium text-purple-800">{booking.kit.price}</p>
+                                            </div>
+
+                                            {/* DateTime */}
+                                            <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
+                                                <div className="flex items-center space-x-2">
+                                                    <Calendar size={16} className="text-blue-500" />
+                                                    <span>{new Date(booking.date).toLocaleDateString('vi-VN', {
+                                                        weekday: 'short',
+                                                        day: '2-digit',
+                                                        month: '2-digit',
+                                                        year: 'numeric'
+                                                    })}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Tests included (if available) */}
+                                            {booking.kit.tests && (
+                                                <div className="mb-4">
+                                                    <p className="text-xs text-gray-500 mb-2">Bao gồm:</p>
+                                                    <div className="flex flex-wrap gap-1">
+                                                        {booking.kit.tests.slice(0, 3).map((test, index) => (
+                                                            <span key={index} className="bg-gray-100 text-xs px-2 py-1 rounded text-gray-600">
+                                                                {test}
+                                                            </span>
+                                                        ))}
+                                                        {booking.kit.tests.length > 3 && (
+                                                            <span className="bg-gray-100 text-xs px-2 py-1 rounded text-gray-600">
+                                                                +{booking.kit.tests.length - 3} khác
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Status and Actions */}
+                                            <div className="flex items-center justify-between">
+                                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
                                                     {getStatusText(booking.status)}
                                                 </span>
-                                                <div className="flex space-x-2">
-                                                    {/* Thêm nút xem chi tiết */}
+
+                                                <div className="flex items-center space-x-2">
                                                     <button
                                                         onClick={() => handleViewDetail(booking)}
-                                                        className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                                        title="Xem chi tiết"
                                                     >
-                                                        <Eye size={18} />
+                                                        <Eye size={16} />
                                                     </button>
+
+                                                    {booking.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => handleCancelTest(booking.id)}
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                                            title="Hủy lịch"
+                                                        >
+                                                            <XCircle size={16} />
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                {booking.status === 'pending' && (
-                                                    <button
-                                                        onClick={() => handleCancelTest(booking.id)}
-                                                        className="text-red-600 hover:text-red-700 text-sm font-medium"
-                                                    >
-                                                        Hủy lịch
-                                                    </button>
-                                                )}
-                                                <button
-                                                    onClick={() => handleDeleteTest(booking.id)}
-                                                    className="text-red-600 hover:text-red-700 text-sm font-medium"
-                                                >
-                                                </button>
                                             </div>
                                         </div>
                                     </div>
                                 ))}
                             </div>
                         )}
-                    </div>
-
-                    {/* Các nút tác vụ */}
-                    <div className="flex justify-center space-x-4">
-                        <Link to="/appointment" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                            Đặt lịch khám
-                        </Link>
-                        <Link to="/test" className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                            Đặt lịch xét nghiệm
-                        </Link>
                     </div>
                 </div>
             </div>
 
             {/* Modal chi tiết lịch hẹn */}
             {showDetailModal && selectedAppointment && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-xl font-bold text-gray-800">
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-scale-in">
+                        {/* Modal Header */}
+                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold text-white">
                                     Chi tiết lịch {selectedAppointment.kit ? 'xét nghiệm' : 'khám'}
                                 </h3>
                                 <button
                                     onClick={closeDetailModal}
-                                    className="text-gray-500 hover:text-gray-700"
+                                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
                                 >
                                     <X size={20} />
                                 </button>
@@ -332,13 +496,6 @@ export default function UserAppointments() {
                                                 <p className="text-sm text-gray-600">
                                                     {new Date(selectedAppointment.date).toLocaleDateString('vi-VN')}
                                                 </p>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <Clock className="text-blue-500 flex-shrink-0" size={18} />
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-700">Thời gian</p>
-                                                <p className="text-sm text-gray-600">{selectedAppointment.time}</p>
                                             </div>
                                         </div>
                                     </div>

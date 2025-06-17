@@ -1547,27 +1547,68 @@ const ReportManagementComponent = () => {
     );
 };
 // New component for the Filter Interface
-const FilterInterface = ({ title }) => {
-    const [activeTab, setActiveTab] = useState('find'); // 'find' or 'all'
-   // Combine consultant and customer data for the "All Accounts" view
-    const allAccountsData = [ // Defined here with lowercase 'a'
-        ...consultantsData.map(c => ({ ...c, type: 'Consultant' })),
-        ...customersData.map(cust => ({ ...cust, type: 'Customer' }))
+const FilterInterface = ({
+    title,
+    consultantsData: receivedConsultantsData = consultantsData,
+    customersData: receivedCustomersData = customersData
+}) => {
+    const [activeTab, setActiveTab] = useState('find');
+
+    const [searchEmail, setSearchEmail] = useState(''); // State for email search
+    const [foundAccount, setFoundAccount] = useState(null);
+    const [searchAttempted, setSearchAttempted] = useState(false);
+
+    const currentConsultants = Array.isArray(receivedConsultantsData) ? receivedConsultantsData : [];
+    const currentCustomers = Array.isArray(receivedCustomersData) ? receivedCustomersData : [];
+
+    // Combined data for searching by email across both types
+    const allSearchableAccounts = [
+        ...currentConsultants.map(c => ({ ...c, originalType: 'Consultant' })),
+        ...currentCustomers.map(cust => ({ ...cust, originalType: 'Customer' }))
     ];
+
+    const allAccountsData = [ // For the "All Accounts" tab
+        ...currentConsultants.map(c => ({ ...c, type: 'Consultant' })),
+        ...currentCustomers.map(cust => ({ ...cust, type: 'Customer' }))
+    ];
+
+    const handleFindAccount = () => {
+        setSearchAttempted(true);
+        setFoundAccount(null);
+
+        const trimmedEmail = searchEmail.trim().toLowerCase();
+
+        if (!trimmedEmail) {
+            return; // No email entered
+        }
+
+        // Search in the combined list
+        const account = allSearchableAccounts.find(acc => acc.email && acc.email.toLowerCase() === trimmedEmail);
+        
+        setFoundAccount(account);
+    };
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setSearchEmail(''); // Reset email search
+        setFoundAccount(null);
+        setSearchAttempted(false);
+    };
+
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
             <div className="flex mb-6 border-b">
                 <button
-                    onClick={() => setActiveTab('find')}
+                    onClick={() => handleTabChange('find')}
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-t-lg focus:outline-none ${
                         activeTab === 'find' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
                     }`}
                 >
                     <Search size={18} />
-                    Find {title}
+                    Find {title} by Email
                 </button>
                 <button
-                    onClick={() => setActiveTab('all')}
+                    onClick={() => handleTabChange('all')}
                     className={`flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-t-lg focus:outline-none ${
                         activeTab === 'all' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'
                     }`}
@@ -1579,62 +1620,90 @@ const FilterInterface = ({ title }) => {
 
             {activeTab === 'find' && (
                 <div>
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">Filter</h2>
+                    <h2 className="text-xl font-semibold mb-4 text-gray-700">Find Account by Email</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        {/* Left Column */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                            <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Type a name here" />
+                        <div className="md:col-span-2"> {/* Email input spans both columns */}
+                            <label htmlFor="searchEmailInput" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                            <input
+                                id="searchEmailInput"
+                                type="email"
+                                value={searchEmail}
+                                onChange={(e) => setSearchEmail(e.target.value)}
+                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter Email Address"
+                            />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-                            <input type="email" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="example@mail.com" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">ID</label>
-                            <input type="text" className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" placeholder="Id" />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">User type</label>
-                            <select className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500">
-                                <option value="consultant">Consultant</option>
-                                <option value="customer">Customer</option>
-                            </select>                     
+                        <div className="md:col-span-2 flex items-end">
+                            <button
+                                onClick={handleFindAccount}
+                                className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                disabled={!searchEmail.trim()} // Disable if email is empty
+                            >
+                                Find Account
+                            </button>
                         </div>
                     </div>
+
+                    {searchAttempted && foundAccount && (
+                        <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow">
+                            <h3 className="text-lg font-semibold mb-3 text-gray-800">Account Information</h3>
+                            {Object.entries(foundAccount).map(([key, value]) => {
+                                // Don't display 'originalType' if you added it just for internal logic
+                                if (key === 'originalType' && value === (foundAccount.type || '')) return null;
+                                return (
+                                    <div key={key} className="mb-1">
+                                        <span className="font-medium text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}: </span>
+                                        <span className="text-gray-700">{String(value)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
+                    {searchAttempted && !foundAccount && searchEmail.trim() && (
+                        <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg">
+                            No account found with email "{searchEmail.trim()}".
+                        </div>
+                    )}
                 </div>
             )}
-             {activeTab === 'all' && (
+
+            {activeTab === 'all' && (
+                // ... "All Accounts" tab content remains the same ...
                 <div>
                     <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
-                    {/* Placeholder for list of all doctors/customers */}
-                    <p className="text-gray-500">List of all {title}s will be displayed here.</p>
-                        <table className="w-full text-left mt-4">
-                            <thead>
-                                <tr className="text-gray-600 border-b">
-                                    <th className="py-2">Name</th>
-                                    <th>Email</th>
-                                    <th>Type</th>
-                                    <th>Gender</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {allAccountsData.map((consultant) => (
-                                    <tr key={consultant.id} className="border-b">
-                                        <td className="py-2">{consultant.email}</td>
-                                        <td>{consultant.name}</td>
-                                        <td>{consultant.type}</td>
-                                        <td>{consultant.gender}</td>
-                                        
-                                        <td>
-                                            <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                            <button className="text-red-600 hover:underline">Delete</button>
-                                        </td>
+                    {allAccountsData.length > 0 ? (
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full text-left mt-4 text-sm">
+                                <thead className="border-b bg-gray-50">
+                                    <tr>
+                                        <th className="px-4 py-3 font-medium text-gray-600">ID</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Name</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Email</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Type</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Gender</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
                                     </tr>
-                                ))}
-                            </tbody>                            
-                        </table>  
+                                </thead>
+                                <tbody className="bg-white divide-y divide-gray-200">
+                                    {allAccountsData.map((account) => (
+                                        <tr key={`${account.type}-${account.id}`} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 text-gray-700">{account.id}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.name}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.email}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.type}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.gender || 'N/A'}</td>
+                                            <td className="px-4 py-3">
+                                                <button className="text-blue-600 hover:text-blue-800 hover:underline mr-3">Edit</button>
+                                                <button className="text-red-600 hover:text-red-800 hover:underline">Delete</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    ) : (
+                         <p className="text-gray-500">No accounts to display.</p>
+                    )}
                 </div>
             )}
         </div>
