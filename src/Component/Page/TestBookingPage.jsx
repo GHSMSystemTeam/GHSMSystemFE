@@ -38,7 +38,6 @@ const TestBookingPage = () => {
 
   const [selectedKit, setSelectedKit] = useState(null);
   const [appointmentDate, setAppointmentDate] = useState('');
-  const [appointmentTime, setAppointmentTime] = useState('');
   const [bookings, setBookings] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingRatings, setBookingRatings] = useState({});
@@ -208,7 +207,7 @@ const TestBookingPage = () => {
       return;
     }
 
-    if (!selectedKit || !appointmentDate || !appointmentTime || !userInfo.name || !userInfo.phone) {
+    if (!selectedKit || !appointmentDate || !userInfo.name || !userInfo.phone) {
       showToast('Vui lòng điền đầy đủ thông tin bắt buộc!', 'error');
       return;
     }
@@ -217,7 +216,6 @@ const TestBookingPage = () => {
       id: Date.now(),
       kit: selectedKit,
       date: appointmentDate,
-      time: appointmentTime,
       userInfo: {
         name: user.fullName,
         phone: user.phone,
@@ -253,7 +251,6 @@ const TestBookingPage = () => {
       setTimeout(() => {
         setSelectedKit(null);
         setAppointmentDate('');
-        setAppointmentTime('');
         setUserInfo({
           name: user?.fullName || '',
           phone: user?.phone || '',
@@ -599,27 +596,6 @@ const TestBookingPage = () => {
                             />
                           </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              Chọn giờ <span className="text-red-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                              {timeSlots.map((time) => (
-                                <button
-                                  key={time}
-                                  type="button"
-                                  onClick={() => setAppointmentTime(time)}
-                                  className={`p-2.5 text-sm border rounded-lg transition-colors flex items-center justify-center ${appointmentTime === time
-                                    ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                    : 'border-gray-300 hover:border-blue-300'
-                                    }`}
-                                >
-                                  {appointmentTime === time && <Check size={14} className="mr-1" />}
-                                  {time}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
                         </div>
                       </div>
 
@@ -929,7 +905,7 @@ const TestBookingPage = () => {
               <h3 className="text-xl font-bold text-gray-900 mb-2">Đặt lịch thành công!</h3>
               <p className="text-gray-500">
                 Bạn đã đặt lịch xét nghiệm {selectedKit.name} vào ngày{' '}
-                {new Date(appointmentDate).toLocaleDateString('vi-VN')} lúc {appointmentTime}
+                {new Date(appointmentDate).toLocaleDateString('vi-VN')}
               </p>
               <p className="text-gray-500 mt-1">
                 Chúng tôi sẽ liên hệ với bạn để xác nhận lịch hẹn.

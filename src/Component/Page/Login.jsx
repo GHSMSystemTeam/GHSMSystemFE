@@ -1,68 +1,103 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import { useAuth } from '../Auth/AuthContext';
+import api from '../config/axios';
+import { toast } from 'react-toastify';
 
 export default function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
-    const { user } = useAuth();
 
-    const handleLogin = (e) => {
+    const handleLogin = async (e) => {
         e.preventDefault();
+        setIsLoading(true);
+        setErrorMessage('');
+
         // Basic validation
         if (!email || !password) {
             setErrorMessage('Vui lòng nhập đầy đủ thông tin');
+            setIsLoading(false);
             return;
         }
+
         try {
-            // Only allow admin login
-            const adminEmail = "admin@example.com";
-            const adminPassword = "admin123"; // Set your admin password here
+            // Gọi API login
+            const payload = {
+                email: email.trim(),
+                password: password
+            };
 
-            if (email === adminEmail && password === adminPassword) {
-                login({
-                    fullName: "Admin User",
-                    email: adminEmail,
-                    role: "admin"
-                });
-                navigate("/admin-profile"); // Redirect to admin profile page
-            } else {
-                setErrorMessage('Chỉ tài khoản admin được phép đăng nhập');
+            console.log("Sending login payload:", payload);
+            const response = await api.post(
+                '/api/login',
+                null,
+                {
+                    params: {
+                        email: email.trim(),
+                        password
+                    },
+                    headers: {
+                        'Accept': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                }
+            );
+            console.log("Login successful:", response.data);
+
+            // Lưu token nếu API trả về
+            if (response.data.token) {
+                localStorage.setItem('authToken', response.data.token);
             }
-            // Giả lập API call để lấy thông tin user
-            const userData = JSON.parse(localStorage.getItem('users') || '[]')
-                .find(user => user.email === email && user.password === password);
 
-            if (userData) {
-                login({
-                    fullName: userData.fullName, // Lấy tên thật của user từ dữ liệu đăng ký
-                    email: userData.email,
-                    phone: userData.phone
-                });
+            // Lưu thông tin user vào context
+            const userData = {
+                id: response.data.id,
+                fullName: response.data.name || email.split('@')[0],
+                email: response.data.email || email,
+                phone: response.data.phone || '',
+                role: response.data.role?.name || 'user',
+                gender: response.data.gender,
+                admin: response.data.admin,
+                specialization: response.data.specialization,
+                active: response.data.active
+            };
 
+            login(userData);
+
+            // Hiển thị thông báo thành công
+            toast.success("Đăng nhập thành công!");
+
+            // Chuyển hướng dựa trên role
+            if (userData.role === 'admin') {
+                navigate('/admin-profile');
+            } else {
                 // Redirect về trang trước đó hoặc trang chủ
                 const from = location.state?.from || '/';
                 navigate(from);
-            } else {
-                setErrorMessage('Email hoặc mật khẩu không đúng');
             }
-        } catch (error) {
-            setErrorMessage('Có lỗi xảy ra khi đăng nhập');
+
+        } catch (err) {
+            console.error("Login error:", err);
+            if (err.response) {
+                console.error("Backend error response data:", err.response.data);
+                const errorMsg = err.response.data?.message || err.response.data?.error || 'Đăng nhập thất bại';
+                toast.error(String(errorMsg));
+                setErrorMessage(String(errorMsg));
+            } else {
+                toast.error("Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại sau.");
+                setErrorMessage("Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại sau.");
+            }
+        } finally {
+            setIsLoading(false);
         }
-
-        // Here you would typically call your API for authentication
-        console.log('Login attempt with:', { email, password });
-
-        // For demo, simulate successful login and redirect
-        // Replace this with actual authentication logic
-        
-
     };
 
     return (
@@ -99,6 +134,7 @@ export default function Login() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="name@example.com"
+                                        disabled={isLoading}
                                     />
                                 </div>
                             </div>
@@ -115,26 +151,24 @@ export default function Login() {
                                         type={showPassword ? "text" : "password"}
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="w-full pl-10 pr-1 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                                         placeholder="••••••••"
+                                        disabled={isLoading}
                                     />
-                                    {/*
-                                    {password && (
-                                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowPassword(!showPassword)}
-                                                className="text-gray-400 hover:text-gray-500"
-                                            >
-                                                {showPassword ? (
-                                                    <EyeOff size={18} />
-                                                ) : (
-                                                    <Eye size={18} />
-                                                )}
-                                            </button>
-                                        </div>
-                                    )}
-                                    */}
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="text-gray-400 hover:text-gray-500"
+                                            disabled={isLoading}
+                                        >
+                                            {showPassword ? (
+                                                <EyeOff size={18} />
+                                            ) : (
+                                                <Eye size={18} />
+                                            )}
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
 
@@ -145,6 +179,7 @@ export default function Login() {
                                         name="remember-me"
                                         type="checkbox"
                                         className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                        disabled={isLoading}
                                     />
                                     <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                                         Ghi nhớ đăng nhập
@@ -161,9 +196,10 @@ export default function Login() {
                             <div>
                                 <button
                                     type="submit"
-                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                    disabled={isLoading}
+                                    className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    Đăng nhập
+                                    {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
                                 </button>
                             </div>
                         </form>
@@ -184,6 +220,7 @@ export default function Login() {
                                 <button
                                     type="button"
                                     className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    disabled={isLoading}
                                 >
                                     <svg className="h-5 w-5 text-blue-600" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.325-1.325z" />
@@ -192,6 +229,7 @@ export default function Login() {
                                 <button
                                     type="button"
                                     className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                    disabled={isLoading}
                                 >
                                     <svg className="h-5 w-5 text-red-500" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748L12.545,10.239z" />
