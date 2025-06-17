@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import { toast } from 'react-toastify';
 import api from '../config/axios';
+import { toast } from 'react-toastify';
 
 export default function Register() {
     const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ export default function Register() {
         const { name, value } = e.target;
         setFormData(prev => ({
             ...prev,
-            [name]: value
+            [name]: name === "gender" ? Number(value) : value
         }));
     };
 
@@ -48,6 +49,18 @@ export default function Register() {
 
         try {
         // Map frontend fields to backend payload
+        let apiGender;
+        if (formData.gender === 0) { // Frontend Male
+            apiGender = 1; // Backend Male
+        } else if (formData.gender === 1) { // Frontend Female
+            apiGender = 2; // Backend Female
+        } else if (formData.gender === 2) { // Frontend Other
+            apiGender = 3; // Backend Other
+        } else {
+            // Handle unexpected frontend gender value, perhaps default or throw error
+            // For now, let's assume it won't happen if your select options are fixed
+            apiGender = 1; // Default to Male or handle error appropriately
+        }
         const payload = {
             name: formData.fullName,
             email: formData.email,
@@ -57,18 +70,26 @@ export default function Register() {
         };
         //formData dữ liệu người dùng nhập
         //Đẩy cái dữ liệu. này xuống cho BE xử lý
-
-        const response = await api.post('/api/register', payload);
-        console.log(response);
-        // => thành công
-        // => show message
+        console.log("Sending payload:", payload);
+        const response = await api.post('/api/register', payload); // Or /api/user if that's the correct one
+        console.log("Registration successful:", response);
+        toast.success("Successfully created new account!");
+        navigate("/login");
         toast.success("Successfully create new account!");
         navigate("/login");
         } catch (err) {
-        console.error("Registration error:", err);
-        toast.error(err.response.data);
+            console.error("Registration error:", err);
+            if (err.response) {
+                console.error("Backend error response data:", err.response.data);
+                const errorMsg = err.response.data?.message || err.response.data?.error || JSON.stringify(err.response.data);
+                toast.error(String(errorMsg));
+                setErrorMessage(String(errorMsg));
+            } else {
+                toast.error("Đăng ký thất bại. Vui lòng thử lại sau.");
+                setErrorMessage("Đăng ký thất bại. Vui lòng thử lại sau.");
+            }
         } finally {
-        setIsLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -148,7 +169,22 @@ export default function Register() {
                                     />
                                 </div>
                             </div>
-                            
+                            {/* Gender input */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Giới tính
+                                </label>
+                                <select
+                                    name="gender"
+                                    value={formData.gender}
+                                    onChange={handleChange}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value={1}>Nam</option>
+                                    <option value={2}>Nữ</option>
+                                    <option value={3}>Khác</option>
+                                </select>
+                            </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Mật khẩu
