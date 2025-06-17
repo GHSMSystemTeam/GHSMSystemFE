@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, User, Phone } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import LogoGHSMS from '../Logo/LogoGHSMS';
-import { toast } from 'react-toastify';
 import api from '../config/axios';
 import { toast } from 'react-toastify';
 

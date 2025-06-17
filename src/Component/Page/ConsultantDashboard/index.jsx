@@ -8,15 +8,93 @@ import ServicesPanel from './ServicesPanel';
 
 export default function ConsultantDashboard() {
   const [activeTab, setActiveTab] = useState('questions');
+  // State cho dữ liệu
+  const [questions, setQuestions] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [examBookings, setExamBookings] = useState([]);
+  const [examResults, setExamResults] = useState([]);
+  const [blogs, setBlogs] = useState([]);
+  const [services, setServices] = useState([]);
+  // State cho loading và error
+  const [loading, setLoading] = useState({
+    questions: false,
+    appointments: false,
+    examBookings: false,
+    examResults: false,
+    blogs: false,
+    services: false,
+  });
+  const [error, setError] = useState({
+    questions: null,
+    appointments: null,
+    examBookings: null,
+    examResults: null,
+    blogs: null,
+    services: null,
+  });
+  // State cho modal
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  // State cho tab xét nghiệm
+  const [examTab, setExamTab] = useState('bookings');
 
   const renderContent = () => {
     switch(activeTab) {
-      case 'questions': return <QuestionsPanel />;
-      case 'schedules': return <SchedulesPanel />;
-      case 'examinations': return <ExaminationsPanel />;
-      case 'blogs': return <BlogsPanel />;
-      case 'services': return <ServicesPanel />;
-      default: return <QuestionsPanel />;
+      case 'questions':
+        return (
+          <QuestionsPanel
+            questions={questions}
+            loading={loading.questions}
+            error={error.questions}
+            selectedQuestion={selectedQuestion}
+            setSelectedQuestion={setSelectedQuestion}
+          />
+        );
+      case 'schedules':
+        return (
+          <SchedulesPanel
+            appointments={appointments}
+            loading={loading.appointments}
+            error={error.appointments}
+            selectedAppointment={selectedAppointment}
+            setSelectedAppointment={setSelectedAppointment}
+          />
+        );
+      case 'examinations':
+        return (
+          <ExaminationsPanel
+            examTab={examTab}
+            setExamTab={setExamTab}
+            examBookings={examBookings}
+            examResults={examResults}
+            loading={loading}
+            error={error}
+          />
+        );
+      case 'blogs':
+        return (
+          <BlogsPanel
+            blogs={blogs}
+            loading={loading.blogs}
+            error={error.blogs}
+          />
+        );
+      case 'services':
+        return (
+          <ServicesPanel
+            services={services}
+            loading={loading.services}
+            error={error.services}
+          />
+        );
+      default:
+        return <QuestionsPanel
+          questions={questions}
+          loading={loading.questions}
+          error={error.questions}
+          selectedQuestion={selectedQuestion}
+          setSelectedQuestion={setSelectedQuestion}
+        />;
     }
   };
 

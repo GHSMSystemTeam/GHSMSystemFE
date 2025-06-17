@@ -14,40 +14,38 @@ export default function QuestionsPanel({ questions, loading, error, selectedQues
       ) : (
         <div className="bg-white rounded-lg shadow">
           {questions && questions.length > 0 ? (
-  questions.map((q) => (
-    <div key={q.id} className="p-4 border-b border-gray-200 last:border-b-0">
-      <div className="flex justify-between items-start">
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-medium">{q.user}</span>
-            <span className="text-sm text-gray-500">{q.time}</span>
-            <span
-              className={`px-2 py-1 rounded text-xs ${
-                q.status === 'Chưa trả lời'
-                  ? 'bg-red-100 text-red-800'
-                  : 'bg-green-100 text-green-800'
-              }`}
-            >
-              {q.status}
-            </span>
-          </div>
-          <p className="text-gray-700">{q.question}</p>
-        </div>
-        <button
-          onClick={() => setSelectedQuestion(q)}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Reply size={16} />
-          Trả lời
-        </button>
-      </div>
-    </div>
-  ))
-) : (
-  <p className="text-gray-500 p-4">Không có câu hỏi nào.</p>
-)}
-
-          ))}
+            questions.map((q) => (
+              <div key={q.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="font-medium">{q.user}</span>
+                      <span className="text-sm text-gray-500">{q.time}</span>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${
+                          q.status === 'Chưa trả lời'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-green-100 text-green-800'
+                        }`}
+                      >
+                        {q.status}
+                      </span>
+                    </div>
+                    <p className="text-gray-700">{q.question}</p>
+                  </div>
+                  <button
+                    onClick={() => setSelectedQuestion(q)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+                  >
+                    <Reply size={16} />
+                    Trả lời
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <p className="text-gray-500 p-4">Không có câu hỏi nào.</p>
+          )}
         </div>
       )}
       {selectedQuestion && (
@@ -77,4 +75,4 @@ export default function QuestionsPanel({ questions, loading, error, selectedQues
       )}
     </div>
   );
-} 
+}
