@@ -9,6 +9,9 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [username, setUsername] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const navigate = useNavigate();
     const { login } = useAuth();
     const { user } = useAuth();
