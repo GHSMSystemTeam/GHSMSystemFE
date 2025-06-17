@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper, HomeIcon } from "lucide-react";
 import { Search, Users as PeopleIcon } from "lucide-react";
+import api from '../config/axios';
 import { 
     Plus, 
     Edit, 
@@ -194,7 +195,7 @@ const sampleFeedback = [
     }
 ];
 // Sample Consultant Data
-const consultantsData = [
+{/*const consultantsData = [
     {
         id: 'c1',
         name: "NGUYEN ANH TU",
@@ -236,9 +237,9 @@ const consultantsData = [
         specialty: "Tư vấn tâm lý", // Based on description "lĩnh vực tư vấn tâm lý"
     }
 ];
-
+*/}
 // Sample Customer Data
-const customersData = [
+{/*const customersData = [
     {
         id: 'cust1',
         name: "Nguyen Van A",
@@ -261,6 +262,7 @@ const customersData = [
         gender: "Nam",
     }
 ];
+*/}
 // Placeholder Components
 const ServiceManagementComponent = () => {
     return (
@@ -1547,52 +1549,65 @@ const ReportManagementComponent = () => {
     );
 };
 // New component for the Filter Interface
-const FilterInterface = ({
-    title,
-    consultantsData: receivedConsultantsData = consultantsData,
-    customersData: receivedCustomersData = customersData
-}) => {
+const FilterInterface = ({ title }) => { // Removed data-related props
     const [activeTab, setActiveTab] = useState('find');
-
-    const [searchEmail, setSearchEmail] = useState(''); // State for email search
+    const [searchEmail, setSearchEmail] = useState('');
     const [foundAccount, setFoundAccount] = useState(null);
     const [searchAttempted, setSearchAttempted] = useState(false);
 
-    const currentConsultants = Array.isArray(receivedConsultantsData) ? receivedConsultantsData : [];
-    const currentCustomers = Array.isArray(receivedCustomersData) ? receivedCustomersData : [];
+    // Internal state for FilterInterface to manage its own data
+    const [internalAccountsData, setInternalAccountsData] = useState([]);
+    const [internalIsLoading, setInternalIsLoading] = useState(false);
+    const [internalError, setInternalError] = useState(null);
 
-    // Combined data for searching by email across both types
-    const allSearchableAccounts = [
-        ...currentConsultants.map(c => ({ ...c, originalType: 'Consultant' })),
-        ...currentCustomers.map(cust => ({ ...cust, originalType: 'Customer' }))
-    ];
+    useEffect(() => {
+        // Fetch data when the component mounts or 'all' tab is active and data isn't loaded
+        // For simplicity, let's fetch when the component mounts.
+        // If you only want to fetch when 'all' tab is clicked, adjust this logic.
+        const fetchAccountsForInterface = async () => {
+            setInternalIsLoading(true);
+            setInternalError(null);
+            try {
+                // 'api' is available here because FilterInterface is defined in the same
+                // module scope as AdminProfile, where 'api' is imported.
+                const response = await api.get('/api/user');
+                setInternalAccountsData(response.data || []);
+            } catch (error) {
+                console.error("Error fetching accounts in FilterInterface:", error);
+                setInternalError(error.response?.data?.message || error.message || "Failed to load accounts.");
+                setInternalAccountsData([]);
+            } finally {
+                setInternalIsLoading(false);
+            }
+        };
 
-    const allAccountsData = [ // For the "All Accounts" tab
-        ...currentConsultants.map(c => ({ ...c, type: 'Consultant' })),
-        ...currentCustomers.map(cust => ({ ...cust, type: 'Customer' }))
-    ];
+        fetchAccountsForInterface();
+    }, []); // Empty dependency array: fetch once when FilterInterface mounts
 
     const handleFindAccount = () => {
         setSearchAttempted(true);
         setFoundAccount(null);
-
         const trimmedEmail = searchEmail.trim().toLowerCase();
+        if (!trimmedEmail) return;
 
-        if (!trimmedEmail) {
-            return; // No email entered
-        }
-
-        // Search in the combined list
-        const account = allSearchableAccounts.find(acc => acc.email && acc.email.toLowerCase() === trimmedEmail);
-        
+        // Use internalAccountsData for searching
+        const account = internalAccountsData.find(acc => acc.email && acc.email.toLowerCase() === trimmedEmail);
         setFoundAccount(account);
     };
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
-        setSearchEmail(''); // Reset email search
+        setSearchEmail('');
         setFoundAccount(null);
         setSearchAttempted(false);
+        // Optionally, you could re-fetch or ensure data is fresh if 'all' tab is selected
+    };
+
+    const formatGender = (genderValue) => {
+        if (genderValue === 0) return 'Male'; // As per API doc example
+        if (genderValue === 1) return 'Female';// Assuming 1 is Female based on common patterns
+        if (genderValue === 2) return 'Other'; // Assuming 2 is Other
+        return 'N/A';
     };
 
     return (
@@ -1621,57 +1636,61 @@ const FilterInterface = ({
             {activeTab === 'find' && (
                 <div>
                     <h2 className="text-xl font-semibold mb-4 text-gray-700">Find Account by Email</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                        <div className="md:col-span-2"> {/* Email input spans both columns */}
-                            <label htmlFor="searchEmailInput" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                            <input
-                                id="searchEmailInput"
-                                type="email"
-                                value={searchEmail}
-                                onChange={(e) => setSearchEmail(e.target.value)}
-                                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Enter Email Address"
-                            />
-                        </div>
-                        <div className="md:col-span-2 flex items-end">
-                            <button
-                                onClick={handleFindAccount}
-                                className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                                disabled={!searchEmail.trim()} // Disable if email is empty
-                            >
-                                Find Account
-                            </button>
-                        </div>
-                    </div>
+                    {internalIsLoading && <p className="text-gray-500">Loading account data for search...</p>}
+                    {internalError && <p className="text-red-500">Error: {internalError}</p>}
+                    {!internalIsLoading && !internalError && (
+                        <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                <div className="md:col-span-2">
+                                    <label htmlFor="searchEmailInput" className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                                    <input
+                                        id="searchEmailInput"
+                                        type="email"
+                                        value={searchEmail}
+                                        onChange={(e) => setSearchEmail(e.target.value)}
+                                        className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="Enter Email Address"
+                                    />
+                                </div>
+                                <div className="md:col-span-2 flex items-end">
+                                    <button
+                                        onClick={handleFindAccount}
+                                        className="w-full md:w-auto bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                                        disabled={!searchEmail.trim() || internalIsLoading}
+                                    >
+                                        Find Account
+                                    </button>
+                                </div>
+                            </div>
 
-                    {searchAttempted && foundAccount && (
-                        <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow">
-                            <h3 className="text-lg font-semibold mb-3 text-gray-800">Account Information</h3>
-                            {Object.entries(foundAccount).map(([key, value]) => {
-                                // Don't display 'originalType' if you added it just for internal logic
-                                if (key === 'originalType' && value === (foundAccount.type || '')) return null;
-                                return (
-                                    <div key={key} className="mb-1">
-                                        <span className="font-medium text-gray-600 capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}: </span>
-                                        <span className="text-gray-700">{String(value)}</span>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                    {searchAttempted && !foundAccount && searchEmail.trim() && (
-                        <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg">
-                            No account found with email "{searchEmail.trim()}".
-                        </div>
+                            {searchAttempted && foundAccount && (
+                                <div className="mt-6 p-4 bg-gray-50 rounded-lg shadow">
+                                    <h3 className="text-lg font-semibold mb-3 text-gray-800">Account Information</h3>
+                                    <div className="mb-1"><span className="font-medium">ID:</span> {foundAccount.id}</div>
+                                    <div className="mb-1"><span className="font-medium">Name:</span> {foundAccount.name}</div>
+                                    <div className="mb-1"><span className="font-medium">Email:</span> {foundAccount.email}</div>
+                                    <div className="mb-1"><span className="font-medium">Role:</span> {foundAccount.role?.name || 'N/A'}</div>
+                                    <div className="mb-1"><span className="font-medium">Gender:</span> {formatGender(foundAccount.gender)}</div>
+                                    <div className="mb-1"><span className="font-medium">Phone:</span> {foundAccount.phone || 'N/A'}</div>
+                                    <div className="mb-1"><span className="font-medium">Created:</span> {new Date(foundAccount.createDate).toLocaleDateString()}</div>
+                                </div>
+                            )}
+                            {searchAttempted && !foundAccount && searchEmail.trim() && (
+                                <div className="mt-6 p-4 bg-red-50 text-red-700 rounded-lg">
+                                    No account found with email "{searchEmail.trim()}".
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
             )}
 
             {activeTab === 'all' && (
-                // ... "All Accounts" tab content remains the same ...
                 <div>
                     <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
-                    {allAccountsData.length > 0 ? (
+                    {internalIsLoading && <p className="text-center py-4">Loading accounts...</p>}
+                    {internalError && <p className="text-center py-4 text-red-500">Error loading accounts: {internalError}</p>}
+                    {!internalIsLoading && !internalError && internalAccountsData.length > 0 ? (
                         <div className="overflow-x-auto">
                             <table className="min-w-full text-left mt-4 text-sm">
                                 <thead className="border-b bg-gray-50">
@@ -1679,31 +1698,41 @@ const FilterInterface = ({
                                         <th className="px-4 py-3 font-medium text-gray-600">ID</th>
                                         <th className="px-4 py-3 font-medium text-gray-600">Name</th>
                                         <th className="px-4 py-3 font-medium text-gray-600">Email</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Type</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Role</th>
                                         <th className="px-4 py-3 font-medium text-gray-600">Gender</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Phone</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Created</th>
+                                        <th className="px-4 py-3 font-medium text-gray-600">Active</th>
                                         <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {allAccountsData.map((account) => (
-                                        <tr key={`${account.type}-${account.id}`} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-gray-700">{account.id}</td>
+                                    {internalAccountsData.map((account) => (
+                                        <tr key={account.id} className="hover:bg-gray-50">
+                                            <td className="px-4 py-3 text-gray-700 truncate max-w-[100px]" title={account.id}>{account.id}</td>
                                             <td className="px-4 py-3 text-gray-700">{account.name}</td>
                                             <td className="px-4 py-3 text-gray-700">{account.email}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.type}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.gender || 'N/A'}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.role?.name || 'N/A'}</td>
+                                            <td className="px-4 py-3 text-gray-700">{formatGender(account.gender)}</td>
+                                            <td className="px-4 py-3 text-gray-700">{account.phone || 'N/A'}</td>
+                                            <td className="px-4 py-3 text-gray-700">{new Date(account.createDate).toLocaleDateString()}</td>
+                                            <td className="px-4 py-3 text-gray-700">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                                    account.active ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
+                                                }`}>
+                                                    {account.active ? 'Yes' : 'No'}
+                                                </span>
+                                            </td>
                                             <td className="px-4 py-3">
-                                                <button className="text-blue-600 hover:text-blue-800 hover:underline mr-3">Edit</button>
-                                                <button className="text-red-600 hover:text-red-800 hover:underline">Delete</button>
+                                                <button className="text-blue-600 hover:text-blue-800 hover:underline mr-3 text-xs">Edit</button>
+                                                <button className="text-red-600 hover:text-red-800 hover:underline text-xs">Delete</button>
                                             </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
-                    ) : (
-                         <p className="text-gray-500">No accounts to display.</p>
-                    )}
+                    ) : (!internalIsLoading && !internalError && <p className="text-center py-4 text-gray-500">No accounts to display.</p>)}
                 </div>
             )}
         </div>
@@ -1716,11 +1745,37 @@ export default function AdminProfile() {
     const navigate = useNavigate();
     const [profileMenu, setProfileMenu] = useState(false);
     const [activeView, setActiveView] = useState('dashboard');
-
+    const [allUsersForOtherViews, setAllUsersForOtherViews] = useState([]);
+    const [loadingOtherViewsData, setLoadingOtherViewsData] = useState(false);
+    const [otherViewsDataError, setOtherViewsDataError] = useState(null);
     const handleLogout = () => {
         logout();
         navigate("/login");
     };
+
+    useEffect(() => {
+        // Fetch all users if needed for consultant/customer specific views
+        const fetchUsersForAdminProfile = async () => {
+            // Only fetch if one of the views that needs this data is active
+            // and data hasn't been fetched yet or needs refresh.
+            if (['consultantAccounts', 'customerAccounts'].includes(activeView) && allUsersForOtherViews.length === 0) {
+                setLoadingOtherViewsData(true);
+                setOtherViewsDataError(null);
+                try {
+                    const response = await api.get('/api/user');
+                    setAllUsersForOtherViews(response.data || []);
+                } catch (error) {
+                    console.error("Error fetching users for AdminProfile views:", error);
+                    setOtherViewsDataError(error.response?.data?.message || error.message || "Failed to load user data.");
+                    setAllUsersForOtherViews([]);
+                } finally {
+                    setLoadingOtherViewsData(false);
+                }
+            }
+        };
+        fetchUsersForAdminProfile();
+    }, [activeView, allUsersForOtherViews.length]); // Re-fetch if activeView changes to one requiring data and data isn't there
+    
     const renderMainContent = () => {
         switch (activeView) {
             case 'dashboard':
