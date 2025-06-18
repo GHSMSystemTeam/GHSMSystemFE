@@ -29,6 +29,7 @@ import BookingRating from '../Rating/Rating';
 import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
 import { useAuth } from '../Auth/AuthContext';
+import api from '../config/axios';
 
 const TestBookingPage = () => {
   const { showToast } = useToast();
@@ -62,9 +63,18 @@ const TestBookingPage = () => {
       });
     }
 
-    // Lấy danh sách lịch hẹn đã đặt từ localStorage
-    const savedBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-    setBookings(savedBookings);
+    // Lấy danh sách lịch hẹn đã đặt từ backend
+
+    const fetchBookings = async () => {
+      try {
+        const res = await api.get('/api/activebookings');
+        setBookings(res.data);
+      } catch (err) {
+        showToast('Không thể tải danh sách lịch hẹn!', 'error');
+      }
+    };
+    fetchBookings();
+
   }, [user]);
 
   // Danh sách gói xét nghiệm phổ biến
@@ -201,7 +211,7 @@ const TestBookingPage = () => {
     showToast('Cảm ơn bạn đã đánh giá dịch vụ!', 'success');
   };
 
-  const handleBooking = () => {
+  const handleBooking = async () => {
     if (!checkAuthAndShowPrompt('booking')) {
       showToast('Vui lòng đăng nhập để sử dụng dịch vụ này', 'info');
       return;
@@ -212,65 +222,37 @@ const TestBookingPage = () => {
       return;
     }
 
+    // Chuẩn bị dữ liệu đúng với backend
     const newBooking = {
-      id: Date.now(),
-      kit: selectedKit,
-      date: appointmentDate,
-      userInfo: {
-        name: user.fullName,
-        phone: user.phone,
-        email: user.email,
-        address: userInfo.address
+      consultantId: user.id, // hoặc user._id tùy backend
+      customerId: user.id,
+      serviceTypeId: {
+        name: selectedKit.name,
+        description: selectedKit.description,
+        price: Number(selectedKit.price.replace(/[^\d]/g, '')),
+        active: true
       },
-      status: 'pending',
-      createdAt: new Date().toISOString()
+      appointmentDate: new Date(appointmentDate).toISOString(),
+      appointmentSlot: 0, // hoặc slot bạn chọn
+      duration: 60, // hoặc selectedKit.duration nếu có
+      description: userInfo.address,
+      active: true
     };
 
     try {
-      // Lưu vào localStorage
-      const existingBookings = JSON.parse(localStorage.getItem('bookings') || '[]');
-      localStorage.setItem('bookings', JSON.stringify([...existingBookings, newBooking]));
-      setBookings([...bookings, newBooking]);
-
-      // Thêm thông báo vào Navigation
-      const notification = `Đặt lịch xét nghiệm thành công: ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}`;
-      const savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-      const newNotification = {
-        id: Date.now(),
-        message: notification,
-        type: 'success',
-        timestamp: new Date(),
-        read: false
-      };
-      localStorage.setItem('notifications', JSON.stringify([newNotification, ...savedNotifications]));
-
-      // Hiện xác nhận đặt lịch thành công
+      await api.post('/api/activebookings', newBooking);
+      showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
-
+      // Reload lại danh sách booking
+      const res = await api.get('/api/activebookings');
+      setBookings(res.data);
       // Reset form
       setTimeout(() => {
         setSelectedKit(null);
         setAppointmentDate('');
-        setUserInfo({
-          name: user?.fullName || '',
-          phone: user?.phone || '',
-          email: user?.email || '',
-          address: ''
-        });
         setCurrentStep(1);
         setShowConfirmation(false);
       }, 3000);
-
-      // Show toast
-      showToast('Đặt lịch thành công!', 'success');
-
-      // Add to bell notification
-      if (window.addNotificationToNav) {
-        window.addNotificationToNav(
-          `Bạn đã đặt lịch xét nghiệm ${newBooking.kit.name} vào ngày ${new Date(newBooking.date).toLocaleDateString('vi-VN')} lúc ${newBooking.time}.`,
-          'success'
-        );
-      }
     } catch (error) {
       showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
     }

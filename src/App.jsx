@@ -40,6 +40,7 @@ import {
 import ConsultantDashboard from './Component/Page/ConsultantDashboard'
 function App() {
 
+
   return (
     <>
       <AuthProvider>
@@ -73,7 +74,7 @@ function App() {
             <Route path="/suc-khoe-tam-ly" element={<SucKhoeTamLy />} />
             <Route path="/blog" element={<Blog />} />
             <Route element={<AdminProtectedRoute />}>
-            <Route path="/admin-profile" element={<AdminProfile />} />
+              <Route path="/admin-profile" element={<AdminProfile />} />
             </Route>
             <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
           </Routes>

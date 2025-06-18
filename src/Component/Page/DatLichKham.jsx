@@ -7,8 +7,9 @@ import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
 import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
-import {   
-    MapPin, 
+import { useLocation } from 'react-router-dom';
+import {
+    MapPin,
     Stethoscope,
     ArrowRight,
     Heart,
@@ -45,7 +46,7 @@ export default function DatLichKham() {
         notes: '',
     });
 
-    
+
 
 
     const [submitting, setSubmitting] = useState(false);
@@ -200,39 +201,6 @@ export default function DatLichKham() {
             [name]: value
         }));
     };
-    
-    // Show toast notification - moved from Navigation
-    // const showLocalToast = (message, type = 'success') => {
-    //     // Clear any existing timeout
-    //     if (toastTimeoutRef.current) {
-    //         clearTimeout(toastTimeoutRef.current);
-    //     }
-
-    //     // Show the toast
-    //     setToast({ show: true, message, type });
-
-    //     // Auto hide after 5 seconds
-    //     toastTimeoutRef.current = setTimeout(() => {
-    //         setToast(prev => ({ ...prev, show: false }));
-    //     }, 5000);
-    // };
-
-    // Close toast manually - moved from Navigation
-    // const closeToast = () => {
-    //     if (toastTimeoutRef.current) {
-    //         clearTimeout(toastTimeoutRef.current);
-    //     }
-    //     setToast(prev => ({ ...prev, show: false }));
-    // };
-
-    // Clean up any timeouts when component unmounts
-    // useEffect(() => {
-    //     return () => {
-    //         if (toastTimeoutRef.current) {
-    //             clearTimeout(toastTimeoutRef.current);
-    //         }
-    //     };
-    // }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -311,6 +279,19 @@ export default function DatLichKham() {
         { id: 2, title: "Thông tin", desc: "Hoàn tất thông tin" },
         { id: 3, title: "Xác nhận", desc: "Xác nhận đặt lịch" }
     ];
+
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.selectedDoctorId && location.state?.fromDoctorSelection) {
+            setFormData(prev => ({
+                ...prev,
+                doctor: location.state.selectedDoctorId.toString()
+            }));
+            setCurrentStep(2); // Chuyển đến bước 2 (nhập thông tin)
+        }
+    }, [location.state]);
+
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-r from-purple-100 to-blue-50 pt-24 mt-10">
             <Header />
@@ -350,21 +331,19 @@ export default function DatLichKham() {
                                 <div className="lg:col-span-1">
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-6">
                                         <h3 className="text-lg font-semibold text-gray-900 mb-6">Quy trình đặt lịch</h3>
-                                        
+
                                         <div className="space-y-4">
                                             {steps.map((step) => (
                                                 <div key={step.id} className="flex items-start space-x-3">
-                                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                                                        currentStep >= step.id 
-                                                            ? 'bg-indigo-600 text-white shadow-lg' 
-                                                            : 'bg-gray-200 text-gray-600'
-                                                    }`}>
+                                                    <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep >= step.id
+                                                        ? 'bg-indigo-600 text-white shadow-lg'
+                                                        : 'bg-gray-200 text-gray-600'
+                                                        }`}>
                                                         {currentStep > step.id ? <CheckCircle size={16} /> : step.id}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <p className={`text-sm font-medium transition-colors ${
-                                                            currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
-                                                        }`}>
+                                                        <p className={`text-sm font-medium transition-colors ${currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
+                                                            }`}>
                                                             {step.title}
                                                         </p>
                                                         <p className="text-xs text-gray-500">{step.desc}</p>
@@ -426,26 +405,25 @@ export default function DatLichKham() {
 
                                         {/* Content Body */}
                                         <div className="p-8">
-{currentStep === 1 && (
+                                            {currentStep === 1 && (
                                                 <div className="space-y-4">
                                                     {availableDoctors.map((doctor) => (
-                                                        <div 
-                                                            key={doctor.id} 
+                                                        <div
+                                                            key={doctor.id}
                                                             onClick={() => {
                                                                 setFormData(prev => ({ ...prev, doctor: doctor.id.toString() }));
                                                                 setCurrentStep(2);
                                                             }}
-                                                            className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
-                                                                formData.doctor === doctor.id.toString() 
-                                                                    ? 'border-indigo-500 bg-indigo-50' 
-                                                                    : 'border-gray-200 hover:border-indigo-300'
-                                                            }`}
+                                                            className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.doctor === doctor.id.toString()
+                                                                ? 'border-indigo-500 bg-indigo-50'
+                                                                : 'border-gray-200 hover:border-indigo-300'
+                                                                }`}
                                                         >
                                                             <div className="flex items-start space-x-4">
                                                                 <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
                                                                     {doctor.image ? (
-                                                                        <img 
-                                                                            src={doctor.image} 
+                                                                        <img
+                                                                            src={doctor.image}
                                                                             alt={doctor.name}
                                                                             className="w-full h-full object-cover"
                                                                             onError={(e) => {
@@ -470,7 +448,7 @@ export default function DatLichKham() {
                                                                             <div className="text-xs text-gray-500">Phí tư vấn</div>
                                                                         </div>
                                                                     </div>
-                                                                    
+
                                                                     <div className="flex items-center space-x-4 mt-3">
                                                                         <div className="flex items-center space-x-1">
                                                                             <Star className="text-yellow-400 fill-current" size={16} />
@@ -482,7 +460,7 @@ export default function DatLichKham() {
                                                                             <span className="text-xs text-gray-600">{doctor.experience} kinh nghiệm</span>
                                                                         </div>
                                                                     </div>
-                                                                    
+
                                                                     <div className="mt-3">
                                                                         <div className="text-xs text-gray-600 mb-1">
                                                                             <strong>Học vấn:</strong> {doctor.education}
@@ -499,18 +477,17 @@ export default function DatLichKham() {
                                                             </div>
                                                         </div>
                                                     ))}
-                                                    
+
                                                     {/* Option to select "Any Doctor" */}
-                                                    <div 
+                                                    <div
                                                         onClick={() => {
                                                             setFormData(prev => ({ ...prev, doctor: 'any' }));
                                                             setCurrentStep(2);
                                                         }}
-                                                        className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${
-                                                            formData.doctor === 'any' 
-                                                                ? 'border-indigo-500 bg-indigo-50' 
-                                                                : 'border-gray-200 hover:border-indigo-300'
-                                                        }`}
+                                                        className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.doctor === 'any'
+                                                            ? 'border-indigo-500 bg-indigo-50'
+                                                            : 'border-gray-200 hover:border-indigo-300'
+                                                            }`}
                                                     >
                                                         <div className="flex items-center space-x-4">
                                                             <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
@@ -639,8 +616,8 @@ export default function DatLichKham() {
                                                             <div className="flex justify-between">
                                                                 <span className="text-gray-600">Bác sĩ:</span>
                                                                 <span className="text-gray-900 font-medium">
-                                                                    {formData.doctor === 'any' 
-                                                                        ? 'Bất kỳ bác sĩ' 
+                                                                    {formData.doctor === 'any'
+                                                                        ? 'Bất kỳ bác sĩ'
                                                                         : availableDoctors.find(d => d.id.toString() === formData.doctor)?.name
                                                                     }
                                                                 </span>
@@ -663,9 +640,8 @@ export default function DatLichKham() {
                                                         <button
                                                             type="submit"
                                                             disabled={submitting || !formData.date}
-                                                            className={`px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center space-x-2 ${
-                                                                submitting || !formData.date ? 'opacity-70 cursor-not-allowed' : ''
-                                                            }`}
+                                                            className={`px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center space-x-2 ${submitting || !formData.date ? 'opacity-70 cursor-not-allowed' : ''
+                                                                }`}
                                                         >
                                                             {submitting ? (
                                                                 <>
@@ -708,15 +684,15 @@ export default function DatLichKham() {
                                         Cảm ơn bạn đã đặt lịch khám tại Trung tâm Y học Giới tính TPHCM.
                                         Chúng tôi sẽ liên hệ lại với bạn để xác nhận lịch hẹn trong thời gian sớm nhất.
                                     </p>
-                                    
+
                                     <div className="bg-gray-50 rounded-lg p-6 mb-8 text-left">
                                         <h4 className="font-semibold text-gray-900 mb-4">Thông tin lịch hẹn</h4>
                                         <div className="space-y-3 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Bác sĩ:</span>
                                                 <span className="text-gray-900 font-medium">
-                                                    {formData.doctor === 'any' 
-                                                        ? 'Bất kỳ bác sĩ' 
+                                                    {formData.doctor === 'any'
+                                                        ? 'Bất kỳ bác sĩ'
                                                         : availableDoctors.find(d => d.id.toString() === formData.doctor)?.name
                                                     }
                                                 </span>
@@ -731,10 +707,10 @@ export default function DatLichKham() {
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div className="flex flex-wrap justify-center gap-4">
-                                        <Link 
-                                            to="/" 
+                                        <Link
+                                            to="/"
                                             className="px-6 py-3 bg-gray-100 text-gray-800 rounded-lg font-medium hover:bg-gray-200 transition-colors"
                                         >
                                             Về trang chủ

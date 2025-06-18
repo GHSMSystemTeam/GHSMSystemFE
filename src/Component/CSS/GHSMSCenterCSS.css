@@ -1,0 +1,43 @@
+@keyframes fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fade-in 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+.animate-fade-in.delay-200 {
+    animation-delay: 0.2s;
+}
+
+.animate-fade-in.delay-300 {
+    animation-delay: 0.3s;
+}
+
+@keyframes gradient-move {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.bg-gradient-animate {
+    background: linear-gradient(270deg, #f0abfc, #a5b4fc, #f9a8d4, #f0abfc);
+    background-size: 600% 600%;
+    animation: gradient-move 10s ease infinite;
+}

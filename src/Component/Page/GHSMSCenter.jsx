@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle, Users, Award, Clock, Star } from 'lucide-react';
+import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle, Users, Award, Clock, Star, Stethoscope, ArrowRight } from 'lucide-react';
 import NavItem from '../Nav/NavItem';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import ServiceItem from '../Service/ServiceItem';
@@ -13,7 +13,8 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import SlideShow from '../Array/SlideShow';
 import Header from '../Header/Header';
-
+import { useNavigate } from 'react-router-dom'
+import '../CSS/GHSMSCenterCSS.css';
 
 
 
@@ -25,6 +26,164 @@ export default function GHSMSCenter() {
     const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
     const [predictions, setPredictions] = useState({});
     const [showTracker, setShowTracker] = useState(false);
+    const navigate = useNavigate();
+    // Thêm state cho carousel bác sĩ
+    const [currentDoctorIndex, setCurrentDoctorIndex] = useState(0);
+    const doctorsPerPage = 4; // Hiển thị 4 bác sĩ mỗi lần
+
+    // Thêm danh sách bác sĩ (lấy từ DatLichKham)
+    const featuredDoctors = [
+        {
+            id: 1,
+            title: "TS.BS",
+            name: "Nguyễn Văn Minh",
+            specialty: "Phụ khoa - Sản khoa",
+            description: "Chuyên điều trị các bệnh phụ khoa, tư vấn sức khỏe sinh sản",
+            experience: "20 năm",
+            rating: 4.9,
+            reviews: 245,
+            education: "Tiến sĩ Y khoa - Đại học Y Hà Nội",
+            image: "/images/doctors/doctor1.jpg",
+            languages: ["Tiếng Việt", "English"],
+            workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 6"],
+            consultationFee: "500,000 VNĐ"
+        },
+        {
+            id: 2,
+            title: "TS.BS",
+            name: "Trần Thị Hồng",
+            specialty: "Nam khoa - Tiết niệu",
+            description: "Chuyên gia hàng đầu về sức khỏe nam giới và rối loạn tiết niệu",
+            experience: "18 năm",
+            rating: 4.8,
+            reviews: 198,
+            education: "Tiến sĩ Y khoa - Đại học Y TP.HCM",
+            image: "/images/doctors/doctor2.jpg",
+            languages: ["Tiếng Việt", "English"],
+            workingDays: ["Thứ 2", "Thứ 4", "Thứ 5", "Thứ 7"],
+            consultationFee: "450,000 VNĐ"
+        },
+        {
+            id: 3,
+            title: "BS.CKI",
+            name: "Lê Văn Thành",
+            specialty: "Nội tiết - Chuyển hóa",
+            description: "Chuyên điều trị rối loạn hormone, tiểu đường, tuyến giáp",
+            experience: "15 năm",
+            rating: 4.7,
+            reviews: 156,
+            education: "Bác sĩ Chuyên khoa I - Đại học Y Cần Thơ",
+            image: "/images/doctors/doctor3.jpg",
+            languages: ["Tiếng Việt"],
+            workingDays: ["Thứ 3", "Thứ 5", "Thứ 6", "Chủ nhật"],
+            consultationFee: "400,000 VNĐ"
+        },
+        {
+            id: 4,
+            title: "TS.BS",
+            name: "Phạm Thị Lan",
+            specialty: "Tâm lý học - Tình dục học",
+            description: "Tư vấn tâm lý, trị liệu tình dục, hỗ trợ sức khỏe tinh thần",
+            experience: "12 năm",
+            rating: 4.8,
+            reviews: 134,
+            education: "Tiến sĩ Tâm lý học - Đại học Khoa học Xã hội và Nhân văn",
+            image: "/images/doctors/doctor4.jpg",
+            languages: ["Tiếng Việt", "English", "Français"],
+            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6", "Thứ 7"],
+            consultationFee: "600,000 VNĐ"
+        },
+        {
+            id: 5,
+            title: "BS.CKI",
+            name: "Hoàng Văn Đức",
+            specialty: "Phẫu thuật thẩm mỹ vùng kín",
+            description: "Chuyên phẫu thuật tạo hình và thẩm mỹ vùng sinh dục",
+            experience: "16 năm",
+            rating: 4.9,
+            reviews: 89,
+            education: "Bác sĩ Chuyên khoa I - Đại học Y Huế",
+            image: "/images/doctors/doctor5.jpg",
+            languages: ["Tiếng Việt", "English"],
+            workingDays: ["Thứ 3", "Thứ 5", "Thứ 7"],
+            consultationFee: "800,000 VNĐ"
+        },
+        {
+            id: 6,
+            title: "BS.CKI",
+            name: "Võ Thị Mai",
+            specialty: "Da liễu - STIs",
+            description: "Chuyên điều trị bệnh da liễu và nhiễm trùng lây truyền qua đường tình dục",
+            experience: "14 năm",
+            rating: 4.6,
+            reviews: 167,
+            education: "Bác sĩ Chuyên khoa I - Đại học Y Dược TP.HCM",
+            image: "/images/doctors/doctor6.jpg",
+            languages: ["Tiếng Việt"],
+            workingDays: ["Thứ 2", "Thứ 3", "Thứ 5", "Thứ 6"],
+            consultationFee: "350,000 VNĐ"
+        },
+        {
+            id: 7,
+            title: "TS.BS",
+            name: "Nguyễn Thị Bích",
+            specialty: "Chăm sóc LGBT+ ",
+            description: "Chuyên gia tư vấn và chăm sóc sức khỏe cộng đồng LGBT+",
+            experience: "10 năm",
+            rating: 4.8,
+            reviews: 112,
+            education: "Tiến sĩ Y khoa - Đại học Y khoa Phạm Ngọc Thạch",
+            image: "/images/doctors/doctor7.jpg",
+            languages: ["Tiếng Việt", "English"],
+            workingDays: ["Thứ 4", "Thứ 6", "Thứ 7", "Chủ nhật"],
+            consultationFee: "550,000 VNĐ"
+        },
+        {
+            id: 8,
+            title: "BS.CKI",
+            name: "Trần Văn Hùng",
+            specialty: "Sinh sản - Hiếm muộn",
+            description: "Chuyên điều trị vô sinh hiếm muộn, hỗ trợ sinh sản",
+            experience: "13 năm",
+            rating: 4.7,
+            reviews: 203,
+            education: "Bác sĩ Chuyên khoa I - Đại học Y Thái Bình",
+            image: "/images/doctors/doctor8.jpg",
+            languages: ["Tiếng Việt"],
+            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6"],
+            consultationFee: "650,000 VNĐ"
+        }
+    ];
+
+    // Hàm điều hướng carousel
+    const nextDoctors = () => {
+        const maxIndex = Math.ceil(featuredDoctors.length / doctorsPerPage) - 1;
+        setCurrentDoctorIndex(prev => (prev >= maxIndex ? 0 : prev + 1));
+    };
+
+    const prevDoctors = () => {
+        const maxIndex = Math.ceil(featuredDoctors.length / doctorsPerPage) - 1;
+        setCurrentDoctorIndex(prev => (prev <= 0 ? maxIndex : prev - 1));
+    };
+
+    // Lấy danh sách bác sĩ hiện tại để hiển thị
+    const getCurrentDoctors = () => {
+        const startIndex = currentDoctorIndex * doctorsPerPage;
+        return featuredDoctors.slice(startIndex, startIndex + doctorsPerPage);
+    };
+
+
+    // Hàm xử lý đặt lịch với bác sĩ được chọn
+    const handleBookAppointment = (doctorId) => {
+        // Chuyển đến trang đặt lịch với thông tin bác sĩ đã chọn
+        navigate('/appointment', {
+            state: {
+                selectedDoctorId: doctorId,
+                fromDoctorSelection: true
+            }
+        });
+    };
+
 
     const months = [
         'Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6',
@@ -160,7 +319,7 @@ export default function GHSMSCenter() {
                 </div>
 
 
-                <div className="container mx-auto px-4 py-16">
+                <div className="container mx-auto px-4 py-16 animate-fade-in delay-100">
                     {/* Welcome Section */}
                     <div className="text-center mb-16">
                         <h1 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
@@ -176,7 +335,7 @@ export default function GHSMSCenter() {
                     </div>
                     <SlideShow />
                     {/* Stats */}
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16 animate-fade-in delay-200">
                         {stats.map((stat, index) => (
                             <div key={index} className="bg-white rounded-xl p-6 text-center shadow-lg hover:shadow-xl transition-shadow ">
                                 <div className="text-blue-600 mb-3 flex justify-center">{stat.icon}</div>
@@ -191,35 +350,6 @@ export default function GHSMSCenter() {
 
             {/* Hero Section */}
             <div className="relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50">
-                {/* <div className="container mx-auto px-4 py-12 flex flex-col md:flex-row items-center"> */}
-                {/* <div className="w-full md:w-1/2 md:pr-12 z-10">
-                        <h2 className="text-4xl font-bold text-purple-600 mb-8">TƯ VẤN VÀ ĐIỀU TRỊ:</h2>
-
-                        <div className="space-y-4">
-                            <ServiceItem
-                                icon={<CircleIcon />}
-                                text="Tư vấn, trị liệu tình dục"
-                            />
-                        </div>
-
-                        <ServiceItem
-                            icon={<CircleIcon />}
-                            text="Theo dõi điều trị bệnh lây truyền qua đường tình dục (STIs)"
-                        />
-
-                        <ServiceItem
-                            icon={<CircleIcon />}
-                            text="Quản lý kế hoạch hóa gia đình, tránh thai"
-                        />
-
-                        <ServiceItem
-                            icon={<CircleIcon />}
-                            text="Hỗ trợ quản lý bệnh nhân"
-                        />
-
-
-                    </div> */}
-
 
 
 
@@ -241,62 +371,179 @@ export default function GHSMSCenter() {
 
                 </div>
 
-                {/* </div> */}
-
-                {/* Main Menu Navigation Buttons
-                <div className="w-full bg-indigo-500 text-white py-2">
-                    <div className="container mx-auto px-4 flex flex-wrap justify-center md:justify-between">
-                        <Link to="/about" className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">ABOUT US</Link>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">SERVICE PRICE LIST</button>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDICAL TEST RESULTS</button>
-                        <button className="px-6 py-3 font-semibold text-lg hover:bg-indigo-600 transition-colors">MEDIA SECTION</button>
-                    </div>
-                </div> */}
-
-
-                {/* News and Events Section */}
-                {/* <div className="bg-gray-50 py-16"> */}
-                {/* <div className="container mx-auto px-4"> */}
-                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-8"> */}
-                {/* History Item 1 */}
-                {/* <div className="bg-white p-6 rounded-lg shadow-sm">
-                                <h3 className="text-xl font-semibold text-purple-500 mb-4">
-                                    12/2022: Establishment of GHSMS HCM
-                                </h3>
-                                <p className="text-gray-700">
-                                    was established with the purpose of examining, diagnosing, and providing treatment advice on
-                                    issues related to male and female sexuality; homosexuality – bisexuality and transgender,
-                                    intersex cases as well as cases of gender differentiation disorders.
+                {/* Doctor Team Section */}
+                <section className="text-center relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 animate-fade-in">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-16">
+                            <div className="inline-block mb-3 px-4 py-1 rounded-full bg-blue-200 text-blue-800 text-sm font-medium shadow">
+                                Đội ngũ chuyên gia
+                            </div>
+                            <div className="text-center mb-8">
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                        Bác sĩ chuyên môn hàng đầu
+                                    </span>
+                                </h2>
+                                <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                                    Đội ngũ bác sĩ giàu kinh nghiệm, được đào tạo chuyên sâu về y học giới tính,
+                                    cam kết mang đến dịch vụ chăm sóc sức khỏe tốt nhất cho bạn.
                                 </p>
-                            </div> */}
+                            </div>
+                        </div>
 
-                {/* History Item 2 */}
-                {/* <div className="bg-white p-6 rounded-lg shadow-sm">
-                                <h3 className="text-xl font-semibold text-purple-500 mb-4">
-                                    25/06/2023: Scientific Workshop: Update on Male and Female Sexual Health Care
-                                </h3>
-                                <p className="text-gray-700">
-                                    Vietnam Society of Gender Medicine (VSSM) and HCM city Andrology and Infertility Hospital
-                                    organized a scientific seminar  "UPDATING MALE AND FEMALE SEXUAL HEALTH CARE".
-                                </p>
-                            </div> */}
+                        {/* Doctors Carousel */}
+                        <div className="relative overflow-hidden">
+                            {/* Mũi tên trái */}
+                            <button
+                                onClick={prevDoctors}
+                                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white  flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
+                                title="Xem bác sĩ trước"
+                            >
+                                <ChevronLeft size={24} />
+                            </button>
 
-                {/* </div>
+                            {/* Mũi tên phải */}
+                            <button
+                                onClick={nextDoctors}
+                                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
+                                title="Xem bác sĩ tiếp theo"
+                            >
+                                <ChevronRight size={24} />
+                            </button>
+
+                            {/* Carousel content */}
+                            <div className="flex transition-all duration-500 ease-in-out"
+                                style={{
+                                    transform: `translateX(-${currentDoctorIndex * 100}%)`
+                                }}>
+                                {/* Render từng trang bác sĩ */}
+                                {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, pageIndex) => (
+                                    <div key={pageIndex} className="w-full flex-shrink-0">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 px-16">
+                                            {featuredDoctors
+                                                .slice(pageIndex * doctorsPerPage, (pageIndex + 1) * doctorsPerPage)
+                                                .map((doctor) => (
+                                                    <div
+                                                        key={doctor.id}
+                                                        className="bg-white rounded-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group hover:-translate-y-2"
+                                                    >
+                                                        {/* Doctor Image */}
+                                                        <div className="relative h-64 bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden">
+                                                            {doctor.image ? (
+                                                                <img
+                                                                    src={doctor.image}
+                                                                    alt={doctor.name}
+                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                    onError={(e) => {
+                                                                        e.target.style.display = 'none';
+                                                                        e.target.nextSibling.style.display = 'flex';
+                                                                    }}
+                                                                />
+                                                            ) : null}
+                                                            <div className="w-full h-full flex items-center justify-center">
+                                                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                                                    <Stethoscope className="text-blue-600" size={32} />
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Rating Badge */}
+                                                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1 shadow-lg">
+                                                                <Star className="text-yellow-400 fill-current" size={14} />
+                                                                <span className="text-sm font-medium text-gray-800">{doctor.rating}</span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Doctor Info */}
+                                                        <div className="p-6">
+                                                            <div className="mb-4">
+                                                                <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                                                    {doctor.title} {doctor.name}
+                                                                </h3>
+                                                                <p className="text-blue-600 font-semibold text-sm mb-2">{doctor.specialty}</p>
+                                                                <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                                                                    {doctor.description}
+                                                                </p>
+                                                            </div>
+
+                                                            {/* Experience & Reviews */}
+                                                            <div className="flex items-center justify-between mb-4 text-sm">
+                                                                <div className="flex items-center space-x-1 text-gray-600">
+                                                                    <Clock size={14} />
+                                                                    <span>{doctor.experience} KN</span>
+                                                                </div>
+                                                                <div className="flex items-center space-x-1 text-gray-600">
+                                                                    <Users size={14} />
+                                                                    <span>{doctor.reviews} đánh giá</span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Consultation Fee */}
+                                                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                                                                <div className="text-center">
+                                                                    <p className="text-xs text-gray-500 mb-1">Phí tư vấn</p>
+                                                                    <p className="text-lg font-bold text-blue-600">{doctor.consultationFee}</p>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Book Appointment Button */}
+                                                            <button
+                                                                onClick={() => handleBookAppointment(doctor.id)}
+                                                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 group active:scale-95"
+                                                            >
+                                                                <span>Đặt lịch ngay</span>
+                                                                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            }
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Dots Indicator */}
+                        <div className="flex justify-center space-x-2 mb-8">
+                            {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setCurrentDoctorIndex(index)}
+                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentDoctorIndex
+                                        ? 'bg-blue-600 w-8'
+                                        : 'bg-gray-300 hover:bg-gray-400'
+                                        }`}
+                                />
+                            ))}
+                        </div>
                     </div>
-                </div> */}
-                <div className='text-center relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50'>
-                    <h2 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600">Chăm sóc sức khỏe toàn diện</span>
-                    </h2>
-                    <p className="text-xl text-gray-600 leading-relaxed">
-                        Đội ngũ chuyên gia hàng đầu với hơn 15 năm kinh nghiệm,
-                        mang đến dịch vụ y tế chất lượng cao và tư vấn chuyên nghiệp
-                    </p>
-                </div>
-                <Service />
+                </section>
+
+                {/* Service Section - Thêm margin top và padding */}
+                <section className="text-center relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 py-20 mt-16 animate-fade-in delay-200">
+                    <div className="container mx-auto px-4">
+                        <div className="text-center mb-16">
+                            <div className="inline-block mb-3 px-4 py-1 rounded-full bg-blue-200 text-blue-800 text-sm font-medium shadow">
+                                Dịch vụ
+                            </div>
+                            <div className="text-center mb-8">
+                                <h2 className="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                                        Chăm sóc sức khỏe toàn diện
+                                    </span>
+                                </h2>
+                                <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+                                    Đội ngũ chuyên gia hàng đầu với hơn 15 năm kinh nghiệm,
+                                    mang đến dịch vụ y tế chất lượng cao và tư vấn chuyên nghiệp
+                                </p>
+                            </div>
+                        </div>
+                        <Service />
+                    </div>
+                </section>
 
 
-                <div id="period-tracker" className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 py-20">
+                <div id="period-tracker" className="min-h-screen bg-gradient-to-br from-pink-50 via-purple-50 to-blue-50 py-20 animate-fade-in delay-300">
                     <div className="container mx-auto px-4">
                         <div className="max-w-4xl mx-auto">
                             <div className="text-center mb-12">

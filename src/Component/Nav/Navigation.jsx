@@ -270,12 +270,8 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                         Về CSM HCM
                                     </Link>
-                                    <Link to="/dncm"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                        Đội ngũ chuyên môn
-                                    </Link>
-                                    
+
+
                                 </div>
                             )}
                         </div>
@@ -317,31 +313,31 @@ export default function Navigation() {
                             )}
                         </div>
 
-                    <div className="relative"
-                        ref={blogDropdownRef}
-                        onMouseEnter={handleBlogMouseEnter}
-                        onMouseLeave={handleBlogMouseLeave}
-                    >
-                        <div className="flex items-center cursor-pointer">
-                            <NavItem
-                                label="Kiến thức"
-                                icon={<ChevronUp size={16} />}
-                                active={isActive('/blog')}
-                            />
-                        </div>
-                        {showBlogDropdown && (
-                            <div className="absolute top-full left-0 w-64 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                <Link to="/blog"
-                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Kiến thức y khoa 
-                                </Link>
-                                <Link to="/news"
-                                    className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                    Tin tức  
-                                </Link>
+                        <div className="relative"
+                            ref={blogDropdownRef}
+                            onMouseEnter={handleBlogMouseEnter}
+                            onMouseLeave={handleBlogMouseLeave}
+                        >
+                            <div className="flex items-center cursor-pointer">
+                                <NavItem
+                                    label="Kiến thức"
+                                    icon={<ChevronUp size={16} />}
+                                    active={isActive('/blog')}
+                                />
                             </div>
-                        )}
-                    </div>
+                            {showBlogDropdown && (
+                                <div className="absolute top-full left-0 w-64 bg-white shadow-lg rounded-lg mt-1 z-50">
+                                    <Link to="/blog"
+                                        className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                        Kiến thức y khoa
+                                    </Link>
+                                    <Link to="/news"
+                                        className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
+                                        Tin tức
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="hidden md:flex items-center space-x-4">

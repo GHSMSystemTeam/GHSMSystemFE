@@ -18,7 +18,7 @@ export default function UserProfile() {
         email: user?.email || 'nguyenvana@example.com',
         phone: user?.phone || '0912345678',
         dateOfBirth: '1990-01-01',
-        address: 'TP. Hồ Chí Minh',
+
         gender: 'male',
         avatar: null,
     });
@@ -68,7 +68,7 @@ export default function UserProfile() {
     };
 
     const handleSave = () => {
-            try {
+        try {
             // Validate required fields
             if (
                 !formData.fullName.trim() ||
@@ -202,16 +202,16 @@ export default function UserProfile() {
 
     return (
 
-        <div className='min-h-screen bg-gray-50 pt-24 mt-10'>
+        <div className="min-h-screen bg-gradient-to-br from-purple-100 via-blue-50 to-pink-50 pt-24">
             <Header />
-            <div className='pt-32 pb-16 bg-gradient-to-r from-purple-100 to-blue-50'>
-                <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className="pt-32 pb-16">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Header Section */}
-                    <div className="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
-                        <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-12">
-                            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                                <div className="relative">
-                                    <div className="w-24 h-24 rounded-full bg-white p-1">
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden mb-10 border border-blue-100">
+                        <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-12 relative">
+                            <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-8">
+                                <div className="relative group">
+                                    <div className="w-28 h-28 rounded-full bg-white p-1 shadow-lg border-4 border-blue-200 transition-all duration-300 group-hover:scale-105">
                                         {formData.avatar ? (
                                             <img
                                                 src={formData.avatar}
@@ -220,13 +220,13 @@ export default function UserProfile() {
                                             />
                                         ) : (
                                             <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center">
-                                                <User size={32} className="text-gray-400" />
+                                                <User size={40} className="text-gray-400" />
                                             </div>
                                         )}
                                     </div>
                                     {isEditing && (
-                                        <label className="absolute bottom-0 right-0 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 transition-colors">
-                                            <Camera size={16} className="text-white" />
+                                        <label className="absolute bottom-2 right-2 w-9 h-9 bg-blue-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-700 shadow-lg transition-colors group-hover:scale-110">
+                                            <Camera size={18} className="text-white" />
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -235,41 +235,44 @@ export default function UserProfile() {
                                             />
                                         </label>
                                     )}
+                                    {!isEditing && (
+                                        <div className="absolute bottom-2 right-2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow-lg pointer-events-none">
+                                            <Camera size={18} className="text-blue-600" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="text-center sm:text-left">
-                                    <h1 className="text-2xl font-bold text-white mb-2">
+                                    <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
                                         {formData.fullName}
                                     </h1>
                                     <p className="text-purple-100 mb-1">{formData.email}</p>
-                                    <div className="flex items-center justify-center sm:justify-start text-purple-100">
-                                        <UserCheck size={16} className="mr-2" />
-                                        <span>Thành viên đã xác thực</span>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* Navigation Tabs */}
-                    <div className="bg-white rounded-xl shadow-sm mb-8">
+                    <div className="bg-white rounded-2xl shadow-lg mb-10 border border-blue-100">
                         <div className="border-b border-gray-200">
                             <nav className="flex">
                                 <button
                                     onClick={() => setActiveTab('profile')}
-                                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'profile'
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'profile'
+                                        ? 'border-blue-600 text-blue-600 bg-blue-50'
+                                        : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'
                                         }`}
                                 >
+                                    <User className="inline mr-2 mb-1" size={18} />
                                     Thông tin cá nhân
                                 </button>
                                 <button
                                     onClick={() => setActiveTab('security')}
-                                    className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${activeTab === 'security'
-                                        ? 'border-blue-600 text-blue-600'
-                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                    className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'security'
+                                        ? 'border-blue-600 text-blue-600 bg-blue-50'
+                                        : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'
                                         }`}
                                 >
+                                    <Lock className="inline mr-2 mb-1" size={18} />
                                     Bảo mật
                                 </button>
                             </nav>
@@ -277,241 +280,214 @@ export default function UserProfile() {
 
                         {/* Profile Tab Content */}
                         {activeTab === 'profile' && (
-                            <div className="p-8">
+                            <div className="p-10 animate-fade-in">
                                 <div className="flex justify-between items-center mb-8">
-                                    <h2 className="text-xl font-semibold text-gray-800">
+                                    <h2 className="text-xl font-semibold text-gray-800 flex items-center">
+                                        <User className="mr-2" size={20} />
                                         Thông tin cá nhân
                                     </h2>
                                     {!isEditing ? (
                                         <button
                                             onClick={() => setIsEditing(true)}
-                                            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                            className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition-colors"
                                         >
-                                            <Edit3 size={16} />
+                                            <Edit3 size={18} />
                                             <span>Chỉnh sửa</span>
                                         </button>
                                     ) : (
                                         <div className="flex space-x-3">
                                             <button
                                                 onClick={handleCancel}
-                                                className="flex items-center space-x-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                                className="flex items-center space-x-2 px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 shadow transition-colors"
                                             >
-                                                <X size={16} />
+                                                <X size={18} />
                                                 <span>Hủy</span>
                                             </button>
                                             <button
                                                 onClick={handleSave}
-                                                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                                className="flex items-center space-x-2 px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow transition-colors"
                                             >
-                                                <Save size={16} />
+                                                <Save size={18} />
                                                 <span>Lưu</span>
                                             </button>
                                         </div>
-
                                     )}
-
                                 </div>
 
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Họ và tên */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <User size={16} className="mr-2" />
                                             Họ và tên
                                         </label>
-                                        <div className="relative">
-                                            <User size={18} className="absolute left-3 top-3 text-gray-400" />
-                                            <input
-                                                type="text"
-                                                name="fullName"
-                                                value={formData.fullName}
-                                                onChange={handleInputChange}
-                                                disabled={!isEditing}
-                                                className={`w-full pl-10 pr-3 py-2 border rounded-lg ${isEditing
-                                                    ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                                    : 'border-gray-200 bg-gray-50'
-                                                    }`}
-                                            />
-                                        </div>
+                                        <input
+                                            type="text"
+                                            name="fullName"
+                                            value={formData.fullName}
+                                            onChange={handleInputChange}
+                                            disabled={!isEditing}
+                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
+                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+                                                : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                }`}
+                                        />
                                     </div>
 
                                     {/* Email */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Mail size={16} className="mr-2" />
                                             Email
                                         </label>
-                                        <div className="relative">
-                                            <Mail size={18} className="absolute left-3 top-3 text-gray-400" />
-                                            <input
-                                                type="email"
-                                                name="email"
-                                                value={formData.email}
-                                                onChange={handleInputChange}
-                                                disabled={!isEditing}
-                                                className={`w-full pl-10 pr-3 py-2 border rounded-lg ${isEditing
-                                                    ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                                    : 'border-gray-200 bg-gray-50'
-                                                    }`}
-                                            />
-                                        </div>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleInputChange}
+                                            disabled
+                                            className="w-full pl-10 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
+                                        />
                                     </div>
 
                                     {/* Số điện thoại */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Phone size={16} className="mr-2" />
                                             Số điện thoại
                                         </label>
-                                        <div className="relative">
-                                            <Phone size={18} className="absolute left-3 top-3 text-gray-400" />
-                                            <input
-                                                type="tel"
-                                                name="phone"
-                                                value={formData.phone}
-                                                onChange={handleInputChange}
-                                                disabled={!isEditing}
-                                                className={`w-full pl-10 pr-3 py-2 border rounded-lg ${isEditing
-                                                    ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                                    : 'border-gray-200 bg-gray-50'
-                                                    }`}
-                                            />
-                                        </div>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={formData.phone}
+                                            onChange={handleInputChange}
+                                            disabled={!isEditing}
+                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
+                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+                                                : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                }`}
+                                        />
                                     </div>
 
                                     {/* Ngày sinh */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <CalendarDays size={16} className="mr-2" />
                                             Ngày sinh
                                         </label>
-                                        <div className="relative">
-                                            <CalendarDays size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            <input
-                                                type="date"
-                                                name="dateOfBirth"
-                                                value={formData.dateOfBirth}
-                                                onChange={handleInputChange}
-                                                disabled={!isEditing}
-                                                className={`w-full pl-10 pr-3 py-2.5 border rounded-lg ${isEditing
-                                                    ? 'border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                                                    : 'border-gray-200 bg-gray-50 text-gray-700'
-                                                    }`}
-                                            />
-                                        </div>
+                                        <input
+                                            type="date"
+                                            name="dateOfBirth"
+                                            value={formData.dateOfBirth}
+                                            onChange={handleInputChange}
+                                            disabled={!isEditing}
+                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
+                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
+                                                : 'border-gray-200 bg-gray-50 text-gray-700'
+                                                }`}
+                                        />
                                     </div>
 
                                     {/* Giới tính */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Users size={16} className="mr-2" />
                                             Giới tính
                                         </label>
-                                        <div className="relative">
-                                            <Users size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                                            {isEditing ? (
-                                                <select
-                                                    name="gender"
-                                                    value={formData.gender}
-                                                    onChange={handleInputChange}
-                                                    className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                >
-                                                    <option value="male">Nam</option>
-                                                    <option value="female">Nữ</option>
-                                                </select>
-                                            ) : (
-                                                <input
-                                                    type="text"
-                                                    name="gender"
-                                                    value={formData.gender === 'male' ? 'Nam' : formData.gender === 'female' ? 'Nữ' : 'Khác'}
-                                                    disabled
-                                                    className="w-full pl-10 pr-3 py-2.5 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
-                                                />
-                                            )}
-                                        </div>
+                                        {isEditing ? (
+                                            <select
+                                                name="gender"
+                                                value={formData.gender}
+                                                onChange={handleInputChange}
+                                                className="w-full pl-10 pr-3 py-2 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                                            >
+                                                <option value="male">Nam</option>
+                                                <option value="female">Nữ</option>
+                                                <option value="other">Khác</option>
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                name="gender"
+                                                value={
+                                                    formData.gender === 'male'
+                                                        ? 'Nam'
+                                                        : formData.gender === 'female'
+                                                            ? 'Nữ'
+                                                            : 'Khác'
+                                                }
+                                                disabled
+                                                className="w-full pl-10 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
+                                            />
+                                        )}
                                     </div>
                                 </div>
-
-
                             </div>
                         )}
 
                         {/* Security Tab Content */}
                         {activeTab === 'security' && (
-                            <div className="p-8">
-                                <h2 className="text-xl font-semibold text-gray-800 mb-8">
+                            <div className="p-10 animate-fade-in">
+                                <h2 className="text-xl font-semibold text-gray-800 mb-8 flex items-center">
+                                    <Lock className="mr-2" size={20} />
                                     Đổi mật khẩu
                                 </h2>
-
-                                <form onSubmit={handlePasswordUpdate} className="max-w-md">
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Mật khẩu hiện tại
-                                            </label>
-                                            <div className="relative">
-                                                <Lock size={18} className="absolute left-3 top-3 text-gray-400" />
-                                                <input
-                                                    type="password"
-                                                    name="currentPassword"
-                                                    value={passwordData.currentPassword}
-                                                    onChange={handlePasswordChange}
-                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="••••••••"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Mật khẩu mới
-                                            </label>
-                                            <div className="relative">
-                                                <Lock size={18} className="absolute left-3 top-3 text-gray-400" />
-                                                <input
-                                                    type="password"
-                                                    name="newPassword"
-                                                    value={passwordData.newPassword}
-                                                    onChange={handlePasswordChange}
-                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="••••••••"
-                                                />
-                                            </div>
-                                            <p className="mt-1 text-xs text-gray-500">
-                                                Mật khẩu phải có ít nhất 8 ký tự
-                                            </p>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Xác nhận mật khẩu mới
-                                            </label>
-                                            <div className="relative">
-                                                <Lock size={18} className="absolute left-3 top-3 text-gray-400" />
-                                                <input
-                                                    type="password"
-                                                    name="confirmPassword"
-                                                    value={passwordData.confirmPassword}
-                                                    onChange={handlePasswordChange}
-                                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    placeholder="••••••••"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <button
-                                            type="submit"
-                                            className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                                        >
-                                            Cập nhật mật khẩu
-                                        </button>
+                                <form onSubmit={handlePasswordUpdate} className="max-w-md space-y-7">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Lock size={16} className="mr-2" />
+                                            Mật khẩu hiện tại
+                                        </label>
+                                        <input
+                                            type="password"
+                                            name="currentPassword"
+                                            value={passwordData.currentPassword}
+                                            onChange={handlePasswordChange}
+                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="••••••••"
+                                        />
                                     </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Lock size={16} className="mr-2" />
+                                            Mật khẩu mới
+                                        </label>
+                                        <input
+                                            type="password"
+                                            name="newPassword"
+                                            value={passwordData.newPassword}
+                                            onChange={handlePasswordChange}
+                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="••••••••"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500">
+                                            Mật khẩu phải có ít nhất 8 ký tự
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                                            <Lock size={16} className="mr-2" />
+                                            Xác nhận mật khẩu mới
+                                        </label>
+                                        <input
+                                            type="password"
+                                            name="confirmPassword"
+                                            value={passwordData.confirmPassword}
+                                            onChange={handlePasswordChange}
+                                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            placeholder="••••••••"
+                                        />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold shadow"
+                                    >
+                                        Cập nhật mật khẩu
+                                    </button>
                                 </form>
                             </div>
                         )}
-
-
                     </div>
-
-
-
-
                 </div>
             </div>
             <Footer />

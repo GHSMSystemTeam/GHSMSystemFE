@@ -939,22 +939,6 @@ export default function Consulation() {
                         </div>
                     </div>
                 </div>
-
-
-
-                {/* CTA */}
-                <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg p-8 shadow-lg text-white text-center mb-8">
-                    <h2 className="text-2xl font-bold mb-4">Đặt lịch khám trực tiếp ngay hôm nay</h2>
-                    <p className="text-white/90 mb-6 max-w-2xl mx-auto">
-                        Đội ngũ bác sĩ chuyên khoa giàu kinh nghiệm của chúng tôi sẵn sàng tư vấn và điều trị mọi vấn đề sức khỏe giới tính của bạn với sự tận tâm và bảo mật tuyệt đối.
-                    </p>
-                    <Link
-                        to="/appointment"
-                        className="inline-block bg-white text-blue-700 font-medium px-8 py-3 rounded-lg hover:bg-blue-50 transition-colors"
-                    >
-                        Đặt lịch ngay
-                    </Link>
-                </div>
             </main>
 
             <Footer />
