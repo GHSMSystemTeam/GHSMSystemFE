@@ -1,7 +1,11 @@
 import axios from "axios";
 
 const api = axios.create({
+<<<<<<< Updated upstream
     baseURL: "https://8944-2405-4803-d74c-b090-2cf2-e14b-9a4e-654c.ngrok-free.app",
+=======
+    baseURL: "https://8944-2405-4803-d74c-b090-2cf2-e14b-9a4e-654c.ngrok-free.app/",
+>>>>>>> Stashed changes
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',

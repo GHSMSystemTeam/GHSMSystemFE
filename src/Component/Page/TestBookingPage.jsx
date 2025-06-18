@@ -63,19 +63,26 @@ const TestBookingPage = () => {
       });
     }
 
-    // Lấy danh sách lịch hẹn đã đặt từ backend
-
-    const fetchBookings = async () => {
+    // Lấy danh sách gói xét nghiệm từ backend
+    const fetchTestKits = async () => {
+      setLoadingKits(true);
       try {
-        const res = await api.get('/api/activebookings');
-        setBookings(res.data);
+        const res = await api.get('/api/servicetypes/active');
+        setTestKits(res.data || []);
       } catch (err) {
-        showToast('Không thể tải danh sách lịch hẹn!', 'error');
+        showToast('Không thể tải danh sách gói xét nghiệm!', 'error');
+      } finally {
+        setLoadingKits(false);
       }
     };
-    fetchBookings();
+    fetchTestKits();
+
+
 
   }, [user]);
+
+  const [testKits, setTestKits] = useState([]);
+  const [loadingKits, setLoadingKits] = useState(true);
 
   // Danh sách gói xét nghiệm phổ biến
   const popularTestKits = [
@@ -229,7 +236,7 @@ const TestBookingPage = () => {
       serviceTypeId: {
         name: selectedKit.name,
         description: selectedKit.description,
-        price: Number(selectedKit.price.replace(/[^\d]/g, '')),
+        price: Number(selectedKit.price),
         active: true
       },
       appointmentDate: new Date(appointmentDate).toISOString(),
@@ -240,11 +247,11 @@ const TestBookingPage = () => {
     };
 
     try {
-      await api.post('/api/activebookings', newBooking);
+      await api.post('/api/servicetypes/active', newBooking);
       showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
       // Reload lại danh sách booking
-      const res = await api.get('/api/activebookings');
+      const res = await api.get('/api/servicetypes/active');
       setBookings(res.data);
       // Reset form
       setTimeout(() => {
@@ -403,107 +410,77 @@ const TestBookingPage = () => {
                   </div>
 
                   <div className="p-6">
-                    <div className="grid md:grid-cols-2 gap-6">
-                      {filteredTestKits().map((kit) => (
-                        <div
-                          key={kit.id}
-                          className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative
-                            ${selectedKit?.id === kit.id
-                              ? 'border-blue-500 bg-blue-50 shadow-md'
-                              : 'border-gray-200 hover:border-blue-300'
-                            }`}
-                          onMouseEnter={() => setHoveredKit(kit.id)}
-                          onMouseLeave={() => setHoveredKit(null)}
-                          onClick={() => setSelectedKit(kit)}
-                        >
-                          {/* Badge */}
-                          {kit.category === 'popular' && (
-                            <div className="absolute top-3 right-3 bg-red-500 text-white text-xs py-1 px-2 rounded-full font-medium z-10 flex items-center">
-                              <Star size={12} className="mr-1 fill-white" />
-                              Phổ biến
-                            </div>
-                          )}
-
-                          {/* Image with overlay on hover */}
-                          <div className="relative">
-                            <img
-                              src={kit.image}
-                              alt={kit.name}
-                              className="w-full h-48 object-cover"
-                            />
-                            <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
-                              ${hoveredKit === kit.id || selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
-                              <button
-                                className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setSelectedKit(kit);
-                                  handleNextStep();
-                                }}
-                              >
-                                Đặt ngay <ArrowRight size={16} className="ml-1" />
-                              </button>
-                            </div>
+                    {loadingKits ? (
+                      <div className="text-center text-blue-600 py-10">Đang tải danh sách gói xét nghiệm...</div>
+                    ) : (
+                      <div className="grid md:grid-cols-2 gap-6">
+                        {testKits.length === 0 && (
+                          <div className="col-span-2 text-center text-gray-500 py-10">
+                            Không có gói xét nghiệm nào khả dụng.
                           </div>
-
-                          <div className="p-4">
-                            <h3 className="font-semibold text-lg text-gray-800 mb-2">{kit.name}</h3>
-                            <p className="text-gray-600 text-sm mb-3 line-clamp-2">{kit.description}</p>
-
-                            <div className="flex items-center mb-3">
-                              <div className="flex">
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    size={16}
-                                    className={i < Math.floor(kit.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}
-                                  />
-                                ))}
+                        )}
+                        {testKits.map((kit, idx) => (
+                          <div
+                            key={kit.name + idx}
+                            className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative
+            ${selectedKit?.name === kit.name
+                                ? 'border-blue-500 bg-blue-50 shadow-md'
+                                : 'border-gray-200 hover:border-blue-300'
+                              }`}
+                            onMouseEnter={() => setHoveredKit(kit.name)}
+                            onMouseLeave={() => setHoveredKit(null)}
+                            onClick={() => setSelectedKit(kit)}
+                          >
+                            {/* Badge */}
+                            {kit.active && (
+                              <div className="absolute top-3 right-3 bg-green-500 text-white text-xs py-1 px-2 rounded-full font-medium z-10 flex items-center">
+                                Đang mở
                               </div>
-                              <span className="text-sm text-gray-500 ml-2">
-                                {kit.rating} ({kit.reviewCount} đánh giá)
-                              </span>
+                            )}
+
+                            {/* Image placeholder */}
+                            <div className="relative">
+                              <div className="w-full h-48 bg-blue-100 flex items-center justify-center text-6xl text-blue-300">
+                                <Beaker size={48} />
+                              </div>
+                              <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
+              ${hoveredKit === kit.name || selectedKit?.name === kit.name ? 'opacity-100' : 'opacity-0'}`}>
+                                <button
+                                  className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedKit(kit);
+                                    handleNextStep();
+                                  }}
+                                >
+                                  Đặt ngay <ArrowRight size={16} className="ml-1" />
+                                </button>
+                              </div>
                             </div>
 
-                            <div className="space-y-2 mb-4">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-gray-600 flex items-center">
-                                  <Package size={16} className="mr-1" />
-                                  Giá:
-                                </span>
-                                <span className="font-semibold text-blue-600">{kit.price}</span>
-                              </div>
-                              <div className="flex justify-between text-sm">
-                                <span className="text-gray-600 flex items-center">
-                                  <Clock size={16} className="mr-1" />
-                                  Thời gian:
-                                </span>
-                                <span className="text-gray-800">{kit.duration}</span>
-                              </div>
-                            </div>
-
-                            <div className="border-t pt-3">
-                              <p className="text-xs text-gray-600 mb-2">Bao gồm:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {kit.tests.map((test, index) => (
-                                  <span key={index} className="bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded-full flex items-center">
-                                    <Check size={12} className="mr-1" />
-                                    {test}
+                            <div className="p-4">
+                              <h3 className="font-semibold text-lg text-gray-800 mb-2">{kit.name}</h3>
+                              <p className="text-gray-600 text-sm mb-3 line-clamp-2">{kit.description}</p>
+                              <div className="space-y-2 mb-4">
+                                <div className="flex justify-between text-sm">
+                                  <span className="text-gray-600 flex items-center">
+                                    <Package size={16} className="mr-1" />
+                                    Giá:
                                   </span>
-                                ))}
+                                  <span className="font-semibold text-blue-600">{kit.price?.toLocaleString('vi-VN')} VNĐ</span>
+                                </div>
                               </div>
                             </div>
+
+                            {selectedKit?.name === kit.name && (
+                              <div className="absolute top-2 left-2 bg-blue-600 text-white rounded-full p-1">
+                                <Check size={16} />
+                              </div>
+                            )}
                           </div>
-
-                          {selectedKit?.id === kit.id && (
-                            <div className="absolute top-2 left-2 bg-blue-600 text-white rounded-full p-1">
-                              <Check size={16} />
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
+                        ))}
+                      </div>
+                    )}
                     <div className="mt-8 flex justify-end">
                       <button
                         onClick={handleNextStep}
