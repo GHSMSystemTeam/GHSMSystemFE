@@ -217,7 +217,7 @@ export default function Register() {
                                     */}
                                 </div>
                                 <p className="mt-1 text-xs text-gray-500">
-                                    Mật khẩu phải có ít nhất 8 ký tự
+                                    Mật khẩu phải có ít nhất 5 ký tự
                                 </p>
                             </div>
                             

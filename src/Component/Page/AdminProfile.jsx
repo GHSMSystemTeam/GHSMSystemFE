@@ -264,11 +264,196 @@ const sampleFeedback = [
 ];
 */}
 // Placeholder Components
+// Get all service types
+export const getServiceTypes = async () => {
+    const response = await api.get('/api/servicetypes');
+    return response.data;
+};
+
+// Add a new service type
+export const addServiceType = async (serviceType) => {
+    const response = await api.post('/api/servicetypes', serviceType);
+    return response.data;
+};
 const ServiceManagementComponent = () => {
+    const [serviceTypes, setServiceTypes] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+    const [form, setForm] = useState({
+        name: '',
+        description: '',
+        price: '',
+        active: true
+    });
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    // Fetch service types on mount
+    useEffect(() => {
+        fetchServiceTypes();
+    }, []);
+
+    const fetchServiceTypes = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            const data = await getServiceTypes();
+            setServiceTypes(data);
+        } catch (err) {
+            setError('Failed to load service types');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleAddServiceType = async (e) => {
+        e.preventDefault();
+        setError('');
+        setSuccess('');
+        if (!form.name || !form.description || !form.price) {
+            setError('Please fill all required fields.');
+            return;
+        }
+        try {
+            await addServiceType({
+                name: form.name,
+                description: form.description,
+                price: Number(form.price),
+                active: form.active
+            });
+            setSuccess('Service type added successfully!');
+            setShowModal(false);
+            setForm({ name: '', description: '', price: '', active: true });
+            fetchServiceTypes();
+        } catch (err) {
+            setError('Failed to add service type');
+        }
+    };
+
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
-            <h2 className="text-xl font-semibold">Service Management</h2>
-            <p>Manage services here...</p>
+            <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Service Type Management</h2>
+                <button
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    onClick={() => setShowModal(true)}
+                >
+                    Add Service Type
+                </button>
+            </div>
+            {error && <div className="text-red-600 mb-2">{error}</div>}
+            {success && <div className="text-green-600 mb-2">{success}</div>}
+            <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                    <thead>
+                        <tr className="text-gray-600 border-b">
+                            <th className="py-2">Name</th>
+                            <th>Description</th>
+                            <th>Price</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan={4} className="py-4 text-center">Loading...</td>
+                            </tr>
+                        ) : serviceTypes.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-4 text-center text-gray-400">No service types found.</td>
+                            </tr>
+                        ) : (
+                            serviceTypes.map((type, idx) => (
+                                <tr key={idx} className="border-b">
+                                    <td className="py-2">{type.name}</td>
+                                    <td>{type.description}</td>
+                                    <td>{type.price}</td>
+                                    <td>
+                                        <span className={`px-2 py-1 rounded-full text-xs ${type.active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                            {type.active ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Add Service Type Modal */}
+            {showModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                    <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
+                        <button
+                            className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+                            onClick={() => setShowModal(false)}
+                            aria-label="Close"
+                        >
+                            &times;
+                        </button>
+                        <h3 className="text-lg font-semibold mb-6">Thêm loại dịch vụ mới</h3>
+                        <form onSubmit={handleAddServiceType} className="space-y-4">
+                            <div>
+                                <label className="block mb-1 font-medium">Tên dịch vụ *</label>
+                                <input
+                                    type="text"
+                                    className="border rounded px-3 py-2 w-full"
+                                    value={form.name}
+                                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-1 font-medium">Mô tả *</label>
+                                <input
+                                    type="text"
+                                    className="border rounded px-3 py-2 w-full"
+                                    value={form.description}
+                                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-1 font-medium">Giá *</label>
+                                <input
+                                    type="number"
+                                    className="border rounded px-3 py-2 w-full"
+                                    value={form.price}
+                                    onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
+                                    required
+                                    min={0}
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-1 font-medium">Trạng thái</label>
+                                <select
+                                    className="border rounded px-3 py-2 w-full"
+                                    value={form.active ? 'true' : 'false'}
+                                    onChange={e => setForm(f => ({ ...f, active: e.target.value === 'true' }))}
+                                >
+                                    <option value="true">Hoạt động</option>
+                                    <option value="false">Không hoạt động</option>
+                                </select>
+                            </div>
+                            <div className="flex justify-end">
+                                <button
+                                    type="button"
+                                    className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 mr-2"
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Hủy
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                >
+                                    Thêm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -1539,7 +1724,12 @@ const FeedbackManagementComponent = () => {
         </div>
     );
 };
-
+ const formatGender = (genderValue) => {
+    if (genderValue === 0) return 'Male'; 
+    if (genderValue === 2) return 'Female';
+    if (genderValue === 1) return 'Other'; 
+    return 'N/A';
+};
 const ReportManagementComponent = () => {
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
@@ -1601,13 +1791,6 @@ const FilterInterface = ({ title }) => { // Removed data-related props
         setFoundAccount(null);
         setSearchAttempted(false);
         // Optionally, you could re-fetch or ensure data is fresh if 'all' tab is selected
-    };
-
-    const formatGender = (genderValue) => {
-        if (genderValue === 0) return 'Male'; // As per API doc example
-        if (genderValue === 1) return 'Female';// Assuming 1 is Female based on common patterns
-        if (genderValue === 2) return 'Other'; // Assuming 2 is Other
-        return 'N/A';
     };
 
     return (
@@ -1748,11 +1931,30 @@ export default function AdminProfile() {
     const [allUsersForOtherViews, setAllUsersForOtherViews] = useState([]);
     const [loadingOtherViewsData, setLoadingOtherViewsData] = useState(false);
     const [otherViewsDataError, setOtherViewsDataError] = useState(null);
+    const [consultantsData, setConsultantsData] = useState([]);
+    const [customersData, setCustomersData] = useState([]);
+    const [loadingConsultants, setLoadingConsultants] = useState(false);
+    const [loadingCustomers, setLoadingCustomers] = useState(false);
+    const SPECIALTIES = [
+        "Y học Giới tính & Nam học",
+        "Tư vấn tâm lý",
+        "Phụ khoa",
+        "Nội tiết",
+        "Dinh dưỡng",
+        "Da liễu",
+        "Sản khoa",
+        "Tiết niệu"
+    ];
+    const [editingConsultant, setEditingConsultant] = useState(null);
+    const [editSpecialty, setEditSpecialty] = useState("");
+    const [editConsultantData, setEditConsultantData] = useState({
+    phone: '',
+    specialty: ''
+    });
     const handleLogout = () => {
         logout();
         navigate("/login");
     };
-
     useEffect(() => {
         // Fetch all users if needed for consultant/customer specific views
         const fetchUsersForAdminProfile = async () => {
@@ -1776,6 +1978,22 @@ export default function AdminProfile() {
         fetchUsersForAdminProfile();
     }, [activeView, allUsersForOtherViews.length]); // Re-fetch if activeView changes to one requiring data and data isn't there
     
+      useEffect(() => {
+        // Fetch consultants
+        setLoadingConsultants(true);
+        api.get('/api/consultants')
+            .then(res => setConsultantsData(res.data))
+            .catch(() => setConsultantsData([]))
+            .finally(() => setLoadingConsultants(false));
+
+        // Fetch customers
+        setLoadingCustomers(true);
+        api.get('/api/customers')
+            .then(res => setCustomersData(res.data))
+            .catch(() => setCustomersData([]))
+            .finally(() => setLoadingCustomers(false));
+    }, []);
+
     const renderMainContent = () => {
         switch (activeView) {
             case 'dashboard':
@@ -1917,48 +2135,121 @@ export default function AdminProfile() {
                 );
                 case 'accounts': // Added this case
                 return <FilterInterface title="Account" />;
-                case 'consultantAccounts':
-                    return (
-                        <div className="bg-white rounded-xl shadow p-6 mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="font-semibold">Consultant Management</div>
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Consultant</button>
-                            </div>
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-600 border-b">
-                                        <th className="py-2">Email</th>
-                                        <th>Name</th>
-                                        <th>Phone</th>
-                                        <th>Gender</th>
-                                        <th>Specialty</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {consultantsData.map((consultant) => (
-                                        <tr key={consultant.id} className="border-b">
-                                            <td className="py-2">{consultant.email}</td>
-                                            <td>{consultant.name}</td>
-                                            <td>{consultant.phone}</td>
-                                            <td>{consultant.gender}</td>
-                                            <td>{consultant.specialty}</td>
-                                            <td>
-                                                <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                                <button className="text-red-600 hover:underline">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+            case 'consultantAccounts':
+                return (
+                    <div className="bg-white rounded-xl shadow p-6 mb-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="font-semibold">Consultant Management</div>
+                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Consultant</button>
                         </div>
-                    );
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr className="text-gray-600 border-b">
+                                    <th className="py-2">Email</th>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>Gender</th>
+                                    <th>Specialty</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {consultantsData.map((consultant) => (
+                                    <tr key={consultant.id} className="border-b">
+                                        <td className="py-2">{consultant.email}</td>
+                                        <td>{consultant.name}</td>
+                                        <td>{consultant.phone}</td>
+                                        <td>{formatGender(consultant.gender)}</td>
+                                        <td>{consultant.specialty || <span className="text-gray-400">N/A</span>}</td>
+                                        <td>
+                                            <button
+                                                className="text-blue-600 hover:underline mr-2"
+                                                onClick={() => {
+                                                    setEditingConsultant(consultant.id);
+                                                    setEditConsultantData({
+                                                        phone: consultant.phone || '',
+                                                        specialty: consultant.specialty || ''
+                                                    });
+                                                }}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button className="text-red-600 hover:underline">Delete</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+
+                        {/* Edit Tab/Panel */}
+                        {editingConsultant && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+                                <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative">
+                                    <button
+                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
+                                        onClick={() => setEditingConsultant(null)}
+                                        aria-label="Close"
+                                    >
+                                        &times;
+                                    </button>
+                                    <h2 className="text-xl font-semibold mb-6">Chỉnh sửa thông tin tư vấn viên</h2>
+                                    <div className="mb-4">
+                                        <label className="block mb-1 font-medium">Số điện thoại</label>
+                                        <input
+                                            type="text"
+                                            className="border rounded px-3 py-2 w-full"
+                                            value={editConsultantData.phone}
+                                            onChange={e => setEditConsultantData(d => ({ ...d, phone: e.target.value }))}
+                                        />
+                                    </div>
+                                    <div className="mb-6">
+                                        <label className="block mb-1 font-medium">Chuyên môn</label>
+                                        <select
+                                            className="border rounded px-3 py-2 w-full"
+                                            value={editConsultantData.specialty}
+                                            onChange={e => setEditConsultantData(d => ({ ...d, specialty: e.target.value }))}
+                                        >
+                                            <option value="">Chọn chuyên môn</option>
+                                            {SPECIALTIES.map(s => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="flex justify-end">
+                                        <button
+                                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-2"
+                                            onClick={async () => {
+                                                const updated = {
+                                                    ...consultantsData.find(c => c.id === editingConsultant),
+                                                    ...editConsultantData
+                                                };
+                                                // Optionally call: await api.put(`/api/consultants/${editingConsultant}`, updated);
+                                                setConsultantsData(prev =>
+                                                    prev.map(c => c.id === editingConsultant ? updated : c)
+                                                );
+                                                setEditingConsultant(null);
+                                            }}
+                                            disabled={!editConsultantData.phone || !editConsultantData.specialty}
+                                        >
+                                            Lưu
+                                        </button>
+                                        <button
+                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+                                            onClick={() => setEditingConsultant(null)}
+                                        >
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                );
                 case 'customerAccounts':
                     return (
                         <div className="bg-white rounded-xl shadow p-6 mb-8">
                             <div className="flex justify-between items-center mb-4">
                                 <div className="font-semibold">Customer Management</div>
-                                <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Customer</button>
                             </div>
                             <table className="w-full text-left">
                                 <thead>
@@ -1976,7 +2267,7 @@ export default function AdminProfile() {
                                             <td className="py-2">{customer.email}</td>
                                             <td>{customer.name}</td>
                                             <td>{customer.phone}</td>
-                                            <td>{customer.gender}</td>
+                                            <td>{formatGender(customer.gender)}</td>
                                             <td>
                                                 <button className="text-blue-600 hover:underline mr-2">Edit</button>
                                                 <button className="text-red-600 hover:underline">Delete</button>
