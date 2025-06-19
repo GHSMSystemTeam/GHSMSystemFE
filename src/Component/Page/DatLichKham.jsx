@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, UserCheck, X } from 'lucide-react';
 import Footer from '../Footer/Footer';
-import { doctors } from '../Array/DoctorTeam';
 import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
 import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
 import { useLocation } from 'react-router-dom';
+import api from '../config/axios';
 import {
     MapPin,
     Stethoscope,
@@ -22,6 +22,7 @@ export default function DatLichKham() {
     const { checkAuthAndShowPrompt } = useAuthCheck();
     const { user } = useAuth()
     const [currentStep, setCurrentStep] = useState(1);
+    const [consultingService, setConsultingService] = useState(null);
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -34,6 +35,28 @@ export default function DatLichKham() {
         }
     }, [user]);
 
+    // Fetch service types and find the consulting one
+    useEffect(() => {
+        const fetchAndSetConsultingService = async () => {
+            try {
+                const response = await api.get('/api/servicetypes/active');
+                if (response.data && response.data.length > 0) {
+                    // Find the consulting service. Adjust 'Tư vấn' if the name is different.
+                    let service = response.data.find(s => s.name.toLowerCase().includes('tư vấn'));
+                    
+                    // Fallback to the first active service if not found
+                    if (!service) {
+                        service = response.data[0];
+                    }
+                    setConsultingService(service);
+                }
+            } catch (error) {
+                console.error("Failed to fetch service types:", error);
+                showToast('Không thể tải dịch vụ tư vấn.', 'error');
+            }
+        };
+        fetchAndSetConsultingService();
+    }, [showToast]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -45,8 +68,6 @@ export default function DatLichKham() {
         doctor: '',
         notes: '',
     });
-
-
 
 
     const [submitting, setSubmitting] = useState(false);
@@ -201,39 +222,59 @@ export default function DatLichKham() {
             [name]: value
         }));
     };
-
-    const handleSubmit = (e) => {
+    
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!checkAuthAndShowPrompt('đặt lịch khám')) return;
+        if (!consultingService) {
+            showToast('Dịch vụ tư vấn chưa được tải, vui lòng thử lại.', 'error');
+            return;
+        }
         setSubmitting(true);
 
-        // Tạo một booking mới
-        const newBooking = {
-            id: Date.now(),
-            type: 'medical', // Thêm type để phân biệt với lịch xét nghiệm
-            service: formData.service,
-            date: formData.date,
-            time: formData.time,
-            userInfo: {
-                name: user.fullName,
-                phone: user.phone,
-                email: user.email
-            },
-            doctor: formData.doctor !== 'any' ?
-                availableDoctors.find(d => d.id.toString() === formData.doctor) :
-                { name: 'Bất kỳ' },
-            notes: formData.notes,
-            status: 'pending',
-            createdAt: new Date().toISOString()
+        // Find the selected doctor object
+        const selectedDoctor =
+            formData.doctor === 'any'
+                ? null
+                : availableDoctors.find(d => d.id.toString() === formData.doctor);
+
+        // Prepare booking payload for API using the fixed consulting service
+        const bookingPayload = {
+            consultantId: selectedDoctor ? selectedDoctor.id.toString() : null,
+            customerId: user?.id?.toString(),
+            serviceTypeId: consultingService.id, // Use the ID from the consultingService state
+            appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
+            appointmentSlot: 0,
+            duration: 0
         };
 
         try {
-            // Lưu vào localStorage
+            await api.post('/api/servicebooking', bookingPayload);
+
+            // Lưu vào localStorage (optional, for your UI)
             const existingBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
+            const newBooking = {
+                id: Date.now(),
+                type: 'medical',
+                service: consultingService.name,
+                date: formData.date,
+                time: formData.time,
+                userInfo: {
+                    name: user.fullName,
+                    phone: user.phone,
+                    email: user.email
+                },
+                doctor: formData.doctor !== 'any'
+                    ? availableDoctors.find(d => d.id.toString() === formData.doctor)
+                    : { name: 'Bất kỳ' },
+                notes: formData.notes,
+                status: 'pending',
+                createdAt: new Date().toISOString()
+            };
             localStorage.setItem('medicalBookings', JSON.stringify([...existingBookings, newBooking]));
 
             // Thêm thông báo vào Navigation
-            const notification = `Đặt lịch khám thành công: ${formData.service} vào ngày ${formData.date} lúc ${formData.time}`;
+            const notification = `Đặt lịch khám thành công: ${consultingService.name} vào ngày ${formData.date}`;
             const savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
             const newNotification = {
                 id: Date.now(),
@@ -244,8 +285,6 @@ export default function DatLichKham() {
             };
             localStorage.setItem('notifications', JSON.stringify([newNotification, ...savedNotifications]));
 
-
-            // Reset form và hiển thị thông báo
             setSubmitting(false);
             setSubmitted(true);
             showToast('Đặt lịch khám thành công!', 'success');
@@ -253,25 +292,6 @@ export default function DatLichKham() {
             setSubmitting(false);
             showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
         }
-
-        // Simulate API call
-        setTimeout(() => {
-            console.log('Form submitted:', formData);
-
-            // Hiển thị toast ở giữa màn hình
-            showToast('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
-
-            // // Show success toast
-            // if (window.addNotificationToNav) {
-            //     window.addNotificationToNav('Đặt lịch thành công! Chúng tôi sẽ liên hệ với bạn sớm.', 'success');
-            // }
-            // setSubmitting(false);
-            // setSubmitted(true);
-
-            // Reset form after submission
-        }, 1500);
-
-
     };
 
     const steps = [
@@ -570,7 +590,6 @@ export default function DatLichKham() {
                                                                 />
                                                             </div>
                                                         </div>
-
                                                         <div className="md:col-span-2">
                                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                                 Ngày khám mong muốn <span className="text-red-500">*</span>

@@ -459,9 +459,26 @@ const ServiceManagementComponent = () => {
 };
 
 const BookingManagementComponent = () => {
-    const [bookings, setBookings] = useState(sampleBookings); // Use sampleBookings directly or fetch from API
+    const [bookings, setBookings] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
+
+    useEffect(() => {
+        fetchBookings();
+    }, []);
+
+    const fetchBookings = async () => {
+        setLoading(true);
+        try {
+            const response = await api.get('/api/servicebookings');
+            setBookings(response.data || []);
+        } catch (err) {
+            setBookings([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     // Functions to handle modal operations
@@ -527,31 +544,36 @@ const BookingManagementComponent = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {bookings.length > 0 ? bookings.sort((a, b) => new Date(a.date) - new Date(b.date) || a.time.localeCompare(b.time)).map(booking => ( // Sort by date then time
-                            <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4">{formatDate(booking.date)}</td>
-                                <td className="px-6 py-4">{booking.time}</td>
-                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{booking.patientName}</td>
-                                <td className="px-6 py-4">{booking.serviceName}</td>
-                                <td className="px-6 py-4">{booking.type}</td>
-                                <td className="px-6 py-4">{booking.consultantId ? consultantsData.find(c => c.id === booking.consultantId)?.name || 'N/A' : 'N/A'}</td>
-                                <td className="px-6 py-4">
-                                    <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                        booking.status === 'Scheduled' ? 'bg-yellow-200 text-yellow-800' :
-                                        booking.status === 'Completed' ? 'bg-green-200 text-green-800' :
-                                        'bg-red-200 text-red-800' // Assuming 'Cancelled' or other
-                                    }`}>{booking.status}</span>
-                                </td>
-                                <td className="px-6 py-4 max-w-xs truncate" title={booking.notes}>{booking.notes || '-'}</td>
-                                <td className="px-6 py-4 flex items-center gap-2">
-                                    <button onClick={() => openEditBookingModal(booking)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                                    <button onClick={() => handleCancelBooking(booking.id)} className="text-sm text-red-600 hover:underline">Cancel</button>
-                                </td>
-                            </tr>
-                        )) : (
+                        {loading ? (
                             <tr>
-                                <td colSpan="9" className="px-6 py-4 text-center text-gray-500">No bookings found.</td>
+                                <td colSpan={7} className="py-4 text-center">Loading...</td>
                             </tr>
+                        ) : bookings.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="py-4 text-center text-gray-400">No bookings found.</td>
+                            </tr>
+                        ) : (
+                            bookings.map((booking) => (
+                                <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
+                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
+                                    <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
+                                    <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
+                                    <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
+                                    <td className="px-6 py-4">
+                                        <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                            booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
+                                            booking.status === 1 ? 'bg-green-200 text-green-800' :
+                                            'bg-red-200 text-red-800'
+                                        }`}>
+                                            {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
+                                        </span>
+                                    </td>
+                                    <td className="px-6 py-4 flex items-center gap-2">
+                                        <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
+                                    </td>
+                                </tr>
+                            ))
                         )}
                     </tbody>
                 </table>
