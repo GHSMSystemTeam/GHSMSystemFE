@@ -5,7 +5,7 @@ import SchedulesPanel from './SchedulesPanel';
 import ExaminationsPanel from './ExaminationsPanel';
 import BlogsPanel from './BlogsPanel';
 import ServicesPanel from './ServicesPanel';
-import { useAuth } from '../../Component/Auth/AuthContext';
+import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
 
 export default function ConsultantDashboard() {
