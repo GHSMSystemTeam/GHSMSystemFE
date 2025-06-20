@@ -1,4 +1,3 @@
-
 import './App.css'
 import { Route, Router, Routes } from 'react-router-dom'
 import GHSMSCenter from './Component/Page/GHSMSCenter'
@@ -76,7 +75,9 @@ function App() {
             <Route element={<AdminProtectedRoute />}>
               <Route path="/admin-profile" element={<AdminProfile />} />
             </Route>
-            <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
+            <Route element={<ProtectedRoute requiredRole="consultant" />}>
+              <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
+            </Route>
           </Routes>
         </ToastProvider>
       </AuthProvider>

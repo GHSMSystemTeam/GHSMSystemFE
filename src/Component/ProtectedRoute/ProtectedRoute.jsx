@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Component/Auth/AuthContext';
 
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children, requiredRole }) {
     const { user } = useAuth();
     const location = useLocation();
 
@@ -26,6 +26,11 @@ export default function ProtectedRoute({ children }) {
                 </div>
             </div>
         );
+    }
+
+    if (requiredRole && user.role !== requiredRole) {
+        // Nếu không đúng role, chuyển về trang chủ hoặc trang lỗi
+        return <Navigate to="/" state={{ from: location, message: "Không có quyền truy cập." }} replace />;
     }
 
     return children;
