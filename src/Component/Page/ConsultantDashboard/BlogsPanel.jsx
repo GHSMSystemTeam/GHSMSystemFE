@@ -16,9 +16,11 @@ export default function BlogsPanel({ blogs, loading, error }) {
           <Filter size={16} />
           <select className="border rounded px-3 py-2">
             <option>Tất cả danh mục</option>
-            <option>Giáo dục</option>
-            <option>Phòng ngừa</option>
-            <option>Sức khỏe</option>
+            <option>Nam Khoa</option>
+            <option>Nữ Khoa</option>
+            <option>Sức khỏe Tâm Lý</option>
+            <option>Sức khỏe Sinh Sản</option>
+            <option>Bệnh Truyền Nhiễm</option>
           </select>
         </div>
         <div className="flex items-center gap-2 flex-1">
