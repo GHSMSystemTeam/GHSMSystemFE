@@ -5,6 +5,8 @@ import SchedulesPanel from './SchedulesPanel';
 import ExaminationsPanel from './ExaminationsPanel';
 import BlogsPanel from './BlogsPanel';
 import ServicesPanel from './ServicesPanel';
+import { useAuth } from '../../Auth/AuthContext';
+import ConsultantProfile from './ConsultantProfile';
 
 export default function ConsultantDashboard() {
   const [activeTab, setActiveTab] = useState('questions');
@@ -37,6 +39,8 @@ export default function ConsultantDashboard() {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   // State cho tab xét nghiệm
   const [examTab, setExamTab] = useState('bookings');
+  const { user } = useAuth();
+  const [openProfile, setOpenProfile] = useState(false);
 
   const renderContent = () => {
     switch(activeTab) {
@@ -104,6 +108,22 @@ export default function ConsultantDashboard() {
       <main className="flex-1 p-6">
         {renderContent()}
       </main>
+      {/* Mini profile góc phải */}
+      {user && (
+        <button
+          className="fixed top-6 right-6 bg-white shadow-lg rounded-full flex items-center gap-2 px-4 py-2 z-40 hover:bg-blue-50 border border-gray-200"
+          onClick={() => setOpenProfile(true)}
+        >
+          <img
+            src={user.avatar || 'https://i.pravatar.cc/100'}
+            alt="avatar"
+            className="w-10 h-10 rounded-full object-cover border"
+          />
+          <span className="font-medium text-gray-800">{user.fullName || user.name || user.email}</span>
+        </button>
+      )}
+      {/* Popup profile chi tiết */}
+      <ConsultantProfile consultant={user || {}} open={openProfile} onClose={() => setOpenProfile(false)} />
     </div>
   );
 }

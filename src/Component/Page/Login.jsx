@@ -78,6 +78,8 @@ export default function Login() {
             // Chuyển hướng dựa trên role
             if (userData.role === 'admin') {
                 navigate('/admin-profile');
+            } else if (userData.role === 'consultant') {
+                navigate('/consultant-dashboard');
             } else {
                 // Redirect về trang trước đó hoặc trang chủ
                 const from = location.state?.from || '/';
