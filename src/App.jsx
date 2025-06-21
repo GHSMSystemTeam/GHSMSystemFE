@@ -79,6 +79,15 @@ function App() {
               <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
             </Route>
           </Routes>
+
+          <Route
+          path="/consultantdashboard"
+          element={
+            <ProtectedRoute requiredRole="consultant">
+              <ConsultantDashboard />
+            </ProtectedRoute>
+          }
+        />
         </ToastProvider>
       </AuthProvider>
     </>
