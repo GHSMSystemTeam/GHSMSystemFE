@@ -23,6 +23,7 @@ export default function DatLichKham() {
     const { user } = useAuth()
     const [currentStep, setCurrentStep] = useState(1);
     const [consultingService, setConsultingService] = useState(null);
+    const [availableDoctors, setAvailableDoctors] = useState([]);
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -35,19 +36,14 @@ export default function DatLichKham() {
         }
     }, [user]);
 
-    // Fetch service types and find the consulting one
+    // Fetch consulting service (default service type)
     useEffect(() => {
         const fetchAndSetConsultingService = async () => {
             try {
                 const response = await api.get('/api/servicetypes/active');
                 if (response.data && response.data.length > 0) {
-                    // Find the consulting service. Adjust 'Tư vấn' if the name is different.
                     let service = response.data.find(s => s.name.toLowerCase().includes('tư vấn'));
-                    
-                    // Fallback to the first active service if not found
-                    if (!service) {
-                        service = response.data[0];
-                    }
+                    if (!service) service = response.data[0];
                     setConsultingService(service);
                 }
             } catch (error) {
@@ -56,6 +52,26 @@ export default function DatLichKham() {
             }
         };
         fetchAndSetConsultingService();
+    }, [showToast]);
+
+    // Fetch active consultants
+    useEffect(() => {
+        const fetchConsultants = async () => {
+            try {
+                const response = await api.get('/api/activeconsultants');
+                // Filter active consultants and ensure unique IDs
+                const activeConsultants = response.data
+                    .filter(c => c.active)
+                    .filter((consultant, index, self) => 
+                        index === self.findIndex(c => c.id === consultant.id)
+                    );
+                setAvailableDoctors(activeConsultants);
+            } catch (error) {
+                console.error("Failed to fetch consultants:", error);
+                showToast('Không thể tải danh sách bác sĩ.', 'error');
+            }
+        };
+        fetchConsultants();
     }, [showToast]);
 
     const [formData, setFormData] = useState({
@@ -72,128 +88,6 @@ export default function DatLichKham() {
 
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-    const [availableDoctors, setAvailableDoctors] = useState([
-        {
-            id: 1,
-            title: "TS.BS",
-            name: "Nguyễn Văn Minh",
-            specialty: "Phụ khoa - Sản khoa",
-            description: "Chuyên điều trị các bệnh phụ khoa, tư vấn sức khỏe sinh sản",
-            experience: "20 năm",
-            rating: 4.9,
-            reviews: 245,
-            education: "Tiến sĩ Y khoa - Đại học Y Hà Nội",
-            image: "/images/doctors/doctor1.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 6"],
-            consultationFee: "500,000 VNĐ"
-        },
-        {
-            id: 2,
-            title: "TS.BS",
-            name: "Trần Thị Hồng",
-            specialty: "Nam khoa - Tiết niệu",
-            description: "Chuyên gia hàng đầu về sức khỏe nam giới và rối loạn tiết niệu",
-            experience: "18 năm",
-            rating: 4.8,
-            reviews: 198,
-            education: "Tiến sĩ Y khoa - Đại học Y TP.HCM",
-            image: "/images/doctors/doctor2.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 5", "Thứ 7"],
-            consultationFee: "450,000 VNĐ"
-        },
-        {
-            id: 3,
-            title: "BS.CKI",
-            name: "Lê Văn Thành",
-            specialty: "Nội tiết - Chuyển hóa",
-            description: "Chuyên điều trị rối loạn hormone, tiểu đường, tuyến giáp",
-            experience: "15 năm",
-            rating: 4.7,
-            reviews: 156,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Cần Thơ",
-            image: "/images/doctors/doctor3.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 3", "Thứ 5", "Thứ 6", "Chủ nhật"],
-            consultationFee: "400,000 VNĐ"
-        },
-        {
-            id: 4,
-            title: "TS.BS",
-            name: "Phạm Thị Lan",
-            specialty: "Tâm lý học - Tình dục học",
-            description: "Tư vấn tâm lý, trị liệu tình dục, hỗ trợ sức khỏe tinh thần",
-            experience: "12 năm",
-            rating: 4.8,
-            reviews: 134,
-            education: "Tiến sĩ Tâm lý học - Đại học Khoa học Xã hội và Nhân văn",
-            image: "/images/doctors/doctor4.jpg",
-            languages: ["Tiếng Việt", "English", "Français"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6", "Thứ 7"],
-            consultationFee: "600,000 VNĐ"
-        },
-        {
-            id: 5,
-            title: "BS.CKI",
-            name: "Hoàng Văn Đức",
-            specialty: "Phẫu thuật thẩm mỹ vùng kín",
-            description: "Chuyên phẫu thuật tạo hình và thẩm mỹ vùng sinh dục",
-            experience: "16 năm",
-            rating: 4.9,
-            reviews: 89,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Huế",
-            image: "/images/doctors/doctor5.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 3", "Thứ 5", "Thứ 7"],
-            consultationFee: "800,000 VNĐ"
-        },
-        {
-            id: 6,
-            title: "BS.CKI",
-            name: "Võ Thị Mai",
-            specialty: "Da liễu - STIs",
-            description: "Chuyên điều trị bệnh da liễu và nhiễm trùng lây truyền qua đường tình dục",
-            experience: "14 năm",
-            rating: 4.6,
-            reviews: 167,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Dược TP.HCM",
-            image: "/images/doctors/doctor6.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 2", "Thứ 3", "Thứ 5", "Thứ 6"],
-            consultationFee: "350,000 VNĐ"
-        },
-        {
-            id: 7,
-            title: "TS.BS",
-            name: "Nguyễn Thị Bích",
-            specialty: "Chăm sóc LGBT+ ",
-            description: "Chuyên gia tư vấn và chăm sóc sức khỏe cộng đồng LGBT+",
-            experience: "10 năm",
-            rating: 4.8,
-            reviews: 112,
-            education: "Tiến sĩ Y khoa - Đại học Y khoa Phạm Ngọc Thạch",
-            image: "/images/doctors/doctor7.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 4", "Thứ 6", "Thứ 7", "Chủ nhật"],
-            consultationFee: "550,000 VNĐ"
-        },
-        {
-            id: 8,
-            title: "BS.CKI",
-            name: "Trần Văn Hùng",
-            specialty: "Sinh sản - Hiếm muộn",
-            description: "Chuyên điều trị vô sinh hiếm muộn, hỗ trợ sinh sản",
-            experience: "13 năm",
-            rating: 4.7,
-            reviews: 203,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Thái Bình",
-            image: "/images/doctors/doctor8.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6"],
-            consultationFee: "650,000 VNĐ"
-        }
-    ]);
 
     // Toast notification state - moved from Navigation
     const [toast, setToast] = useState({
@@ -230,70 +124,67 @@ export default function DatLichKham() {
             showToast('Dịch vụ tư vấn chưa được tải, vui lòng thử lại.', 'error');
             return;
         }
+        if (!formData.doctor) {
+            showToast('Vui lòng chọn bác sĩ.', 'error');
+            return;
+        }
+        if (!formData.date) {
+        showToast('Vui lòng chọn ngày khám.', 'error');
+        return;
+        }
         setSubmitting(true);
 
-        // Find the selected doctor object
-        const selectedDoctor =
-            formData.doctor === 'any'
-                ? null
-                : availableDoctors.find(d => d.id.toString() === formData.doctor);
-
-        // Prepare booking payload for API using the fixed consulting service
+        const selectedDoctor = availableDoctors.find(d => d.id.toString() === formData.doctor);
+        // Debug logging
+        console.log('Consulting Service:', consultingService);
+        console.log('Selected Doctor:', selectedDoctor);
+        console.log('User:', user);
+        // Updated booking payload to match API structure
         const bookingPayload = {
-            consultantId: selectedDoctor ? selectedDoctor.id.toString() : null,
-            customerId: user?.id?.toString(),
-            serviceTypeId: consultingService.id, // Use the ID from the consultingService state
+            consultantId: selectedDoctor?.id || null,
+            customerId: user?.id || null,
+            serviceTypeId: consultingService?.id || null, // Make sure this has a value
             appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
             appointmentSlot: 0,
-            duration: 0
+            duration: 0,
+            description: formData.notes || ""
         };
-
+        // Log the payload to debug
+        console.log('Booking Payload:', bookingPayload);
+        // Validate required fields before sending
+        if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
+            setSubmitting(false);
+            showToast('Thiếu thông tin bắt buộc. Vui lòng thử lại.', 'error');
+            return;
+        }
         try {
-            await api.post('/api/servicebooking', bookingPayload);
-
-            // Lưu vào localStorage (optional, for your UI)
-            const existingBookings = JSON.parse(localStorage.getItem('medicalBookings') || '[]');
-            const newBooking = {
-                id: Date.now(),
-                type: 'medical',
-                service: consultingService.name,
-                date: formData.date,
-                time: formData.time,
-                userInfo: {
-                    name: user.fullName,
-                    phone: user.phone,
-                    email: user.email
-                },
-                doctor: formData.doctor !== 'any'
-                    ? availableDoctors.find(d => d.id.toString() === formData.doctor)
-                    : { name: 'Bất kỳ' },
-                notes: formData.notes,
-                status: 'pending',
-                createdAt: new Date().toISOString()
-            };
-            localStorage.setItem('medicalBookings', JSON.stringify([...existingBookings, newBooking]));
-
-            // Thêm thông báo vào Navigation
-            const notification = `Đặt lịch khám thành công: ${consultingService.name} vào ngày ${formData.date}`;
-            const savedNotifications = JSON.parse(localStorage.getItem('notifications') || '[]');
-            const newNotification = {
-                id: Date.now(),
-                message: notification,
-                type: 'success',
-                timestamp: new Date(),
-                read: false
-            };
-            localStorage.setItem('notifications', JSON.stringify([newNotification, ...savedNotifications]));
-
+            const response = await api.post('/api/servicebooking', bookingPayload);
+            console.log('Booking Response:', response.data);
             setSubmitting(false);
             setSubmitted(true);
             showToast('Đặt lịch khám thành công!', 'success');
         } catch (error) {
+            console.error("API Error:", error.response || error);
             setSubmitting(false);
-            showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
+            const errorMessage = error.response?.data?.message || 
+                            error.response?.data?.error || 
+                            'Có lỗi xảy ra khi đặt lịch!';
+            showToast(errorMessage, 'error');
         }
     };
-
+    
+    const resetForm = () => {
+        setSubmitted(false);
+        setCurrentStep(1);
+        setFormData({
+            name: user?.fullName || '',
+            phone: user?.phone || '',
+            email: user?.email || '',
+            date: '',
+            doctor: '',
+            notes: '',
+        });
+    };
     const steps = [
         { id: 1, title: "Chọn bác sĩ", desc: "Tìm bác sĩ chuyên khoa" },
         { id: 2, title: "Thông tin", desc: "Hoàn tất thông tin" },
@@ -301,7 +192,7 @@ export default function DatLichKham() {
     ];
 
     const location = useLocation();
-
+    // Handle location state for pre-selected doctor
     useEffect(() => {
         if (location.state?.selectedDoctorId && location.state?.fromDoctorSelection) {
             setFormData(prev => ({
@@ -441,55 +332,48 @@ export default function DatLichKham() {
                                                         >
                                                             <div className="flex items-start space-x-4">
                                                                 <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                                    {doctor.image ? (
+                                                                    {doctor.profilePicture && doctor.profilePicture[0] ? (
                                                                         <img
-                                                                            src={doctor.image}
+                                                                            src={doctor.profilePicture[0]}
                                                                             alt={doctor.name}
                                                                             className="w-full h-full object-cover"
-                                                                            onError={(e) => {
-                                                                                e.target.style.display = 'none';
-                                                                                e.target.nextSibling.style.display = 'flex';
-                                                                            }}
                                                                         />
-                                                                    ) : null}
-                                                                    <User className="text-indigo-600" size={28} />
+                                                                    ) : (
+                                                                        <User className="text-indigo-600" size={28} />
+                                                                    )}
                                                                 </div>
                                                                 <div className="flex-1 min-w-0">
                                                                     <div className="flex items-start justify-between">
-                                                                        <div className="flex-1">
-                                                                            <h3 className="font-semibold text-gray-900 text-lg">
-                                                                                {doctor.title} {doctor.name}
+                                                                        <div className="flex-1 pr-4"> {/* Added pr-4 for spacing */}
+                                                                            <h3 className="font-semibold text-gray-900 text-lg break-words whitespace-normal leading-tight">
+                                                                                {doctor.name || 'Tên bác sĩ'}
                                                                             </h3>
-                                                                            <p className="text-indigo-600 font-medium text-sm">{doctor.specialty}</p>
-                                                                            <p className="text-gray-600 text-sm mt-1 line-clamp-2">{doctor.description}</p>
+                                                                            <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
+                                                                                {doctor.specialization || 'Chuyên khoa tổng quát'}
+                                                                            </p>
+                                                                            <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
+                                                                                {doctor.description || 'Bác sĩ có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
+                                                                            </p>
                                                                         </div>
-                                                                        <div className="text-right ml-4">
-                                                                            <div className="text-lg font-bold text-indigo-600">{doctor.consultationFee}</div>
-                                                                            <div className="text-xs text-gray-500">Phí tư vấn</div>
+                                                                        <div className="text-right ml-4 flex-shrink-0">
+                                                                            <div className="text-lg font-bold text-indigo-600">
+                                                                                {doctor.expYear || 0} năm
+                                                                            </div>
+                                                                            <div className="text-xs text-gray-500">Kinh nghiệm</div>
                                                                         </div>
                                                                     </div>
-
                                                                     <div className="flex items-center space-x-4 mt-3">
                                                                         <div className="flex items-center space-x-1">
                                                                             <Star className="text-yellow-400 fill-current" size={16} />
-                                                                            <span className="text-sm font-medium text-gray-700">{doctor.rating}</span>
-                                                                            <span className="text-xs text-gray-500">({doctor.reviews} đánh giá)</span>
+                                                                            <span className="text-sm font-medium text-gray-700">
+                                                                                {doctor.avgRating || 'N/A'}
+                                                                            </span>
                                                                         </div>
                                                                         <div className="flex items-center space-x-1">
                                                                             <Stethoscope className="text-gray-400" size={14} />
-                                                                            <span className="text-xs text-gray-600">{doctor.experience} kinh nghiệm</span>
-                                                                        </div>
-                                                                    </div>
-
-                                                                    <div className="mt-3">
-                                                                        <div className="text-xs text-gray-600 mb-1">
-                                                                            <strong>Học vấn:</strong> {doctor.education}
-                                                                        </div>
-                                                                        <div className="text-xs text-gray-600 mb-1">
-                                                                            <strong>Ngôn ngữ:</strong> {doctor.languages.join(', ')}
-                                                                        </div>
-                                                                        <div className="text-xs text-gray-600">
-                                                                            <strong>Lịch làm việc:</strong> {doctor.workingDays.join(', ')}
+                                                                            <span className="text-xs text-gray-600 break-words">
+                                                                                {doctor.licenseDetails || 'Chứng chỉ hành nghề'}
+                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>
@@ -497,34 +381,6 @@ export default function DatLichKham() {
                                                             </div>
                                                         </div>
                                                     ))}
-
-                                                    {/* Option to select "Any Doctor" */}
-                                                    <div
-                                                        onClick={() => {
-                                                            setFormData(prev => ({ ...prev, doctor: 'any' }));
-                                                            setCurrentStep(2);
-                                                        }}
-                                                        className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.doctor === 'any'
-                                                            ? 'border-indigo-500 bg-indigo-50'
-                                                            : 'border-gray-200 hover:border-indigo-300'
-                                                            }`}
-                                                    >
-                                                        <div className="flex items-center space-x-4">
-                                                            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center">
-                                                                <Users className="text-gray-600" size={32} />
-                                                            </div>
-                                                            <div className="flex-1">
-                                                                <h3 className="font-semibold text-gray-900 text-lg">Bất kỳ bác sĩ nào</h3>
-                                                                <p className="text-sm text-gray-600">Chúng tôi sẽ sắp xếp bác sĩ phù hợp nhất cho bạn</p>
-                                                                <div className="mt-2">
-                                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                                                        Linh hoạt lịch hẹn
-                                                                    </span>
-                                                                </div>
-                                                            </div>
-                                                            <ArrowRight className="text-gray-400" size={20} />
-                                                        </div>
-                                                    </div>
                                                 </div>
                                             )}
 
@@ -634,11 +490,14 @@ export default function DatLichKham() {
                                                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                                                             <div className="flex justify-between">
                                                                 <span className="text-gray-600">Bác sĩ:</span>
+                                                                <span className="text-gray-900 font-medium text-right break-words max-w-[200px]">
+                                                                    {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name || 'Chưa chọn'}
+                                                                </span> 
+                                                            </div>
+                                                            <div className="flex justify-between">
+                                                                <span className="text-gray-600">Dịch vụ:</span>
                                                                 <span className="text-gray-900 font-medium">
-                                                                    {formData.doctor === 'any'
-                                                                        ? 'Bất kỳ bác sĩ'
-                                                                        : availableDoctors.find(d => d.id.toString() === formData.doctor)?.name
-                                                                    }
+                                                                    {consultingService?.name || 'Đang tải...'}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
@@ -709,16 +568,17 @@ export default function DatLichKham() {
                                         <div className="space-y-3 text-sm">
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Bác sĩ:</span>
-                                                <span className="text-gray-900 font-medium">
-                                                    {formData.doctor === 'any'
-                                                        ? 'Bất kỳ bác sĩ'
-                                                        : availableDoctors.find(d => d.id.toString() === formData.doctor)?.name
-                                                    }
+                                                <span className="text-gray-900 font-medium text-right break-words max-w-[250px]">
+                                                    {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Ngày khám:</span>
                                                 <span className="text-gray-900 font-medium">{formData.date}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Dịch vụ:</span>
+                                                <span className="text-gray-900 font-medium">{consultingService?.name}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Mã đặt lịch:</span>
@@ -735,20 +595,7 @@ export default function DatLichKham() {
                                             Về trang chủ
                                         </Link>
                                         <button
-                                            onClick={() => {
-                                                setSubmitted(false);
-                                                setCurrentStep(1);
-                                                setFormData({
-                                                    name: user?.fullName || '',
-                                                    phone: user?.phone || '',
-                                                    email: user?.email || '',
-                                                    date: '',
-                                                    time: '',
-                                                    service: '',
-                                                    doctor: '',
-                                                    notes: '',
-                                                });
-                                            }}
+                                            onClick={resetForm}
                                             className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
                                         >
                                             Đặt lịch khác
