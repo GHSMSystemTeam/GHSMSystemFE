@@ -37,6 +37,7 @@ import {
   NewsComponent6,
 } from './Component/Page/ArticlePage';
 import ConsultantDashboard from './Component/Page/ConsultantDashboard'
+import BlogsPanel from './Component/Page/ConsultantDashboard/BlogsPanel'
 function App() {
 
 
@@ -76,7 +77,7 @@ function App() {
               <Route path="/admin-profile" element={<AdminProfile />} />
             </Route>
             <Route element={<ProtectedRoute requiredRole="consultant" />}>
-              <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
+              <Route path="/consultantblog" element={<BlogsPanel />} />
             </Route>
           </Routes>
         </ToastProvider>
