@@ -75,11 +75,6 @@ function App() {
             <Route element={<AdminProtectedRoute />}>
               <Route path="/admin-profile" element={<AdminProfile />} />
             </Route>
-            <Route element={<ProtectedRoute requiredRole="consultant" />}>
-              <Route path="/consultantdashboard" element={<ConsultantDashboard />} />
-            </Route>
-          </Routes>
-
           <Route
           path="/consultantdashboard"
           element={
@@ -87,7 +82,8 @@ function App() {
               <ConsultantDashboard />
             </ProtectedRoute>
           }
-        />
+        /> 
+          </Routes>
         </ToastProvider>
       </AuthProvider>
     </>
