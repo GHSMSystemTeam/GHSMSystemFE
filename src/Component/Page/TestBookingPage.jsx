@@ -247,11 +247,11 @@ const TestBookingPage = () => {
     };
 
     try {
-      await api.post('/api/servicetypes/active', newBooking);
+      await api.post('/api/servicebooking', newBooking);
       showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
       // Reload lại danh sách booking
-      const res = await api.get('/api/servicetypes/active');
+      const res = await api.get('/api/servicebooking');
       setBookings(res.data);
       // Reset form
       setTimeout(() => {

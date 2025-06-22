@@ -315,17 +315,19 @@ const ServiceManagementComponent = () => {
             return;
         }
         try {
-            await addServiceType({
+            const serviceData= {
                 name: form.name,
                 description: form.description,
                 price: Number(form.price),
                 active: form.active
-            });
+            };
+            await addServiceType(serviceData);
             setSuccess('Service type added successfully!');
             setShowModal(false);
             setForm({ name: '', description: '', price: '', active: true });
             fetchServiceTypes();
         } catch (err) {
+            console.error('Error adding service type:', err);
             setError('Failed to add service type');
         }
     };
