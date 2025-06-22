@@ -79,11 +79,7 @@ export default function Login() {
             if (userData.role === 'admin') {
                 navigate('/admin-profile');
             } else if (userData.role === 'consultant') {
-<<<<<<< HEAD
                 navigate('/consultantblog');
-=======
-                navigate('/consultantdashboard');
->>>>>>> f96e34ce78e9af78461353e289de2e39ddd97a56
             } else {
                 // Redirect về trang trước đó hoặc trang chủ
                 const from = location.state?.from || '/';
