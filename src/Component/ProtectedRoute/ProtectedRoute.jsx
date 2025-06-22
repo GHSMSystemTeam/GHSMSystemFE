@@ -28,7 +28,7 @@ export default function ProtectedRoute({ children, requiredRole }) {
         );
     }
 
-    if (requiredRole && user.role !== requiredRole) {
+    if (requiredRole && user.role?.toLowerCase() !== requiredRole.toLowerCase()) {
         // Nếu không đúng role, chuyển về trang chủ hoặc trang lỗi
         return <Navigate to="/" state={{ from: location, message: "Không có quyền truy cập." }} replace />;
     }

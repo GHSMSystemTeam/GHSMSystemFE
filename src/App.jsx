@@ -80,6 +80,15 @@ function App() {
               <Route path="/consultantblog" element={<BlogsPanel />} />
             </Route>
           </Routes>
+
+          <Route
+          path="/consultantdashboard"
+          element={
+            <ProtectedRoute requiredRole="consultant">
+              <ConsultantDashboard />
+            </ProtectedRoute>
+          }
+        />
         </ToastProvider>
       </AuthProvider>
     </>

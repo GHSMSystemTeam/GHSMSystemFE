@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import QuestionsPanel from './QuestionsPanel';
 import SchedulesPanel from './SchedulesPanel';
@@ -41,6 +41,10 @@ export default function ConsultantDashboard() {
   const [examTab, setExamTab] = useState('bookings');
   const { user } = useAuth();
   const [openProfile, setOpenProfile] = useState(false);
+
+  useEffect(() => {
+    console.log('ConsultantDashboard mounted');
+  }, []);
 
   const renderContent = () => {
     switch(activeTab) {
