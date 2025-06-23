@@ -42,8 +42,20 @@ export default function DatLichKham() {
             try {
                 const response = await api.get('/api/servicetypes/active');
                 if (response.data && response.data.length > 0) {
-                    let service = response.data.find(s => s.name.toLowerCase().includes('tư vấn'));
-                    if (!service) service = response.data[0];
+                    console.log('All available services:', response.data.map(s => ({ 
+                        id: s.id,
+                        name: s.name, 
+                        price: s.price,
+                        active: s.active,
+                        description: s.description
+                    })));
+                    let service = response.data.find(s => s.name.toLowerCase().includes('consulting'));
+                    if (!service) {
+                        service = response.data.find(s => s.name && s.name.toLowerCase().includes('tư vấn'));
+                    }
+                    if (!service) {
+                        service = response.data[0];
+                    }
                     setConsultingService(service);
                 }
             } catch (error) {
@@ -68,7 +80,7 @@ export default function DatLichKham() {
                 setAvailableDoctors(activeConsultants);
             } catch (error) {
                 console.error("Failed to fetch consultants:", error);
-                showToast('Không thể tải danh sách bác sĩ.', 'error');
+                showToast('Không thể tải danh sách tư vấn viên.', 'error');
             }
         };
         fetchConsultants();
@@ -96,19 +108,6 @@ export default function DatLichKham() {
         type: ''
     });
     const toastTimeoutRef = React.useRef(null);
-
-    // Filter doctors based on selected service
-    {/*
-    useEffect(() => {
-        if (formData.service) {
-            // In a real app, you would filter doctors by their specialties
-            // For now, we'll just use all doctors but simulate filtering
-            setAvailableDoctors(doctors);
-        } else {
-            setAvailableDoctors([]);
-        }
-    }, [formData.service]);
-    */}
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevState => ({
@@ -137,8 +136,12 @@ export default function DatLichKham() {
         const selectedDoctor = availableDoctors.find(d => d.id.toString() === formData.doctor);
         // Debug logging
         console.log('Consulting Service:', consultingService);
+        console.log('Consulting Service ID:', consultingService?.id);
         console.log('Selected Doctor:', selectedDoctor);
+        console.log('Selected Doctor ID:', selectedDoctor?.id);
         console.log('User:', user);
+        console.log('User ID:', user?.id);
+        console.log('Form Data:', formData);
         // Updated booking payload to match API structure
         const bookingPayload = {
             consultantId: selectedDoctor?.id || null,
@@ -150,12 +153,37 @@ export default function DatLichKham() {
             description: formData.notes || ""
         };
         // Log the payload to debug
-        console.log('Booking Payload:', bookingPayload);
+        console.log('Final Booking Payload:', bookingPayload);
+        console.log('Payload consultantId:', bookingPayload.consultantId);
+        console.log('Payload customerId:', bookingPayload.customerId);
+        console.log('Payload serviceTypeId:', bookingPayload.serviceTypeId);
         // Validate required fields before sending
-        if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
-            setSubmitting(false);
-            showToast('Thiếu thông tin bắt buộc. Vui lòng thử lại.', 'error');
-            return;
+     // Enhanced validation with detailed logging
+    const validationCheck = {
+        consultantId: !!bookingPayload.consultantId,
+        customerId: !!bookingPayload.customerId,
+        serviceTypeId: !!bookingPayload.serviceTypeId,
+        appointmentDate: !!bookingPayload.appointmentDate
+    };
+    
+    console.log('Validation Check:', validationCheck);
+
+    if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
+        setSubmitting(false);
+        
+        // More specific error messages
+        if (!bookingPayload.consultantId) {
+            console.error('Missing consultantId - selectedDoctor:', selectedDoctor);
+            showToast('Không tìm thấy thông tin bác sĩ. Vui lòng chọn lại bác sĩ.', 'error');
+        } else if (!bookingPayload.customerId) {
+            console.error('Missing customerId - user:', user);
+            showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
+        } else if (!bookingPayload.serviceTypeId) {
+            console.error('Missing serviceTypeId - consultingService:', consultingService);
+            showToast('Không tìm thấy thông tin dịch vụ. Vui lòng tải lại trang.', 'error');
+        }
+        
+        return;
         }
         try {
             const response = await api.post('/api/servicebooking', bookingPayload);

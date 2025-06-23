@@ -186,9 +186,8 @@ const TestBookingPage = () => {
       setShowConfirmation(true);
 
       // Reload lại danh sách booking
-      const res = await api.get('/api/activebookings');
-      setBookings(res.data || []);
-
+      const res = await api.get('/api/servicetypes/active');
+      setBookings(res.data);
       // Reset form
       setTimeout(() => {
         setSelectedKit(null);
