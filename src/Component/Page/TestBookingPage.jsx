@@ -45,6 +45,7 @@ const TestBookingPage = () => {
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [activeTab, setActiveTab] = useState('popular');
   const [hoveredKit, setHoveredKit] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   // State cho service types từ backend
   const [testKits, setTestKits] = useState([]);
@@ -83,7 +84,7 @@ const TestBookingPage = () => {
       setLoadingKits(true);
       try {
         const res = await api.get('/api/servicetypes/active');
-        console.log('Service types from API:', res.data);
+
         setTestKits(res.data || []);
       } catch (err) {
         showToast('Không thể tải danh sách gói xét nghiệm!', 'error');
@@ -93,6 +94,20 @@ const TestBookingPage = () => {
       }
     };
     fetchTestKits();
+
+    // Lấy bác sĩ mặc định (chạy ngầm)
+    // Gọi API lấy danh sách bác sĩ khi vào trang
+    const fetchDefaultDoctor = async () => {
+      try {
+        const res = await api.get('/api/consultants/active'); // Đổi endpoint nếu backend bạn khác
+        if (res.data && res.data.length > 0) {
+          setSelectedDoctor(res.data[0]); // Lấy bác sĩ đầu tiên làm mặc định
+        }
+      } catch (err) {
+        setSelectedDoctor(null);
+      }
+    };
+    fetchDefaultDoctor();
 
   }, [user]);
 
@@ -140,17 +155,27 @@ const TestBookingPage = () => {
       return;
     }
 
+    if (!selectedDoctor || !selectedDoctor.id) {
+      showToast('Không tìm thấy bác sĩ. Vui lòng thử lại sau.', 'error');
+      return;
+    }
+
     // Chuẩn bị dữ liệu theo đúng cấu trúc API backend
     const bookingPayload = {
-      consultantId: user?.id || null,
-      customerId: user.id || null,
-      serviceTypeId: selectedKit?.id || 0, // Sử dụng ID của service type
+      consultantId: null,
+      customerId: user.id || "",
+      serviceTypeId: selectedKit.id,
       appointmentDate: new Date(appointmentDate).toISOString(),
-      appointmentSlot: 0,
-      duration: 60
+      appointmentSlot: null,
+      duration: 0
     };
 
-    console.log('Booking payload:', bookingPayload);
+    // // Xóa trường null/undefined
+    // Object.keys(bookingPayload).forEach(
+    //   key => (bookingPayload[key] === undefined || bookingPayload[key] === null) && delete bookingPayload[key]
+    // );
+
+    // console.log('Booking payload:', bookingPayload);
 
     try {
       // Gọi API đặt lịch xét nghiệm
