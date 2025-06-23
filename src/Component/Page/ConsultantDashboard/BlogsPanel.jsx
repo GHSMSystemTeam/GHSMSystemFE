@@ -1,7 +1,9 @@
 import React from 'react';
 import { Plus, Filter, Search, Edit, Trash2 } from 'lucide-react';
 
-export default function BlogsPanel({ blogs, loading, error }) {
+export default function BlogsPanel({ blogs = [], loading = false, error = null }) {
+  // Sử dụng dữ liệu mẫu nếu blogs rỗng
+  const displayBlogs = blogs.length > 0 ? blogs : sampleBlogs;
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -11,6 +13,7 @@ export default function BlogsPanel({ blogs, loading, error }) {
           Tạo bài viết mới
         </button>
       </div>
+
       <div className="mb-4 flex gap-4">
         <div className="flex items-center gap-2">
           <Filter size={16} />
@@ -25,45 +28,56 @@ export default function BlogsPanel({ blogs, loading, error }) {
         </div>
         <div className="flex items-center gap-2 flex-1">
           <Search size={16} />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm bài viết..." 
+          <input
+            type="text"
+            placeholder="Tìm kiếm bài viết..."
             className="border rounded px-3 py-2 flex-1"
           />
         </div>
       </div>
+
       {loading ? (
-        <p>Đang tải...</p>
+        <div className="flex justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
       ) : error ? (
-        <p className="text-red-500">{error}</p>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
       ) : (
         <div className="bg-white rounded-lg shadow">
-          {blogs.map((blog) => (
-            <div key={blog.id} className="p-4 border-b border-gray-200 last:border-b-0">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h3 className="font-medium mb-2">{blog.title}</h3>
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <span>Danh mục: {blog.category}</span>
-                    <span>{blog.views} lượt xem</span>
-                    <span>{blog.comments} bình luận</span>
-                    <span>{blog.date}</span>
+          {displayBlogs.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              Chưa có bài viết nào
+            </div>
+          ) : (
+            displayBlogs.map((blog) => (
+              <div key={blog.id} className="p-4 border-b border-gray-200 last:border-b-0">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <h3 className="font-medium mb-2">{blog.title}</h3>
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <span>Danh mục: {blog.category}</span>
+                      <span>{blog.views} lượt xem</span>
+                      <span>{blog.comments} bình luận</span>
+                      <span>{blog.date}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
+                      Xem bình luận
+                    </button>
+                    <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
+                      <Edit size={14} />
+                    </button>
+                    <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                      <Trash2 size={14} />
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700">
-                    Xem bình luận
-                  </button>
-                  <button className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700">
-                    <Edit size={14} />
-                  </button>
-                  <button className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       )}
     </div>

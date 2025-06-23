@@ -15,6 +15,7 @@ import SlideShow from '../Array/SlideShow';
 import Header from '../Header/Header';
 import { useNavigate } from 'react-router-dom'
 import '../CSS/GHSMSCenterCSS.css';
+import api from '../config/axios';
 
 
 
@@ -31,129 +32,24 @@ export default function GHSMSCenter() {
     const [currentDoctorIndex, setCurrentDoctorIndex] = useState(0);
     const doctorsPerPage = 4; // Hiển thị 4 bác sĩ mỗi lần
 
-    // Thêm danh sách bác sĩ (lấy từ DatLichKham)
-    const featuredDoctors = [
-        {
-            id: 1,
-            title: "TS.BS",
-            name: "Nguyễn Văn Minh",
-            specialty: "Phụ khoa - Sản khoa",
-            description: "Chuyên điều trị các bệnh phụ khoa, tư vấn sức khỏe sinh sản",
-            experience: "20 năm",
-            rating: 4.9,
-            reviews: 245,
-            education: "Tiến sĩ Y khoa - Đại học Y Hà Nội",
-            image: "/images/doctors/doctor1.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 6"],
-            consultationFee: "500,000 VNĐ"
-        },
-        {
-            id: 2,
-            title: "TS.BS",
-            name: "Trần Thị Hồng",
-            specialty: "Nam khoa - Tiết niệu",
-            description: "Chuyên gia hàng đầu về sức khỏe nam giới và rối loạn tiết niệu",
-            experience: "18 năm",
-            rating: 4.8,
-            reviews: 198,
-            education: "Tiến sĩ Y khoa - Đại học Y TP.HCM",
-            image: "/images/doctors/doctor2.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 5", "Thứ 7"],
-            consultationFee: "450,000 VNĐ"
-        },
-        {
-            id: 3,
-            title: "BS.CKI",
-            name: "Lê Văn Thành",
-            specialty: "Nội tiết - Chuyển hóa",
-            description: "Chuyên điều trị rối loạn hormone, tiểu đường, tuyến giáp",
-            experience: "15 năm",
-            rating: 4.7,
-            reviews: 156,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Cần Thơ",
-            image: "/images/doctors/doctor3.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 3", "Thứ 5", "Thứ 6", "Chủ nhật"],
-            consultationFee: "400,000 VNĐ"
-        },
-        {
-            id: 4,
-            title: "TS.BS",
-            name: "Phạm Thị Lan",
-            specialty: "Tâm lý học - Tình dục học",
-            description: "Tư vấn tâm lý, trị liệu tình dục, hỗ trợ sức khỏe tinh thần",
-            experience: "12 năm",
-            rating: 4.8,
-            reviews: 134,
-            education: "Tiến sĩ Tâm lý học - Đại học Khoa học Xã hội và Nhân văn",
-            image: "/images/doctors/doctor4.jpg",
-            languages: ["Tiếng Việt", "English", "Français"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6", "Thứ 7"],
-            consultationFee: "600,000 VNĐ"
-        },
-        {
-            id: 5,
-            title: "BS.CKI",
-            name: "Hoàng Văn Đức",
-            specialty: "Phẫu thuật thẩm mỹ vùng kín",
-            description: "Chuyên phẫu thuật tạo hình và thẩm mỹ vùng sinh dục",
-            experience: "16 năm",
-            rating: 4.9,
-            reviews: 89,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Huế",
-            image: "/images/doctors/doctor5.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 3", "Thứ 5", "Thứ 7"],
-            consultationFee: "800,000 VNĐ"
-        },
-        {
-            id: 6,
-            title: "BS.CKI",
-            name: "Võ Thị Mai",
-            specialty: "Da liễu - STIs",
-            description: "Chuyên điều trị bệnh da liễu và nhiễm trùng lây truyền qua đường tình dục",
-            experience: "14 năm",
-            rating: 4.6,
-            reviews: 167,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Dược TP.HCM",
-            image: "/images/doctors/doctor6.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 2", "Thứ 3", "Thứ 5", "Thứ 6"],
-            consultationFee: "350,000 VNĐ"
-        },
-        {
-            id: 7,
-            title: "TS.BS",
-            name: "Nguyễn Thị Bích",
-            specialty: "Chăm sóc LGBT+ ",
-            description: "Chuyên gia tư vấn và chăm sóc sức khỏe cộng đồng LGBT+",
-            experience: "10 năm",
-            rating: 4.8,
-            reviews: 112,
-            education: "Tiến sĩ Y khoa - Đại học Y khoa Phạm Ngọc Thạch",
-            image: "/images/doctors/doctor7.jpg",
-            languages: ["Tiếng Việt", "English"],
-            workingDays: ["Thứ 4", "Thứ 6", "Thứ 7", "Chủ nhật"],
-            consultationFee: "550,000 VNĐ"
-        },
-        {
-            id: 8,
-            title: "BS.CKI",
-            name: "Trần Văn Hùng",
-            specialty: "Sinh sản - Hiếm muộn",
-            description: "Chuyên điều trị vô sinh hiếm muộn, hỗ trợ sinh sản",
-            experience: "13 năm",
-            rating: 4.7,
-            reviews: 203,
-            education: "Bác sĩ Chuyên khoa I - Đại học Y Thái Bình",
-            image: "/images/doctors/doctor8.jpg",
-            languages: ["Tiếng Việt"],
-            workingDays: ["Thứ 2", "Thứ 4", "Thứ 6"],
-            consultationFee: "650,000 VNĐ"
-        }
-    ];
+    // Thay đổi: Lấy danh sách bác sĩ từ API
+    const [featuredDoctors, setFeaturedDoctors] = useState([]);
+    const [loadingDoctors, setLoadingDoctors] = useState(true);
+
+    // Lấy danh sách bác sĩ từ API
+    useEffect(() => {
+        const fetchDoctors = async () => {
+            try {
+                const response = await api.get('/api/activeconsultants');
+                setFeaturedDoctors(response.data || []);
+            } catch (error) {
+                console.error('Không thể tải danh sách bác sĩ:', error);
+            } finally {
+                setLoadingDoctors(false);
+            }
+        };
+        fetchDoctors();
+    }, []);
 
     // Hàm điều hướng carousel
     const nextDoctors = () => {
@@ -391,131 +287,154 @@ export default function GHSMSCenter() {
                             </div>
                         </div>
 
-                        {/* Doctors Carousel */}
-                        <div className="relative overflow-hidden">
-                            {/* Mũi tên trái */}
-                            <button
-                                onClick={prevDoctors}
-                                className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white  flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
-                                title="Xem bác sĩ trước"
-                            >
-                                <ChevronLeft size={24} />
-                            </button>
 
-                            {/* Mũi tên phải */}
-                            <button
-                                onClick={nextDoctors}
-                                className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
-                                title="Xem bác sĩ tiếp theo"
-                            >
-                                <ChevronRight size={24} />
-                            </button>
 
-                            {/* Carousel content */}
-                            <div className="flex transition-all duration-500 ease-in-out"
-                                style={{
-                                    transform: `translateX(-${currentDoctorIndex * 100}%)`
-                                }}>
-                                {/* Render từng trang bác sĩ */}
-                                {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, pageIndex) => (
-                                    <div key={pageIndex} className="w-full flex-shrink-0">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 px-16">
-                                            {featuredDoctors
-                                                .slice(pageIndex * doctorsPerPage, (pageIndex + 1) * doctorsPerPage)
-                                                .map((doctor) => (
-                                                    <div
-                                                        key={doctor.id}
-                                                        className="bg-white rounded-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group hover:-translate-y-2"
-                                                    >
-                                                        {/* Doctor Image */}
-                                                        <div className="relative h-64 bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden">
-                                                            {doctor.image ? (
-                                                                <img
-                                                                    src={doctor.image}
-                                                                    alt={doctor.name}
-                                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                                    onError={(e) => {
-                                                                        e.target.style.display = 'none';
-                                                                        e.target.nextSibling.style.display = 'flex';
-                                                                    }}
-                                                                />
-                                                            ) : null}
-                                                            <div className="w-full h-full flex items-center justify-center">
-                                                                <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
-                                                                    <Stethoscope className="text-blue-600" size={32} />
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Rating Badge */}
-                                                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1 shadow-lg">
-                                                                <Star className="text-yellow-400 fill-current" size={14} />
-                                                                <span className="text-sm font-medium text-gray-800">{doctor.rating}</span>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Doctor Info */}
-                                                        <div className="p-6">
-                                                            <div className="mb-4">
-                                                                <h3 className="text-xl font-bold text-gray-900 mb-1">
-                                                                    {doctor.title} {doctor.name}
-                                                                </h3>
-                                                                <p className="text-blue-600 font-semibold text-sm mb-2">{doctor.specialty}</p>
-                                                                <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
-                                                                    {doctor.description}
-                                                                </p>
-                                                            </div>
-
-                                                            {/* Experience & Reviews */}
-                                                            <div className="flex items-center justify-between mb-4 text-sm">
-                                                                <div className="flex items-center space-x-1 text-gray-600">
-                                                                    <Clock size={14} />
-                                                                    <span>{doctor.experience} KN</span>
-                                                                </div>
-                                                                <div className="flex items-center space-x-1 text-gray-600">
-                                                                    <Users size={14} />
-                                                                    <span>{doctor.reviews} đánh giá</span>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Consultation Fee */}
-                                                            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                                                                <div className="text-center">
-                                                                    <p className="text-xs text-gray-500 mb-1">Phí tư vấn</p>
-                                                                    <p className="text-lg font-bold text-blue-600">{doctor.consultationFee}</p>
-                                                                </div>
-                                                            </div>
-
-                                                            {/* Book Appointment Button */}
-                                                            <button
-                                                                onClick={() => handleBookAppointment(doctor.id)}
-                                                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 group active:scale-95"
-                                                            >
-                                                                <span>Đặt lịch ngay</span>
-                                                                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            }
-                                        </div>
-                                    </div>
-                                ))}
+                        {/* Loading State */}
+                        {loadingDoctors ? (
+                            <div className="text-center py-12">
+                                <div className="text-blue-600">Đang tải danh sách bác sĩ...</div>
                             </div>
-                        </div>
+                        ) : featuredDoctors.length === 0 ? (
+                            <div className="text-center py-12">
+                                <div className="text-gray-500">Không có bác sĩ nào khả dụng.</div>
+                            </div>
+                        ) : (
+                            /* Doctors Carousel */
+                            <div className="relative overflow-hidden">
+                                {/* Mũi tên trái */}
+                                <button
+                                    onClick={prevDoctors}
+                                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
+                                    title="Xem bác sĩ trước"
+                                >
+                                    <ChevronLeft size={24} />
+                                </button>
+
+                                {/* Mũi tên phải */}
+                                <button
+                                    onClick={nextDoctors}
+                                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white flex items-center justify-center text-gray-600 hover:text-blue-600 transition-all duration-300 hover:scale-125 active:scale-90"
+                                    title="Xem bác sĩ tiếp theo"
+                                >
+                                    <ChevronRight size={24} />
+                                </button>
+
+                                {/* Carousel content */}
+                                <div className="flex transition-all duration-500 ease-in-out"
+                                    style={{
+                                        transform: `translateX(-${currentDoctorIndex * 100}%)`
+                                    }}>
+                                    {/* Render từng trang bác sĩ */}
+                                    {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, pageIndex) => (
+                                        <div key={pageIndex} className="w-full flex-shrink-0">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12 px-16">
+                                                {featuredDoctors
+                                                    .slice(pageIndex * doctorsPerPage, (pageIndex + 1) * doctorsPerPage)
+                                                    .map((doctor) => (
+                                                        <div
+                                                            key={doctor.id}
+                                                            className="bg-white rounded-2xl hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-100 group hover:-translate-y-2"
+                                                        >
+                                                            {/* Doctor Image */}
+                                                            <div className="relative h-64 bg-gradient-to-br from-blue-100 to-purple-100 overflow-hidden">
+                                                                {doctor.profilePicture && doctor.profilePicture.length > 0 ? (
+                                                                    <img
+                                                                        src={doctor.profilePicture[0]}
+                                                                        alt={doctor.name}
+                                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                                        onError={(e) => {
+                                                                            e.target.style.display = 'none';
+                                                                            e.target.nextSibling.style.display = 'flex';
+                                                                        }}
+                                                                    />
+                                                                ) : null}
+                                                                <div className="w-full h-full flex items-center justify-center">
+                                                                    <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg">
+                                                                        <Stethoscope className="text-blue-600" size={32} />
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Rating Badge */}
+                                                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm rounded-full px-3 py-1 flex items-center space-x-1 shadow-lg">
+                                                                    <Star className="text-yellow-400 fill-current" size={14} />
+                                                                    <span className="text-sm font-medium text-gray-800">
+                                                                        {doctor.avgRating || 'N/A'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Doctor Info */}
+                                                            <div className="p-6">
+                                                                <div className="mb-4">
+                                                                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                                                                        {doctor.name}
+                                                                    </h3>
+                                                                    <p className="text-blue-600 font-semibold text-sm mb-2">
+                                                                        {doctor.specialization || 'Chuyên khoa tổng quát'}
+                                                                    </p>
+                                                                    <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
+                                                                        {doctor.description || 'Bác sĩ giàu kinh nghiệm trong lĩnh vực y học giới tính'}
+                                                                    </p>
+                                                                </div>
+
+                                                                {/* Experience & Contact */}
+                                                                <div className="flex items-center justify-between mb-4 text-sm">
+                                                                    <div className="flex items-center space-x-1 text-gray-600">
+                                                                        <Clock size={14} />
+                                                                        <span>{doctor.expYear || 0} năm KN</span>
+                                                                    </div>
+                                                                    <div className="flex items-center space-x-1 text-gray-600">
+                                                                        <Phone size={14} />
+                                                                        <span>{doctor.phone || 'Liên hệ'}</span>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* License Details */}
+                                                                {doctor.licenseDetails && (
+                                                                    <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                                                                        <div className="text-center">
+                                                                            <p className="text-xs text-gray-500 mb-1">Chứng chỉ</p>
+                                                                            <p className="text-sm font-medium text-gray-700 line-clamp-2">
+                                                                                {doctor.licenseDetails}
+                                                                            </p>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {/* Book Appointment Button */}
+                                                                <button
+                                                                    onClick={() => handleBookAppointment(doctor.id)}
+                                                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 group active:scale-95"
+                                                                >
+                                                                    <span>Đặt lịch ngay</span>
+                                                                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                }
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         {/* Dots Indicator */}
-                        <div className="flex justify-center space-x-2 mb-8">
-                            {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setCurrentDoctorIndex(index)}
-                                    className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentDoctorIndex
-                                        ? 'bg-blue-600 w-8'
-                                        : 'bg-gray-300 hover:bg-gray-400'
-                                        }`}
-                                />
-                            ))}
-                        </div>
+                        {featuredDoctors.length > 0 && (
+                            <div className="flex justify-center space-x-2 mb-8">
+                                {Array.from({ length: Math.ceil(featuredDoctors.length / doctorsPerPage) }).map((_, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => setCurrentDoctorIndex(index)}
+                                        className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentDoctorIndex
+                                            ? 'bg-blue-600 w-8'
+                                            : 'bg-gray-300 hover:bg-gray-400'
+                                            }`}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </section>
 

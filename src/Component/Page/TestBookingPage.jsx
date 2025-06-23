@@ -43,8 +43,11 @@ const TestBookingPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingRatings, setBookingRatings] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [activeTab, setActiveTab] = useState('popular'); // 'popular', 'specialized', 'all'
-  const [hoveredKit, setHoveredKit] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+
+  // State cho service types từ backend
+  const [testKits, setTestKits] = useState([]);
+  const [loadingKits, setLoadingKits] = useState(true);
 
   const [userInfo, setUserInfo] = useState({
     name: '',
@@ -63,127 +66,48 @@ const TestBookingPage = () => {
       });
     }
 
-    // Lấy danh sách gói xét nghiệm từ backend
+    // Lấy danh sách booking từ backend
+    const fetchBookings = async () => {
+      try {
+        const res = await api.get('/api/activebookings');
+        setBookings(res.data || []);
+      } catch (err) {
+        console.error('Error fetching bookings:', err);
+      }
+    };
+    fetchBookings();
+
+    // Lấy danh sách service types từ backend
     const fetchTestKits = async () => {
       setLoadingKits(true);
       try {
         const res = await api.get('/api/servicetypes/active');
+
         setTestKits(res.data || []);
       } catch (err) {
         showToast('Không thể tải danh sách gói xét nghiệm!', 'error');
+        console.error('Error fetching service types:', err);
       } finally {
         setLoadingKits(false);
       }
     };
     fetchTestKits();
 
+    // Lấy bác sĩ mặc định (chạy ngầm)
+    // Gọi API lấy danh sách bác sĩ khi vào trang
+    const fetchDefaultDoctor = async () => {
+      try {
+        const res = await api.get('/api/activeconsultants'); // Đổi endpoint nếu backend bạn khác
+        if (res.data && res.data.length > 0) {
+          setSelectedDoctor(res.data[0]); // Lấy bác sĩ đầu tiên làm mặc định
+        }
+      } catch (err) {
+        setSelectedDoctor(null);
+      }
+    };
+    fetchDefaultDoctor();
 
-
-  }, [user]);
-
-  const [testKits, setTestKits] = useState([]);
-  const [loadingKits, setLoadingKits] = useState(true);
-
-  // Danh sách gói xét nghiệm phổ biến
-  const popularTestKits = [
-    {
-      id: 1,
-      name: 'Gói Xét Nghiệm Tổng Quát Nam Giới',
-      price: '1.500.000 VNĐ',
-      duration: '2-3 giờ',
-      tests: ['Hormone nam giới', 'Chức năng sinh sản', 'STD/STI', 'Tầm soát ung thư'],
-      image: 'https://images.unsplash.com/photo-1579165466741-7f35e4755182?w=300&h=200&fit=crop',
-      description: 'Gói xét nghiệm toàn diện cho sức khỏe nam giới, bao gồm các chỉ số quan trọng về nội tiết tố và chức năng sinh sản.',
-      category: 'popular',
-      rating: 4.8,
-      reviewCount: 127
-    },
-    {
-      id: 2,
-      name: 'Gói Xét Nghiệm Hormone Giới Tính',
-      price: '2.200.000 VNĐ',
-      duration: '1-2 giờ',
-      tests: ['Testosterone', 'Estrogen', 'FSH/LH', 'Prolactin'],
-      image: 'https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=300&h=200&fit=crop',
-      description: 'Đánh giá toàn diện hệ thống nội tiết tố giới tính, giúp phát hiện sớm các rối loạn liên quan đến hormone.',
-      category: 'popular',
-      rating: 4.9,
-      reviewCount: 98
-    },
-  ];
-
-  // Các gói xét nghiệm chuyên sâu
-  const specializedTestKits = [
-    {
-      id: 3,
-      name: 'Gói Xét Nghiệm STD/STI Cơ Bản',
-      price: '800.000 VNĐ',
-      duration: '30-45 phút',
-      tests: ['HIV', 'Syphilis', 'Hepatitis B/C', 'Chlamydia'],
-      image: 'https://images.unsplash.com/photo-1576670159375-41d87bc2c60d?w=300&h=200&fit=crop',
-      description: 'Tầm soát các bệnh lây truyền qua đường tình dục phổ biến, đảm bảo an toàn cho bạn và đối tác.',
-      category: 'specialized',
-      rating: 4.7,
-      reviewCount: 156
-    },
-    {
-      id: 4,
-      name: 'Gói Xét Nghiệm Chức Năng Sinh Sản',
-      price: '1.800.000 VNĐ',
-      duration: '2-3 giờ',
-      tests: ['Tinh dịch đồ', 'DNA mảnh tinh trùng', 'Hormone sinh sản', 'Siêu âm'],
-      image: 'https://images.unsplash.com/photo-1560252502-c9117d625a4d?w=300&h=200&fit=crop',
-      description: 'Đánh giá khả năng sinh sản và chức năng sinh dục nam giới, hỗ trợ kế hoạch hóa gia đình.',
-      category: 'specialized',
-      rating: 4.9,
-      reviewCount: 84
-    },
-  ];
-
-  // Gói xét nghiệm khác
-  const otherTestKits = [
-    {
-      id: 5,
-      name: 'Gói Xét Nghiệm Di Truyền',
-      price: '3.500.000 VNĐ',
-      duration: '3-5 giờ',
-      tests: ['Phân tích DNA', 'Dị ứng di truyền', 'Gen bệnh lý', 'Đặc điểm sinh học'],
-      image: 'https://images.unsplash.com/photo-1562421224-6201844c0a33?w=300&h=200&fit=crop',
-      description: 'Xét nghiệm di truyền toàn diện giúp bạn hiểu rõ về cơ địa và nguy cơ mắc các bệnh di truyền.',
-      category: 'other',
-      rating: 4.6,
-      reviewCount: 42
-    },
-    {
-      id: 6,
-      name: 'Gói Kiểm Tra Sức Khỏe Tình Dục Nam',
-      price: '950.000 VNĐ',
-      duration: '1 giờ',
-      tests: ['Xét nghiệm nước tiểu', 'Các bệnh lây nhiễm', 'Kiểm tra cơ quan sinh dục'],
-      image: 'https://images.unsplash.com/photo-1563213126-a4273aed2016?w=300&h=200&fit=crop',
-      description: 'Gói kiểm tra nhanh các vấn đề sức khỏe tình dục nam giới, phát hiện sớm các bệnh lý.',
-      category: 'other',
-      rating: 4.5,
-      reviewCount: 76
-    },
-  ];
-
-  // Tổng hợp tất cả gói xét nghiệm
-  const allTestKits = [...popularTestKits, ...specializedTestKits, ...otherTestKits];
-
-  // Lọc gói xét nghiệm dựa vào tab đang active
-  const filteredTestKits = () => {
-    switch (activeTab) {
-      case 'popular':
-        return popularTestKits;
-      case 'specialized':
-        return specializedTestKits;
-      case 'all':
-        return allTestKits;
-      default:
-        return popularTestKits;
-    }
-  };
+  }, []);
 
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -229,30 +153,38 @@ const TestBookingPage = () => {
       return;
     }
 
-    // Chuẩn bị dữ liệu đúng với backend
-    const newBooking = {
-      consultantId: user.id, // hoặc user._id tùy backend
+    // Kiểm tra selectedDoctor đã có chưa
+    if (!selectedDoctor || !selectedDoctor.id) {
+      showToast('Đang tải thông tin bác sĩ, vui lòng đợi hoặc thử lại sau.', 'error');
+      return;
+    }
+
+    // Disable nút submit để tránh click nhiều lần
+    const submitButton = document.querySelector('button[onClick="handleBooking"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    const bookingPayload = {
+      consultantId: String(selectedDoctor.id),
       customerId: user.id,
-      serviceTypeId: {
-        name: selectedKit.name,
-        description: selectedKit.description,
-        price: Number(selectedKit.price),
-        active: true
-      },
+      serviceTypeId: selectedKit.id,
       appointmentDate: new Date(appointmentDate).toISOString(),
-      appointmentSlot: 0, // hoặc slot bạn chọn
-      duration: 60, // hoặc selectedKit.duration nếu có
-      description: userInfo.address,
-      active: true
+      duration: 0
     };
 
     try {
-      await api.post('/api/servicebooking', newBooking);
+      // Gọi API đặt lịch xét nghiệm
+      const response = await api.post('/api/servicebooking', bookingPayload);
+      console.log('Booking response:', response.data);
+
       showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
-      // Reload lại danh sách booking
-      const res = await api.get('/api/servicebooking');
-      setBookings(res.data);
+
+      // XÓA PHẦN NÀY để tránh reload ngay lập tức
+      // const res = await api.get('/api/activebookings');
+      // setBookings(res.data || []);
+
       // Reset form
       setTimeout(() => {
         setSelectedKit(null);
@@ -261,7 +193,16 @@ const TestBookingPage = () => {
         setShowConfirmation(false);
       }, 3000);
     } catch (error) {
-      showToast('Có lỗi xảy ra khi đặt lịch!', 'error');
+      console.error('Booking error:', error);
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Có lỗi xảy ra khi đặt lịch!';
+      showToast(errorMessage, 'error');
+    } finally {
+      // Re-enable nút submit
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   };
 
@@ -276,7 +217,6 @@ const TestBookingPage = () => {
       booking.id === bookingId ? { ...booking, status: newStatus } : booking
     );
     setBookings(updatedBookings);
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings));
 
     if (newStatus === 'cancelled') {
       showToast('Đã hủy lịch hẹn thành công', 'info');
@@ -284,6 +224,12 @@ const TestBookingPage = () => {
       showToast('Đã xác nhận lịch hẹn thành công', 'success');
     }
   };
+
+  // Lọc service types theo tab
+  const getAllKits = () => {
+    return testKits || [];
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 to-indigo-50 pt-24 mt-10">
@@ -318,7 +264,6 @@ const TestBookingPage = () => {
             </div>
           </div>
         </div>
-
       </div>
 
       <div className="container mx-auto px-4 py-8" id="booking-section">
@@ -369,66 +314,26 @@ const TestBookingPage = () => {
                     </p>
                   </div>
 
-                  {/* Tab navigation */}
-                  <div className="flex border-b">
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'popular'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('popular')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <Star size={18} className="mr-2" />
-                        Phổ biến
-                      </div>
-                    </button>
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'specialized'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('specialized')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <FlaskConical size={18} className="mr-2" />
-                        Chuyên sâu
-                      </div>
-                    </button>
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'all'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('all')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <Bookmark size={18} className="mr-2" />
-                        Tất cả
-                      </div>
-                    </button>
-                  </div>
+
 
                   <div className="p-6">
                     {loadingKits ? (
                       <div className="text-center text-blue-600 py-10">Đang tải danh sách gói xét nghiệm...</div>
                     ) : (
                       <div className="grid md:grid-cols-2 gap-6">
-                        {testKits.length === 0 && (
+                        {getAllKits().length === 0 && (
                           <div className="col-span-2 text-center text-gray-500 py-10">
                             Không có gói xét nghiệm nào khả dụng.
                           </div>
                         )}
-                        {testKits.map((kit, idx) => (
+                        {getAllKits().map((kit, idx) => (
                           <div
-                            key={kit.name + idx}
-                            className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative
-            ${selectedKit?.name === kit.name
+                            key={`${kit.id || kit.name}-${idx}`}
+                            className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative cursor-pointer
+                ${selectedKit?.id === kit.id
                                 ? 'border-blue-500 bg-blue-50 shadow-md'
                                 : 'border-gray-200 hover:border-blue-300'
                               }`}
-                            onMouseEnter={() => setHoveredKit(kit.name)}
-                            onMouseLeave={() => setHoveredKit(null)}
                             onClick={() => setSelectedKit(kit)}
                           >
                             {/* Badge */}
@@ -444,7 +349,7 @@ const TestBookingPage = () => {
                                 <Beaker size={48} />
                               </div>
                               <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
-              ${hoveredKit === kit.name || selectedKit?.name === kit.name ? 'opacity-100' : 'opacity-0'}`}>
+                  ${selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
                                 <button
                                   className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
                                   onClick={(e) => {
@@ -467,12 +372,14 @@ const TestBookingPage = () => {
                                     <Package size={16} className="mr-1" />
                                     Giá:
                                   </span>
-                                  <span className="font-semibold text-blue-600">{kit.price?.toLocaleString('vi-VN')} VNĐ</span>
+                                  <span className="font-semibold text-blue-600">
+                                    {kit.price ? `${kit.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'}
+                                  </span>
                                 </div>
                               </div>
                             </div>
 
-                            {selectedKit?.name === kit.name && (
+                            {selectedKit?.id === kit.id && (
                               <div className="absolute top-2 left-2 bg-blue-600 text-white rounded-full p-1">
                                 <Check size={16} />
                               </div>
@@ -513,20 +420,16 @@ const TestBookingPage = () => {
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6 border border-blue-100">
                         <div className="flex items-start">
                           <div className="flex-shrink-0 mr-4">
-                            <img
-                              src={selectedKit.image}
-                              alt={selectedKit.name}
-                              className="w-16 h-16 object-cover rounded-lg shadow-sm"
-                            />
+                            <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <Beaker className="text-blue-600" size={24} />
+                            </div>
                           </div>
                           <div>
                             <h3 className="font-semibold text-blue-800 mb-1">Gói đã chọn:</h3>
                             <p className="text-blue-700 font-medium">{selectedKit.name}</p>
                             <div className="flex items-center mt-1">
-                              <span className="text-blue-600 text-sm mr-3">{selectedKit.price}</span>
-                              <span className="text-gray-500 text-sm flex items-center">
-                                <Clock size={14} className="mr-1" />
-                                {selectedKit.duration}
+                              <span className="text-blue-600 text-sm mr-3">
+                                {selectedKit.price ? `${selectedKit.price.toLocaleString('vi-VN')} VNĐ` : 'Liên hệ'}
                               </span>
                             </div>
                           </div>
@@ -539,7 +442,7 @@ const TestBookingPage = () => {
                       <div className="bg-white rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                           <Calendar className="mr-2 text-blue-600" size={20} />
-                          Chọn Ngày & Giờ Xét Nghiệm
+                          Chọn Ngày Xét Nghiệm
                         </h3>
                         <div className="grid md:grid-cols-2 gap-6">
                           <div>
@@ -554,7 +457,6 @@ const TestBookingPage = () => {
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
                           </div>
-
                         </div>
                       </div>
 
@@ -863,7 +765,7 @@ const TestBookingPage = () => {
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">Đặt lịch thành công!</h3>
               <p className="text-gray-500">
-                Bạn đã đặt lịch xét nghiệm {selectedKit.name} vào ngày{' '}
+                Bạn đã đặt lịch xét nghiệm {selectedKit?.name} vào ngày{' '}
                 {new Date(appointmentDate).toLocaleDateString('vi-VN')}
               </p>
               <p className="text-gray-500 mt-1">

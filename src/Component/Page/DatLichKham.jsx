@@ -42,9 +42,9 @@ export default function DatLichKham() {
             try {
                 const response = await api.get('/api/servicetypes/active');
                 if (response.data && response.data.length > 0) {
-                    console.log('All available services:', response.data.map(s => ({ 
+                    console.log('All available services:', response.data.map(s => ({
                         id: s.id,
-                        name: s.name, 
+                        name: s.name,
                         price: s.price,
                         active: s.active,
                         description: s.description
@@ -74,7 +74,7 @@ export default function DatLichKham() {
                 // Filter active consultants and ensure unique IDs
                 const activeConsultants = response.data
                     .filter(c => c.active)
-                    .filter((consultant, index, self) => 
+                    .filter((consultant, index, self) =>
                         index === self.findIndex(c => c.id === consultant.id)
                     );
                 setAvailableDoctors(activeConsultants);
@@ -115,10 +115,11 @@ export default function DatLichKham() {
             [name]: value
         }));
     };
-    
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!checkAuthAndShowPrompt('đặt lịch khám')) return;
+
         if (!consultingService) {
             showToast('Dịch vụ tư vấn chưa được tải, vui lòng thử lại.', 'error');
             return;
@@ -128,79 +129,57 @@ export default function DatLichKham() {
             return;
         }
         if (!formData.date) {
-        showToast('Vui lòng chọn ngày khám.', 'error');
-        return;
+            showToast('Vui lòng chọn ngày khám.', 'error');
+            return;
         }
+
+        // Tránh submit nhiều lần
+        if (submitting) return;
         setSubmitting(true);
 
         const selectedDoctor = availableDoctors.find(d => d.id.toString() === formData.doctor);
-        // Debug logging
-        console.log('Consulting Service:', consultingService);
-        console.log('Consulting Service ID:', consultingService?.id);
-        console.log('Selected Doctor:', selectedDoctor);
-        console.log('Selected Doctor ID:', selectedDoctor?.id);
-        console.log('User:', user);
-        console.log('User ID:', user?.id);
-        console.log('Form Data:', formData);
-        // Updated booking payload to match API structure
+
         const bookingPayload = {
             consultantId: selectedDoctor?.id || null,
             customerId: user?.id || null,
-            serviceTypeId: consultingService?.id || null, // Make sure this has a value
+            serviceTypeId: consultingService?.id || null,
             appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
             appointmentSlot: 0,
             duration: 0,
             description: formData.notes || ""
         };
-        // Log the payload to debug
-        console.log('Final Booking Payload:', bookingPayload);
-        console.log('Payload consultantId:', bookingPayload.consultantId);
-        console.log('Payload customerId:', bookingPayload.customerId);
-        console.log('Payload serviceTypeId:', bookingPayload.serviceTypeId);
-        // Validate required fields before sending
-     // Enhanced validation with detailed logging
-    const validationCheck = {
-        consultantId: !!bookingPayload.consultantId,
-        customerId: !!bookingPayload.customerId,
-        serviceTypeId: !!bookingPayload.serviceTypeId,
-        appointmentDate: !!bookingPayload.appointmentDate
-    };
-    
-    console.log('Validation Check:', validationCheck);
 
-    if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
-        setSubmitting(false);
-        
-        // More specific error messages
-        if (!bookingPayload.consultantId) {
-            console.error('Missing consultantId - selectedDoctor:', selectedDoctor);
-            showToast('Không tìm thấy thông tin bác sĩ. Vui lòng chọn lại bác sĩ.', 'error');
-        } else if (!bookingPayload.customerId) {
-            console.error('Missing customerId - user:', user);
-            showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
-        } else if (!bookingPayload.serviceTypeId) {
-            console.error('Missing serviceTypeId - consultingService:', consultingService);
-            showToast('Không tìm thấy thông tin dịch vụ. Vui lòng tải lại trang.', 'error');
+        // Validation
+        if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
+            setSubmitting(false);
+            if (!bookingPayload.consultantId) {
+                showToast('Không tìm thấy thông tin bác sĩ. Vui lòng chọn lại bác sĩ.', 'error');
+            } else if (!bookingPayload.customerId) {
+                showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
+            } else if (!bookingPayload.serviceTypeId) {
+                showToast('Không tìm thấy thông tin dịch vụ. Vui lòng tải lại trang.', 'error');
+            }
+            return;
         }
-        
-        return;
-        }
+
         try {
+            // Chỉ gọi API một lần
             const response = await api.post('/api/servicebooking', bookingPayload);
             console.log('Booking Response:', response.data);
-            setSubmitting(false);
+
             setSubmitted(true);
             showToast('Đặt lịch khám thành công!', 'success');
         } catch (error) {
             console.error("API Error:", error.response || error);
-            setSubmitting(false);
-            const errorMessage = error.response?.data?.message || 
-                            error.response?.data?.error || 
-                            'Có lỗi xảy ra khi đặt lịch!';
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Có lỗi xảy ra khi đặt lịch!';
             showToast(errorMessage, 'error');
+        } finally {
+            setSubmitting(false);
         }
     };
-    
+
     const resetForm = () => {
         setSubmitted(false);
         setCurrentStep(1);
@@ -520,7 +499,7 @@ export default function DatLichKham() {
                                                                 <span className="text-gray-600">Bác sĩ:</span>
                                                                 <span className="text-gray-900 font-medium text-right break-words max-w-[200px]">
                                                                     {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name || 'Chưa chọn'}
-                                                                </span> 
+                                                                </span>
                                                             </div>
                                                             <div className="flex justify-between">
                                                                 <span className="text-gray-600">Dịch vụ:</span>
