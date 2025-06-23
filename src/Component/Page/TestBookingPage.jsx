@@ -43,8 +43,6 @@ const TestBookingPage = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingRatings, setBookingRatings] = useState({});
   const [showConfirmation, setShowConfirmation] = useState(false);
-  const [activeTab, setActiveTab] = useState('popular');
-  const [hoveredKit, setHoveredKit] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
 
   // State cho service types từ backend
@@ -99,7 +97,7 @@ const TestBookingPage = () => {
     // Gọi API lấy danh sách bác sĩ khi vào trang
     const fetchDefaultDoctor = async () => {
       try {
-        const res = await api.get('/api/consultants/active'); // Đổi endpoint nếu backend bạn khác
+        const res = await api.get('/api/activeconsultants'); // Đổi endpoint nếu backend bạn khác
         if (res.data && res.data.length > 0) {
           setSelectedDoctor(res.data[0]); // Lấy bác sĩ đầu tiên làm mặc định
         }
@@ -109,7 +107,7 @@ const TestBookingPage = () => {
     };
     fetchDefaultDoctor();
 
-  }, [user]);
+  }, []);
 
   const timeSlots = [
     '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
@@ -155,27 +153,25 @@ const TestBookingPage = () => {
       return;
     }
 
+    // Kiểm tra selectedDoctor đã có chưa
     if (!selectedDoctor || !selectedDoctor.id) {
-      showToast('Không tìm thấy bác sĩ. Vui lòng thử lại sau.', 'error');
+      showToast('Đang tải thông tin bác sĩ, vui lòng đợi hoặc thử lại sau.', 'error');
       return;
     }
 
-    // Chuẩn bị dữ liệu theo đúng cấu trúc API backend
+    // Disable nút submit để tránh click nhiều lần
+    const submitButton = document.querySelector('button[onClick="handleBooking"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
     const bookingPayload = {
-      consultantId: null,
-      customerId: user.id || "",
+      consultantId: String(selectedDoctor.id),
+      customerId: user.id,
       serviceTypeId: selectedKit.id,
       appointmentDate: new Date(appointmentDate).toISOString(),
-      appointmentSlot: null,
       duration: 0
     };
-
-    // // Xóa trường null/undefined
-    // Object.keys(bookingPayload).forEach(
-    //   key => (bookingPayload[key] === undefined || bookingPayload[key] === null) && delete bookingPayload[key]
-    // );
-
-    // console.log('Booking payload:', bookingPayload);
 
     try {
       // Gọi API đặt lịch xét nghiệm
@@ -185,9 +181,10 @@ const TestBookingPage = () => {
       showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
 
-      // Reload lại danh sách booking
-      const res = await api.get('/api/servicetypes/active');
-      setBookings(res.data);
+      // XÓA PHẦN NÀY để tránh reload ngay lập tức
+      // const res = await api.get('/api/activebookings');
+      // setBookings(res.data || []);
+
       // Reset form
       setTimeout(() => {
         setSelectedKit(null);
@@ -201,6 +198,11 @@ const TestBookingPage = () => {
         error.response?.data?.error ||
         'Có lỗi xảy ra khi đặt lịch!';
       showToast(errorMessage, 'error');
+    } finally {
+      // Re-enable nút submit
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
     }
   };
 
@@ -224,29 +226,10 @@ const TestBookingPage = () => {
   };
 
   // Lọc service types theo tab
-  const getFilteredKits = () => {
-    if (!testKits || testKits.length === 0) return [];
-
-    // Vì backend không có category, ta sẽ filter theo tên hoặc mô tả
-    switch (activeTab) {
-      case 'popular':
-        return testKits.filter(kit =>
-          kit.name?.toLowerCase().includes('tổng quát') ||
-          kit.name?.toLowerCase().includes('hormone') ||
-          kit.description?.toLowerCase().includes('phổ biến')
-        );
-      case 'specialized':
-        return testKits.filter(kit =>
-          kit.name?.toLowerCase().includes('std') ||
-          kit.name?.toLowerCase().includes('sti') ||
-          kit.name?.toLowerCase().includes('sinh sản') ||
-          kit.description?.toLowerCase().includes('chuyên sâu')
-        );
-      case 'all':
-      default:
-        return testKits;
-    }
+  const getAllKits = () => {
+    return testKits || [];
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-purple-100 to-blue-50 to-indigo-50 pt-24 mt-10">
@@ -331,66 +314,26 @@ const TestBookingPage = () => {
                     </p>
                   </div>
 
-                  {/* Tab navigation */}
-                  <div className="flex border-b">
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'popular'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('popular')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <Star size={18} className="mr-2" />
-                        Phổ biến
-                      </div>
-                    </button>
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'specialized'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('specialized')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <FlaskConical size={18} className="mr-2" />
-                        Chuyên sâu
-                      </div>
-                    </button>
-                    <button
-                      className={`flex-1 py-4 px-4 text-center font-medium transition-colors 
-                        ${activeTab === 'all'
-                          ? 'text-blue-600 border-b-2 border-blue-600'
-                          : 'text-gray-600 hover:text-blue-600'}`}
-                      onClick={() => setActiveTab('all')}
-                    >
-                      <div className="flex items-center justify-center">
-                        <Bookmark size={18} className="mr-2" />
-                        Tất cả
-                      </div>
-                    </button>
-                  </div>
+
 
                   <div className="p-6">
                     {loadingKits ? (
                       <div className="text-center text-blue-600 py-10">Đang tải danh sách gói xét nghiệm...</div>
                     ) : (
                       <div className="grid md:grid-cols-2 gap-6">
-                        {getFilteredKits().length === 0 && (
+                        {getAllKits().length === 0 && (
                           <div className="col-span-2 text-center text-gray-500 py-10">
                             Không có gói xét nghiệm nào khả dụng.
                           </div>
                         )}
-                        {getFilteredKits().map((kit, idx) => (
+                        {getAllKits().map((kit, idx) => (
                           <div
                             key={`${kit.id || kit.name}-${idx}`}
                             className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative cursor-pointer
-                              ${selectedKit?.id === kit.id
+                ${selectedKit?.id === kit.id
                                 ? 'border-blue-500 bg-blue-50 shadow-md'
                                 : 'border-gray-200 hover:border-blue-300'
                               }`}
-                            onMouseEnter={() => setHoveredKit(kit.id)}
-                            onMouseLeave={() => setHoveredKit(null)}
                             onClick={() => setSelectedKit(kit)}
                           >
                             {/* Badge */}
@@ -406,7 +349,7 @@ const TestBookingPage = () => {
                                 <Beaker size={48} />
                               </div>
                               <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
-                                ${hoveredKit === kit.id || selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
+                  ${selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
                                 <button
                                   className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
                                   onClick={(e) => {
