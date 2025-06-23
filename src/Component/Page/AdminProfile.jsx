@@ -13,75 +13,7 @@ import {
     Tag,
     X
 } from 'lucide-react';
-
-   const sampleBookings = [
-        {
-            id: 'bk001',
-            date: '2025-06-10', // YYYY-MM-DD format for easier comparison
-            time: '10:00',
-            type: 'Consultation', // 'Consultation' or 'Test'
-            patientName: 'Nguyen Van X',
-            consultantId: 'c1', // Link to consultantsData
-            serviceName: 'Sexual Health Consultation',
-            status: 'Scheduled', // e.g., Scheduled, Completed, Cancelled
-            notes: 'Follow-up discussion required.'
-        },
-        {
-            id: 'bk002',
-            date: '2025-06-10',
-            time: '14:00',
-            type: 'Test',
-            patientName: 'Tran Thi Y',
-            consultantId: null, // Tests might not always have a specific consultant assigned initially
-            serviceName: 'STD Panel Basic',
-            status: 'Scheduled',
-            notes: 'Patient requested discretion.'
-        },
-        {
-            id: 'bk003',
-            date: '2025-06-18',
-            time: '11:30',
-            type: 'Consultation',
-            patientName: 'Le Van Z',
-            consultantId: 'c2',
-            serviceName: 'Pre-test Counseling',
-            status: 'Completed',
-        },
-        {
-            id: 'bk004',
-            date: '2025-07-05', // A booking in the next month
-            time: '09:00',
-            type: 'Test',
-            patientName: 'Pham Thi Q',
-            serviceName: 'Advanced Hormone Test',
-            status: 'Scheduled',
-        }
-    ];
-const updatedSampleBookings = [
-    ...sampleBookings, 
-    {
-        id: 'bk_test_005',
-        date: '2025-06-20',
-        time: '09:30',
-        type: 'Test',
-        patientName: 'Hoang Van E',
-        consultantId: null,
-        serviceName: 'Basic Blood Panel',
-        status: 'Completed',
-        notes: 'Routine check-up.'
-    },
-    {
-        id: 'bk_test_006',
-        date: '2025-06-22',
-        time: '11:00',
-        type: 'Test',
-        patientName: 'Dang Thi F',
-        consultantId: null,
-        serviceName: 'Urinalysis',
-        status: 'Scheduled', // A test that might not have results yet
-        notes: ''
-    }
-];
+import { useToast } from '../Toast/ToastProvider';
 
 const sampleTestResults = [
     {
@@ -194,76 +126,447 @@ const sampleFeedback = [
         isActive: true,
     }
 ];
-// Sample Consultant Data
-{/*const consultantsData = [
-    {
-        id: 'c1',
-        name: "NGUYEN ANH TU",
-        email: "nguyen.anh.tu@example.com",
-        phone: "0901111111", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c2',
-        name: "PHAM MINH NGOC",
-        email: "pham.minh.ngoc@example.com",
-        phone: "0902222222", // Placeholder
-        gender: "Nữ", // Assuming Female
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c3',
-        name: "HO HUU PHUC",
-        email: "ho.huu.phuc@example.com",
-        phone: "0903333333", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c4',
-        name: "NGUYEN TRONG HOANG HIEP",
-        email: "nguyen.hoang.hiep@example.com",
-        phone: "0904444444", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c5',
-        name: "NGUYEN QUOC LINH",
-        email: "nguyen.quoc.linh@example.com",
-        phone: "0905555555", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Tư vấn tâm lý", // Based on description "lĩnh vực tư vấn tâm lý"
+
+// Create a new, dedicated component for Consultant Management
+const ConsultantManagementComponent = () => {
+    const [consultants, setConsultants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingConsultant, setEditingConsultant] = useState(null);
+    const [editFormData, setEditFormData] = useState({ phone: '', specialization: '' });
+    const SPECIALTIES = [
+        "Y học Giới tính & Nam học", "Tư vấn tâm lý", "Phụ khoa", "Nội tiết",
+        "Da liễu", "Sản khoa", "Tiết niệu"
+    ];
+    const toast = useToast();
+    const handleToggleActive = async (consultant) => {
+        const id = consultant.id;
+        const willActivate = !consultant.active;
+        try {
+            // Optimistic UI update (optional)
+            setConsultants(prev =>
+                prev.map(c =>
+                    c.id === id ? { ...c, active: willActivate } : c
+                )
+            );
+
+            // Call the correct API
+            if (willActivate) {
+                await api.put(`/api/active/${id}`);
+            } else {
+                await api.put(`/api/deactive/${id}`);
+            }
+            toast.showToast(`Consultant ${consultant.active ? 'deactivated' : 'activated'} successfully!`, 'success');
+            // Optionally refetch or confirm update
+            // await fetchConsultants();
+        } catch (error) {
+            // Rollback optimistic update on error
+            setConsultants(prev =>
+                prev.map(c =>
+                    c.id === id ? { ...c, active: !willActivate } : c
+                )
+            );
+            toast.showToast('Failed to update consultant status.', 'error');
+        }
+    };
+    const fetchConsultants = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.get('/api/consultants');
+            setConsultants(response.data || []);
+        } catch (err) {
+            setError('Failed to load consultants.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchConsultants();
+    }, []);
+
+    const handleOpenEditModal = (consultant) => {
+        setEditingConsultant(consultant);
+        setEditFormData({
+            phone: consultant.phone || '',
+            specialization: consultant.specialization || SPECIALTIES[0]
+        });
+        setShowEditModal(true);
+    };
+
+    const handleUpdateConsultant = async (e) => {
+        e.preventDefault();
+        if (!editingConsultant) return;
+
+        if (!editFormData.specialization || editFormData.specialization.trim() === "") {
+        setError("Specialization is required.");
+        return;
     }
-];
-*/}
-// Sample Customer Data
-{/*const customersData = [
-    {
-        id: 'cust1',
-        name: "Nguyen Van A",
-        email: "customer1@example.com",
-        phone: "0912345678",
-        gender: "Nam",
-    },
-    {
-        id: 'cust2',
-        name: "Tran Thi B",
-        email: "customer2@example.com",
-        phone: "0987654321",
-        gender: "Nữ",
-    },
-    {
-        id: 'cust3',
-        name: "Le Van C",
-        email: "customer3@example.com",
-        phone: "0911223344",
-        gender: "Nam",
+         const fullPayload = {
+            id:              editingConsultant.id,
+            name:            editingConsultant.name,
+            role:            editingConsultant.role,
+            admin:           editingConsultant.admin,
+            managedUser:     editingConsultant.managedUser,
+            email:           editingConsultant.email,
+            password:        editingConsultant.password,      
+            gender:          editingConsultant.gender,
+            phone:           editFormData.phone,
+            createDate:      editingConsultant.createDate,
+            birthDate:       editingConsultant.birthDate,
+            profilePicture:  editingConsultant.profilePicture,
+            bookingHistory:  editingConsultant.bookingHistory,
+            totalSpending:   editingConsultant.totalSpending,
+            specialization:  editFormData.specialization,
+            licenseDetails:  editingConsultant.licenseDetails,
+            expYear:         editingConsultant.expYear || 0,
+            avgRating:       editingConsultant.avgRating || 0,
+            description:     editingConsultant.description,
+            active:          editingConsultant.active
+        };
+        try {
+            console.log('Sending full payload:', fullPayload);
+            await api.put(`/api/user/${editingConsultant.email}`, fullPayload);
+            toast.showToast('Consultant updated successfully!', 'success');
+            setShowEditModal(false);
+            await fetchConsultants(); // Refresh data
+        } catch (err) {
+            setError('Failed to update consultant. Please try again.');
+            console.error('Update error:', err.response || err);
+        }
+    };    const createConsultant = async (consultantData) => {
+        try {
+            const response = await api.post('/api/createconsultant', consultantData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating consultant:', error);
+            throw error;
+        }
+    };
+    const [showAddModal, setShowAddModal] = useState(false);    const [newConsultant, setNewConsultant] = useState({
+        name: '',
+        email: '',
+        password: '',
+        gender: 0,
+        phone: '',
+        specialization: '',
+        expYear: ''
+    });
+    
+    const handleAddConsultant = async (e) => {
+        e.preventDefault();
+        try {
+            const result = await createConsultant(newConsultant);
+            toast.showToast('Consultant created successfully!', 'success');
+            setShowAddModal(false);            setNewConsultant({
+                name: '',
+                email: '',
+                password: '',
+                gender: 0,
+                phone: '',
+                specialization: '',
+                expYear: ''
+            });
+            fetchConsultants();
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to create consultant.';
+            toast.showToast(errorMessage, 'error');
+        }
+    };        return (
+        <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Consultant Account Management</h2>
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center gap-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Consultant
+                </button>
+            </div>
+            {error && <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3">Name</th>
+                            <th className="px-6 py-3">Email</th>
+                            <th className="px-6 py-3">Phone</th>
+                            <th className="px-6 py-3">Status</th>
+                            <th className="px-6 py-3">Specialization</th>
+                            <th className="px-6 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan="5" className="text-center py-4">Loading...</td></tr>
+                        ) : consultants.map(consultant => {
+                            console.log('Consultant row:', consultant);
+                            console.log('Specialization:', consultant.specialization);
+                        return (
+                            <tr key={consultant.id} className="bg-white border-b hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium text-gray-900">{consultant.name}</td>
+                                <td className="px-6 py-4">{consultant.email}</td>
+                                <td className="px-6 py-4">{consultant.phone || 'N/A'}</td>
+                                <td className="px-6 py-4">
+                                    <span
+                                        className={`px-2 py-1 rounded-full text-xs font-semibold
+                                            ${consultant.active
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'}`}
+                                    >
+                                        {consultant.active ? 'Active' : 'Inactive'}
+                                    </span>
+                                    <button
+                                        onClick={() => handleToggleActive(consultant)}
+                                        className={`px-3 py-1 rounded transition-colors duration-200 ml-2
+                                            ${consultant.active 
+                                                ? ' text-white bg-red-600' 
+                                                : ' text-white bg-green-500'}`}
+                                    >
+                                        {consultant.active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                    {consultant.specialization && consultant.specialization.trim() !== "" 
+                                        ? consultant.specialization 
+                                        : 'N/A'}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <button onClick={() => handleOpenEditModal(consultant)} className="text-blue-600 hover:underline">
+                                        Edit
+                                    </button>
+                                </td>
+                            </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            {showEditModal && editingConsultant && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Edit Consultant: {editingConsultant.name}</h3>
+                        <form onSubmit={handleUpdateConsultant}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={editFormData.phone}
+                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                                <select
+                                    value={editFormData.specialization}
+                                    onChange={(e) => setEditFormData({ ...editFormData, specialization: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                >
+                                    <option value="" disabled>Select a specialty</option>
+                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                </select>
+                            </div>                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Add New Consultant</h3>
+                        <form onSubmit={handleAddConsultant}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <input
+                                    type="text"
+                                    value={newConsultant.name}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, name: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input
+                                    type="email"
+                                    value={newConsultant.email}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, email: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                                <input
+                                    type="password"
+                                    value={newConsultant.password}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, password: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                                <select
+                                    value={newConsultant.gender}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, gender: parseInt(e.target.value) })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                >
+                                    <option value={0}>Female</option>
+                                    <option value={1}>Male</option>
+                                    <option value={2}>Other</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                <input
+                                    type="tel"
+                                    value={newConsultant.phone}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, phone: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization *</label>
+                                <select
+                                    value={newConsultant.specialization}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, specialization: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                >
+                                    <option value="" disabled>Select a specialty</option>
+                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                </select>
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Experience Years *</label>
+                                <input
+                                    type="number"
+                                    value={newConsultant.expYear}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, expYear: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    min="0"
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create Consultant</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+const CustomerManagementComponent = () => {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const toast = useToast();
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.get("/api/customers");
+      setCustomers(response.data || []);
+    } catch (err) {
+      setError("Failed to load customers.");
+    } finally {
+      setLoading(false);
     }
-];
-*/}
-// Placeholder Components
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const handleToggleActive = async (customer) => {
+    try {
+      const url = customer.active
+        ? `/api/deactive/${customer.id}`
+        : `/api/active/${customer.id}`;
+      await api.put(url);
+      toast.showToast(`Customer ${customer.active ? 'deactivated' : 'activated'} successfully!`, 'success');
+      fetchCustomers();
+    } catch (err) {
+      toast.showToast('Failed to update customer status.', 'error');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        Customer Account Management
+      </h2>
+      {error && (
+        <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left text-gray-500">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+              <th className="px-6 py-3">Name</th>
+              <th className="px-6 py-3">Email</th>
+              <th className="px-6 py-3">Phone</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  Loading...
+                </td>
+              </tr>
+            ) : (
+              customers.map((customer) => (
+                <tr key={customer.id} className="bg-white border-b hover:bg-gray-50">
+                  <td className="px-6 py-4 font-medium text-gray-900">{customer.name}</td>
+                  <td className="px-6 py-4">{customer.email}</td>
+                  <td className="px-6 py-4">{customer.phone || "N/A"}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${customer.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                      {customer.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleToggleActive(customer)}
+                                        className={`px-3 py-1 rounded transition-colors duration-200 ml-2
+                                            ${customer.active 
+                                                ? ' text-white bg-red-600' 
+                                                : ' text-white bg-green-500'}`}
+                                    >
+                                        {customer.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 // Get all service types
 export const getServiceTypes = async () => {
     const response = await api.get('/api/servicetypes');
@@ -1162,8 +1465,8 @@ const PostManagementComponent = () => {
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                 post.isActive 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-200 text-green-800' 
+                                                    : 'bg-red-200 text-red-800'
                                             }`}>
                                                 {post.isActive ? 'Hoạt động' : 'Tạm dừng'}
                                             </span>
@@ -1559,7 +1862,7 @@ const TestResultManagementComponent = () => {
                                     onChange={handleFormChange}
                                     placeholder="Enter full test result details here..."
                                     className="border p-2 rounded w-full"
-                                    required={currentFormData.isActive} // Content required if result is active
+                                    required
                                 ></textarea>
                             </div>
                              <div className="mb-4">
@@ -1955,26 +2258,6 @@ export default function AdminProfile() {
     const [allUsersForOtherViews, setAllUsersForOtherViews] = useState([]);
     const [loadingOtherViewsData, setLoadingOtherViewsData] = useState(false);
     const [otherViewsDataError, setOtherViewsDataError] = useState(null);
-    const [consultantsData, setConsultantsData] = useState([]);
-    const [customersData, setCustomersData] = useState([]);
-    const [loadingConsultants, setLoadingConsultants] = useState(false);
-    const [loadingCustomers, setLoadingCustomers] = useState(false);
-    const SPECIALTIES = [
-        "Y học Giới tính & Nam học",
-        "Tư vấn tâm lý",
-        "Phụ khoa",
-        "Nội tiết",
-        "Dinh dưỡng",
-        "Da liễu",
-        "Sản khoa",
-        "Tiết niệu"
-    ];
-    const [editingConsultant, setEditingConsultant] = useState(null);
-    const [editSpecialty, setEditSpecialty] = useState("");
-    const [editConsultantData, setEditConsultantData] = useState({
-    phone: '',
-    specialty: ''
-    });
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -2000,23 +2283,7 @@ export default function AdminProfile() {
             }
         };
         fetchUsersForAdminProfile();
-    }, [activeView, allUsersForOtherViews.length]); // Re-fetch if activeView changes to one requiring data and data isn't there
-    
-      useEffect(() => {
-        // Fetch consultants
-        setLoadingConsultants(true);
-        api.get('/api/consultants')
-            .then(res => setConsultantsData(res.data))
-            .catch(() => setConsultantsData([]))
-            .finally(() => setLoadingConsultants(false));
-
-        // Fetch customers
-        setLoadingCustomers(true);
-        api.get('/api/customers')
-            .then(res => setCustomersData(res.data))
-            .catch(() => setCustomersData([]))
-            .finally(() => setLoadingCustomers(false));
-    }, []);
+    }, [activeView, allUsersForOtherViews.length]); 
 
     const renderMainContent = () => {
         switch (activeView) {
@@ -2157,151 +2424,12 @@ export default function AdminProfile() {
                         </div>
                     </>
                 );
-                case 'accounts': // Added this case
+            case 'accounts': 
                 return <FilterInterface title="Account" />;
             case 'consultantAccounts':
-                return (
-                    <div className="bg-white rounded-xl shadow p-6 mb-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="font-semibold">Consultant Management</div>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Consultant</button>
-                        </div>
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="text-gray-600 border-b">
-                                    <th className="py-2">Email</th>
-                                    <th>Name</th>
-                                    <th>Phone</th>
-                                    <th>Gender</th>
-                                    <th>Specialty</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {consultantsData.map((consultant) => (
-                                    <tr key={consultant.id} className="border-b">
-                                        <td className="py-2">{consultant.email}</td>
-                                        <td>{consultant.name}</td>
-                                        <td>{consultant.phone}</td>
-                                        <td>{formatGender(consultant.gender)}</td>
-                                        <td>{consultant.specialty || <span className="text-gray-400">N/A</span>}</td>
-                                        <td>
-                                            <button
-                                                className="text-blue-600 hover:underline mr-2"
-                                                onClick={() => {
-                                                    setEditingConsultant(consultant.id);
-                                                    setEditConsultantData({
-                                                        phone: consultant.phone || '',
-                                                        specialty: consultant.specialty || ''
-                                                    });
-                                                }}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button className="text-red-600 hover:underline">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {/* Edit Tab/Panel */}
-                        {editingConsultant && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                                <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative">
-                                    <button
-                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
-                                        onClick={() => setEditingConsultant(null)}
-                                        aria-label="Close"
-                                    >
-                                        &times;
-                                    </button>
-                                    <h2 className="text-xl font-semibold mb-6">Chỉnh sửa thông tin tư vấn viên</h2>
-                                    <div className="mb-4">
-                                        <label className="block mb-1 font-medium">Số điện thoại</label>
-                                        <input
-                                            type="text"
-                                            className="border rounded px-3 py-2 w-full"
-                                            value={editConsultantData.phone}
-                                            onChange={e => setEditConsultantData(d => ({ ...d, phone: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="mb-6">
-                                        <label className="block mb-1 font-medium">Chuyên môn</label>
-                                        <select
-                                            className="border rounded px-3 py-2 w-full"
-                                            value={editConsultantData.specialty}
-                                            onChange={e => setEditConsultantData(d => ({ ...d, specialty: e.target.value }))}
-                                        >
-                                            <option value="">Chọn chuyên môn</option>
-                                            {SPECIALTIES.map(s => (
-                                                <option key={s} value={s}>{s}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-2"
-                                            onClick={async () => {
-                                                const updated = {
-                                                    ...consultantsData.find(c => c.id === editingConsultant),
-                                                    ...editConsultantData
-                                                };
-                                                // Optionally call: await api.put(`/api/consultants/${editingConsultant}`, updated);
-                                                setConsultantsData(prev =>
-                                                    prev.map(c => c.id === editingConsultant ? updated : c)
-                                                );
-                                                setEditingConsultant(null);
-                                            }}
-                                            disabled={!editConsultantData.phone || !editConsultantData.specialty}
-                                        >
-                                            Lưu
-                                        </button>
-                                        <button
-                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                                            onClick={() => setEditingConsultant(null)}
-                                        >
-                                            Hủy
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-                case 'customerAccounts':
-                    return (
-                        <div className="bg-white rounded-xl shadow p-6 mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="font-semibold">Customer Management</div>
-                            </div>
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-600 border-b">
-                                        <th className="py-2">Email</th>
-                                        <th>Name</th>
-                                        <th>Phone</th>
-                                        <th>Gender</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {customersData.map((customer) => ( // Map over customersData here
-                                        <tr key={customer.id} className="border-b">
-                                            <td className="py-2">{customer.email}</td>
-                                            <td>{customer.name}</td>
-                                            <td>{customer.phone}</td>
-                                            <td>{formatGender(customer.gender)}</td>
-                                            <td>
-                                                <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                                <button className="text-red-600 hover:underline">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    );
+                return <ConsultantManagementComponent />;
+            case 'customerAccounts':
+                return <CustomerManagementComponent/>;
             case 'services':
                 return <ServiceManagementComponent />;
             case 'bookings':
