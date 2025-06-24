@@ -91,7 +91,7 @@ export default function IntroductionPage() {
                             <div className="mb-6 bg-blue-50 p-4 rounded-lg">
                                 <h3 className="text-xl font-medium text-blue-600 mb-3">Tầm nhìn</h3>
                                 <p className="text-gray-700 leading-relaxed">
-                                        Trở thành trung tâm y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc
+                                        Trở thành dịch vụ y học giới tính hàng đầu tại Việt Nam và khu vực Đông Nam Á, tiên phong trong việc
                                         phát triển các phương pháp điều trị hiện đại và toàn diện, góp phần nâng cao chất lượng đời sống tình dục
                                         của người dân.
                                 </p>
@@ -113,7 +113,7 @@ export default function IntroductionPage() {
                     {/* Main content */}
                     <div className="lg:col-span-2">
                         <div className="bg-white rounded-lg shadow-sm p-6">
-                            <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Trung tâm Y học Giới tính </h1>
+                            <h1 className="text-3xl font-bold text-gray-800 mb-6">Giới thiệu về Dịch vụ chăm sóc sức khỏe giới tính </h1>
 
                             <div className="prose max-w-none">
                                 <div className="mb-8 transition-transform hover:scale-105">
@@ -123,18 +123,18 @@ export default function IntroductionPage() {
                                         className="w-full h-auto rounded-lg mb-4"
                                         onError={(e) => e.target.src = 'https://placehold.co/800x400?text=Trung+tâm+Y+học+Giới+tính'}
                                     />
-                                    <p className="text-sm text-center text-gray-500 italic">Trung tâm Y học Giới tính TPHCM - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
+                                    <p className="text-sm text-center text-gray-500 italic">Dịch vụ chăm sóc sức khỏe giới tính TPHCM - Nơi đặt niềm tin cho sức khỏe giới tính của bạn</p>
                                 </div>
 
                                 <h2 className="text-2xl font-semibold text-blue-700 mb-4">Về chúng tôi</h2>
                                 <p className="mb-6 text-gray-700 leading-relaxed">
-                                    Trung tâm Y học Giới tính TPHCM (CSM HCM) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam.
+                                    Dịch vụ chăm sóc sức khỏe giới tính TPHCM (CSM HCM) là đơn vị chuyên khoa đầu ngành về lĩnh vực y học giới tính tại miền Bắc Việt Nam.
                                     Chúng tôi cung cấp các dịch vụ chuyên sâu trong điều trị, tư vấn và chăm sóc sức khỏe giới tính toàn diện cho nam giới, nữ giới
                                     và cộng đồng đa dạng giới.
                                 </p>
 
                                 <p className="mb-6 text-gray-700 leading-relaxed">
-                                    Trung tâm được thành lập với đội ngũ bác sĩ, chuyên gia tâm lý và nhân viên y tế có trình độ chuyên môn cao,
+                                    Dịch vụ được thành lập với đội ngũ bác sĩ, chuyên gia tâm lý và nhân viên y tế có trình độ chuyên môn cao,
                                     được đào tạo bài bản tại các cơ sở y tế trong nước và quốc tế. Chúng tôi tự hào áp dụng phác đồ điều trị tiên tiến
                                     và các phương pháp kỹ thuật hiện đại trong chẩn đoán và điều trị.
                                 </p>

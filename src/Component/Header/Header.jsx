@@ -20,9 +20,8 @@ export default function Header() {
                         <LogoGHSMS />
                     </div>
                     <div className="hidden lg:block">
-                        <h1 className="text-blue-700 font-semibold text-lg uppercase">Trung tâm Y học Giới tính TPHCM</h1>
-                        <p className="text-gray-600 text-sm">Bệnh viện Nam học và Hiếm muộn TPHCM</p>
-                        <p className="text-gray-500 text-xs">Center for Sexual Medicine of TPHCM</p>
+                        <h1 className="text-blue-700 font-semibold text-lg uppercase">Dịch vụ chăm sóc sức khỏe giới tính</h1>
+                        <p className="text-gray-500 text-xs">Gender healthcare service</p>
                     </div>
                 </div>
                 <div className="flex items-center space-x-6">

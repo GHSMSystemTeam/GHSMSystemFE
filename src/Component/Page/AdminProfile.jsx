@@ -45,42 +45,42 @@ const sampleTestResults = [
 
 
 // Sample Dashboard Overview Data
-const dashboardOverviewData = {
-        totalAccounts: 1234,
-        totalConsultants: 120, 
-        totalCustomers: 1114,
-        totalBookingsThisMonth: 45,
-        monthlyRevenue: 78515000, 
-        averageServiceRating: 4.5, 
-        totalFeedback: 87,
-        totalActiveUsers: 1234,
-        pendingTestResults: 15, 
-        newFeedbackToday: 5,  
-    };
-    const bookingTrendsData = { // For a bar chart or line chart
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
-        consultationBookings: [18, 22, 20, 25, 30, 15, 10],
-        testBookings: [10, 12, 8, 15, 12, 20, 18],
-    };
+// const dashboardOverviewData = {
+//         totalAccounts: 1234,
+//         totalConsultants: 120, 
+//         totalCustomers: 1114,
+//         totalBookingsThisMonth: 45,
+//         monthlyRevenue: 78515000, 
+//         averageServiceRating: 4.5, 
+//         totalFeedback: 87,
+//         totalActiveUsers: 1234,
+//         pendingTestResults: 15, 
+//         newFeedbackToday: 5,  
+//     };
+//     const bookingTrendsData = { // For a bar chart or line chart
+//         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
+//         consultationBookings: [18, 22, 20, 25, 30, 15, 10],
+//         testBookings: [10, 12, 8, 15, 12, 20, 18],
+//     };
 
-    const genderDistributionData = { // For a pie chart
-        labels: ['Male', 'Female', 'Other'],
-        counts: [650, 720, 34], // Number of customers or all users
-    };
+//     const genderDistributionData = { // For a pie chart
+//         labels: ['Male', 'Female', 'Other'],
+//         counts: [650, 720, 34], // Number of customers or all users
+//     };
 
-    const topPerformingConsultants = [
-        { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
-        { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
-        { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
-        // ... more consultants
-    ];
+//     const topPerformingConsultants = [
+//         { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
+//         { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
+//         { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
+//         // ... more consultants
+//     ];
 
-    const popularServicesData = [
-        { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
-        { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
-        { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
-        // ... more services
-    ];
+//     const popularServicesData = [
+//         { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
+//         { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
+//         { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
+//         // ... more services
+//     ];
     // Sample Booking Data    
  
 // --- Sample Data for Feedback ---
@@ -275,7 +275,50 @@ const ConsultantManagementComponent = () => {
             const errorMessage = err.response?.data?.message || 'Failed to create consultant.';
             toast.showToast(errorMessage, 'error');
         }
-    };        return (
+    }; 
+    // Add these state variables to ConsultantManagementComponent
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordFormData, setPasswordFormData] = useState({
+        email: '',
+        newpass: ''
+    });
+
+    // Add the password update API function
+    const updateUserPassword = async (email, newPassword) => {
+        try {
+            // Use query parameters instead of request body
+            const response = await api.put(`/api/user/changepassword?email=${encodeURIComponent(email)}&newpass=${encodeURIComponent(newPassword)}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating password:', error);
+            throw error;
+        }
+    };
+
+    // Add the password update handler
+    const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await updateUserPassword(passwordFormData.email, passwordFormData.newpass);
+            toast.showToast('Password updated successfully!', 'success');
+            setShowPasswordModal(false);
+            setPasswordFormData({ email: '', newpass: '' });
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to update password.';
+            toast.showToast(errorMessage, 'error');
+        }
+    };
+
+    // Add the function to open password modal
+    const handleOpenPasswordModal = (consultant) => {
+        setPasswordFormData({
+            email: consultant.email,
+            newpass: ''
+        });
+        setShowPasswordModal(true);
+    };    
+    
+    return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">Consultant Account Management</h2>
@@ -341,6 +384,12 @@ const ConsultantManagementComponent = () => {
                                     <button onClick={() => handleOpenEditModal(consultant)} className="text-blue-600 hover:underline">
                                         Edit
                                     </button>
+                                    <button 
+                                        onClick={() => handleOpenPasswordModal(consultant)} 
+                                        className="text-purple-600 hover:underline text-sm"
+                                    >
+                                        Change Password
+                                    </button>                                    
                                 </td>
                             </tr>
                             );
@@ -373,7 +422,8 @@ const ConsultantManagementComponent = () => {
                                     <option value="" disabled>Select a specialty</option>
                                     {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
                                 </select>
-                            </div>                            <div className="flex justify-end gap-4">
+                            </div>                           
+                            <div className="flex justify-end gap-4">
                                 <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
                                 <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
                             </div>
@@ -381,7 +431,52 @@ const ConsultantManagementComponent = () => {
                     </div>
                 </div>
             )}
-
+            {/* Password Update Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Change Password</h3>
+                        <form onSubmit={handlePasswordUpdate}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={passwordFormData.email}
+                                    className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+                                    disabled
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
+                                <input
+                                    type="password"
+                                    value={passwordFormData.newpass}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newpass: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    placeholder="Enter new password"
+                                    required
+                                    minLength="6"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPasswordModal(false)} 
+                                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                                >
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
             {showAddModal && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
                     <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
@@ -2254,7 +2349,7 @@ export default function AdminProfile() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const [profileMenu, setProfileMenu] = useState(false);
-    const [activeView, setActiveView] = useState('dashboard');
+    const [activeView, setActiveView] = useState('accounts');
     const [allUsersForOtherViews, setAllUsersForOtherViews] = useState([]);
     const [loadingOtherViewsData, setLoadingOtherViewsData] = useState(false);
     const [otherViewsDataError, setOtherViewsDataError] = useState(null);
@@ -2287,143 +2382,140 @@ export default function AdminProfile() {
 
     const renderMainContent = () => {
         switch (activeView) {
-            case 'dashboard':
-                return (
-                    <>
-                        {/* Row 1: Key Metric Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Total Active Users</div>
-                                    <Users size={24} className="text-blue-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-blue-700 mt-2">{dashboardOverviewData.totalActiveUsers.toLocaleString()}</div>
-                                <div className="text-sm text-green-500 mt-1">+2.5% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Bookings (This Month)</div>
-                                    <CalendarDays size={24} className="text-purple-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-purple-700 mt-2">{dashboardOverviewData.totalBookingsThisMonth.toLocaleString()}</div>
-                                <div className="text-sm text-green-500 mt-1">+5% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Revenue (This Month)</div>
-                                    <BarChart2 size={24} className="text-green-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-green-700 mt-2">{dashboardOverviewData.monthlyRevenue.toLocaleString()} VND</div>
-                                <div className="text-sm text-red-500 mt-1">-1.2% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Avg. Service Rating</div>
-                                    <Star size={24} className="text-yellow-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-yellow-700 mt-2">{dashboardOverviewData.averageServiceRating}/5</div>
-                                <div className="text-sm text-gray-500 mt-1">Based on all services</div>
-                            </div>
-                        </div>
+            // case 'dashboard':
+            //     return (
+            //         <>
+            //             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Total Active Users</div>
+            //                         <Users size={24} className="text-blue-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-blue-700 mt-2">{dashboardOverviewData.totalActiveUsers.toLocaleString()}</div>
+            //                     <div className="text-sm text-green-500 mt-1">+2.5% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Bookings (This Month)</div>
+            //                         <CalendarDays size={24} className="text-purple-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-purple-700 mt-2">{dashboardOverviewData.totalBookingsThisMonth.toLocaleString()}</div>
+            //                     <div className="text-sm text-green-500 mt-1">+5% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Revenue (This Month)</div>
+            //                         <BarChart2 size={24} className="text-green-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-green-700 mt-2">{dashboardOverviewData.monthlyRevenue.toLocaleString()} VND</div>
+            //                     <div className="text-sm text-red-500 mt-1">-1.2% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Avg. Service Rating</div>
+            //                         <Star size={24} className="text-yellow-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-yellow-700 mt-2">{dashboardOverviewData.averageServiceRating}/5</div>
+            //                     <div className="text-sm text-gray-500 mt-1">Based on all services</div>
+            //                 </div>
+            //             </div>
 
-                        {/* Row 2: Charts */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            {/* Booking Trends Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Booking Trends (Last 7 Days)</h3>
-                                <div className="h-64 flex items-center justify-center text-gray-400">
-                                    {/* Placeholder for Bar Chart (e.g., using Recharts or Chart.js) */}
-                                    [Bar Chart: Consultation vs Test Bookings per Day]
-                                    <p className="text-sm">(Data: Mon C:{bookingTrendsData.consultationBookings[0]} T:{bookingTrendsData.testBookings[0]}, ...)</p>
-                                </div>
-                            </div>
-                            {/* Gender Distribution Chart */}
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">User Gender Distribution</h3>
-                                <div className="h-64 flex flex-col items-center justify-center text-gray-400">
-                                    {/* Placeholder for Pie Chart */}
-                                    [Pie Chart Here]
-                                    <ul className="text-sm mt-2">
-                                        <li>Male: {genderDistributionData.counts[0]}</li>
-                                        <li>Female: {genderDistributionData.counts[1]}</li>
-                                        <li>Other: {genderDistributionData.counts[2]}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+            //             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-                        {/* Row 3: Tables/Lists - Top Consultants & Popular Services */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Performing Consultants</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase">
-                                            <tr>
-                                                <th className="py-2 px-1">Name</th>
-                                                <th className="py-2 px-1">Appointments</th>
-                                                <th className="py-2 px-1">Rating</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {topPerformingConsultants.slice(0, 3).map(c => ( // Show top 3-5
-                                                <tr key={c.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                    <td className="py-2 px-1 font-medium text-gray-800">{c.name}</td>
-                                                    <td className="py-2 px-1 text-gray-600">{c.appointmentsThisMonth}</td>
-                                                    <td className="py-2 px-1 text-yellow-600 flex items-center"><Star size={14} className="mr-1 fill-current"/>{c.rating}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Popular Services</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase">
-                                            <tr>
-                                                <th className="py-2 px-1">Service Name</th>
-                                                <th className="py-2 px-1">Bookings</th>
-                                                <th className="py-2 px-1">Revenue</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {popularServicesData.slice(0, 3).map(s => (
-                                                <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                    <td className="py-2 px-1 font-medium text-gray-800">{s.name}</td>
-                                                    <td className="py-2 px-1 text-gray-600">{s.bookingsThisMonth}</td>
-                                                    <td className="py-2 px-1 text-green-600">{s.revenue.toLocaleString()} VND</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                         {/* Optional: Quick Stats/Alerts */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                             <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center">
-                                    <ClipboardCheck size={20} className="text-orange-500 mr-3"/>
-                                    <div>
-                                        <div className="text-gray-500 text-sm">Pending Test Results</div>
-                                        <div className="text-xl font-semibold text-orange-700">{dashboardOverviewData.pendingTestResults}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center">
-                                    <Bell size={20} className="text-red-500 mr-3"/>
-                                    <div>
-                                        <div className="text-gray-500 text-sm">New Feedback Today</div>
-                                        <div className="text-xl font-semibold text-red-700">{dashboardOverviewData.newFeedbackToday}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                );
+            //                 <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Booking Trends (Last 7 Days)</h3>
+            //                     <div className="h-64 flex items-center justify-center text-gray-400">
+
+            //                         [Bar Chart: Consultation vs Test Bookings per Day]
+            //                         <p className="text-sm">(Data: Mon C:{bookingTrendsData.consultationBookings[0]} T:{bookingTrendsData.testBookings[0]}, ...)</p>
+            //                     </div>
+            //                 </div>
+
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">User Gender Distribution</h3>
+            //                     <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+
+            //                         [Pie Chart Here]
+            //                         <ul className="text-sm mt-2">
+            //                             <li>Male: {genderDistributionData.counts[0]}</li>
+            //                             <li>Female: {genderDistributionData.counts[1]}</li>
+            //                             <li>Other: {genderDistributionData.counts[2]}</li>
+            //                         </ul>
+            //                     </div>
+            //                 </div>
+            //             </div>
+
+
+            //             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Performing Consultants</h3>
+            //                     <div className="overflow-x-auto">
+            //                         <table className="w-full text-sm text-left">
+            //                             <thead className="text-xs text-gray-500 uppercase">
+            //                                 <tr>
+            //                                     <th className="py-2 px-1">Name</th>
+            //                                     <th className="py-2 px-1">Appointments</th>
+            //                                     <th className="py-2 px-1">Rating</th>
+            //                                 </tr>
+            //                             </thead>
+            //                             <tbody>
+            //                                 {topPerformingConsultants.slice(0, 3).map(c => ( // Show top 3-5
+            //                                     <tr key={c.id} className="border-b border-gray-200 hover:bg-gray-50">
+            //                                         <td className="py-2 px-1 font-medium text-gray-800">{c.name}</td>
+            //                                         <td className="py-2 px-1 text-gray-600">{c.appointmentsThisMonth}</td>
+            //                                         <td className="py-2 px-1 text-yellow-600 flex items-center"><Star size={14} className="mr-1 fill-current"/>{c.rating}</td>
+            //                                     </tr>
+            //                                 ))}
+            //                             </tbody>
+            //                         </table>
+            //                     </div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Popular Services</h3>
+            //                     <div className="overflow-x-auto">
+            //                         <table className="w-full text-sm text-left">
+            //                             <thead className="text-xs text-gray-500 uppercase">
+            //                                 <tr>
+            //                                     <th className="py-2 px-1">Service Name</th>
+            //                                     <th className="py-2 px-1">Bookings</th>
+            //                                     <th className="py-2 px-1">Revenue</th>
+            //                                 </tr>
+            //                             </thead>
+            //                             <tbody>
+            //                                 {popularServicesData.slice(0, 3).map(s => (
+            //                                     <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
+            //                                         <td className="py-2 px-1 font-medium text-gray-800">{s.name}</td>
+            //                                         <td className="py-2 px-1 text-gray-600">{s.bookingsThisMonth}</td>
+            //                                         <td className="py-2 px-1 text-green-600">{s.revenue.toLocaleString()} VND</td>
+            //                                     </tr>
+            //                                 ))}
+            //                             </tbody>
+            //                         </table>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            //                  <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center">
+            //                         <ClipboardCheck size={20} className="text-orange-500 mr-3"/>
+            //                         <div>
+            //                             <div className="text-gray-500 text-sm">Pending Test Results</div>
+            //                             <div className="text-xl font-semibold text-orange-700">{dashboardOverviewData.pendingTestResults}</div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center">
+            //                         <Bell size={20} className="text-red-500 mr-3"/>
+            //                         <div>
+            //                             <div className="text-gray-500 text-sm">New Feedback Today</div>
+            //                             <div className="text-xl font-semibold text-red-700">{dashboardOverviewData.newFeedbackToday}</div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </>
+            //     );
             case 'accounts': 
                 return <FilterInterface title="Account" />;
             case 'consultantAccounts':
@@ -2483,13 +2575,13 @@ export default function AdminProfile() {
                 {/* Sidebar */}
                 <aside className="w-64 bg-white shadow-lg pt-8 px-4 hidden md:block">
                     <nav className="flex flex-col gap-1">
-                        <button onClick={() => setActiveView('dashboard')}
+                        {/* <button onClick={() => setActiveView('dashboard')}
                          className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
                             activeView === 'dashboard' ? 'font-semibold text-blue-700 bg-blue-100' : ''
                             }`}>
                             <BarChart2 size={18} />
                             <span>Dashboard</span>
-                        </button>
+                        </button> */}
                         <button onClick={() => setActiveView('accounts')} 
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
                             activeView === 'accounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
@@ -2552,13 +2644,6 @@ export default function AdminProfile() {
                             }`}>
                         <Star size={18} /> 
                         <span>Feedback</span>
-                        </button>
-                        <button onClick={() => setActiveView('help')} 
-                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50${
-                            activeView === 'help' ? 'font-semibold text-blue-700 bg-blue-100' : ''
-                            }`}>
-                            <HelpCircle size={18} />
-                            <span>Help</span>
                         </button>
                     </nav>
                 </aside>
