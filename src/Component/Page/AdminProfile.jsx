@@ -930,55 +930,58 @@ const BookingManagementComponent = () => {
             </div>
 
             {/* Bookings List Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Date</th>
-                            <th scope="col" className="px-6 py-3">Time</th>
-                            <th scope="col" className="px-6 py-3">Patient</th>
-                            <th scope="col" className="px-6 py-3">Service</th>
-                            <th scope="col" className="px-6 py-3">Type</th>
-                            <th scope="col" className="px-6 py-3">Consultant</th>
-                            <th scope="col" className="px-6 py-3">Status</th>
-                            <th scope="col" className="px-6 py-3">Notes</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan={7} className="py-4 text-center">Loading...</td>
-                            </tr>
-                        ) : bookings.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="py-4 text-center text-gray-400">No bookings found.</td>
-                            </tr>
-                        ) : (
-                            bookings.map((booking) => (
-                                <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
-                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
-                                    <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
-                                    <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
-                                    <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                            booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
-                                            booking.status === 1 ? 'bg-green-200 text-green-800' :
-                                            'bg-red-200 text-red-800'
-                                        }`}>
-                                            {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 flex items-center gap-2">
-                                        <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
-                                    </td>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                    <div className="max-h-[600px] overflow-y-auto">
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3">Date</th>
+                                    <th scope="col" className="px-6 py-3">Time</th>
+                                    <th scope="col" className="px-6 py-3">Patient</th>
+                                    <th scope="col" className="px-6 py-3">Service Type</th>
+                                    <th scope="col" className="px-6 py-3">Consultant</th>
+                                    <th scope="col" className="px-6 py-3">Status</th>
+                                    <th scope="col" className="px-6 py-3">Notes</th>
+                                    <th scope="col" className="px-6 py-3">Actions</th>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-4 text-center">Loading...</td>
+                                    </tr>
+                                ) : bookings.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-4 text-center text-gray-400">No bookings found.</td>
+                                    </tr>
+                                ) : (
+                                    bookings.map((booking) => (
+                                        <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
+                                            <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
+                                            <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
+                                            <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
+                                            <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                                    booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
+                                                    booking.status === 1 ? 'bg-green-200 text-green-800' :
+                                                    'bg-red-200 text-red-800'
+                                                }`}>
+                                                    {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 flex items-center gap-2">
+                                                <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             {/* Booking Modal (Add/Edit) */}
