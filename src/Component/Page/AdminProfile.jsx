@@ -342,7 +342,7 @@ const ConsultantManagementComponent = () => {
                             <th className="px-6 py-3">Phone</th>
                             <th className="px-6 py-3">Status</th>
                             <th className="px-6 py-3">Specialization</th>
-                            <th className="px-6 py-3">Actions</th>
+                            <th className="px-6 py-3 text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -381,15 +381,17 @@ const ConsultantManagementComponent = () => {
                                         : 'N/A'}
                                 </td>
                                 <td className="px-6 py-4">
-                                    <button onClick={() => handleOpenEditModal(consultant)} className="text-blue-600 hover:underline">
-                                        Edit
-                                    </button>
-                                    <button 
-                                        onClick={() => handleOpenPasswordModal(consultant)} 
-                                        className="text-purple-600 hover:underline text-sm"
-                                    >
-                                        Change Password
-                                    </button>                                    
+                                    <div className="flex gap-3 items-center">
+                                        <button onClick={() => handleOpenEditModal(consultant)} className="text-blue-600 hover:underline">
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleOpenPasswordModal(consultant)} 
+                                            className="text-purple-600 hover:underline text-sm"
+                                        >
+                                            Change Password
+                                        </button>  
+                                    </div>                                  
                                 </td>
                             </tr>
                             );
@@ -2161,7 +2163,7 @@ const ReportManagementComponent = () => {
     );
 };
 // New component for the Filter Interface
-const FilterInterface = ({ title }) => { // Removed data-related props
+const FilterInterface = ({ title }) => { 
     const [activeTab, setActiveTab] = useState('find');
     const [searchEmail, setSearchEmail] = useState('');
     const [foundAccount, setFoundAccount] = useState(null);
@@ -2214,9 +2216,78 @@ const FilterInterface = ({ title }) => { // Removed data-related props
         setSearchAttempted(false);
         // Optionally, you could re-fetch or ensure data is fresh if 'all' tab is selected
     };
+    const [roleFilter, setRoleFilter] = useState('');
+    const [genderFilter, setGenderFilter] = useState('');
+    const [activeFilter, setActiveFilter] = useState('');
+    const [searchFilter, setSearchFilter] = useState('');
 
+    // Add these computed values:
+    const uniqueRoles = [...new Set(internalAccountsData.map(account => account.role?.name).filter(Boolean))];
+
+    const filteredAccounts = internalAccountsData.filter(account => {
+        // Role filter
+        if (roleFilter && account.role?.name !== roleFilter) return false;
+        
+        // Gender filter
+        if (genderFilter && account.gender.toString() !== genderFilter) return false;
+        
+        // Active status filter
+        if (activeFilter && account.active.toString() !== activeFilter) return false;
+        
+        // Search filter
+        if (searchFilter) {
+            const searchLower = searchFilter.toLowerCase();
+            const nameMatch = account.name?.toLowerCase().includes(searchLower);
+            const emailMatch = account.email?.toLowerCase().includes(searchLower);
+            if (!nameMatch && !emailMatch) return false;
+        }
+        return true;
+    })
+    .sort((a, b) => {
+        // Sort by filter priority - exact matches appear first
+        let scoreA = 0;
+        let scoreB = 0;
+        
+        // Role filter priority
+        if (roleFilter) {
+            if (a.role?.name === roleFilter) scoreA += 4;
+            if (b.role?.name === roleFilter) scoreB += 4;
+        }
+        
+        // Gender filter priority
+        if (genderFilter) {
+            if (a.gender.toString() === genderFilter) scoreA += 3;
+            if (b.gender.toString() === genderFilter) scoreB += 3;
+        }
+        
+        // Active status filter priority
+        if (activeFilter) {
+            if (a.active.toString() === activeFilter) scoreA += 2;
+            if (b.active.toString() === activeFilter) scoreB += 2;
+        }
+        
+        // Search filter priority
+        if (searchFilter) {
+            const searchLower = searchFilter.toLowerCase();
+            const aNameMatch = a.name?.toLowerCase().includes(searchLower);
+            const aEmailMatch = a.email?.toLowerCase().includes(searchLower);
+            const bNameMatch = b.name?.toLowerCase().includes(searchLower);
+            const bEmailMatch = b.email?.toLowerCase().includes(searchLower);
+            
+            if (aNameMatch || aEmailMatch) scoreA += 1;
+            if (bNameMatch || bEmailMatch) scoreB += 1;
+        }
+        
+        // Sort by score (higher scores first), then by name alphabetically
+        if (scoreB !== scoreA) {
+            return scoreB - scoreA;
+        }
+        
+        // Secondary sort by name if scores are equal
+        return (a.name || '').localeCompare(b.name || '');
+    });
     return (
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
+        <div className="bg-white rounded-xl shadow p-6">
             <div className="flex mb-6 border-b">
                 <button
                     onClick={() => handleTabChange('find')}
@@ -2292,52 +2363,150 @@ const FilterInterface = ({ title }) => { // Removed data-related props
 
             {activeTab === 'all' && (
                 <div>
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
+                        {/* Filter Controls */}
+                        <div className="flex flex-wrap gap-4">
+                                {/* Role Filter */}
+                                <div className="min-w-[150px]" >
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+                                    <select
+                                        value={roleFilter}
+                                        onChange={(e) => setRoleFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Roles</option>
+                                        {uniqueRoles.map(role => (
+                                            <option key={role} value={role}>{role}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Gender Filter */}
+                                <div className="min-w-[120px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Gender</label>
+                                    <select
+                                        value={genderFilter}
+                                        onChange={(e) => setGenderFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Genders</option>
+                                        <option value="0">Male</option>
+                                        <option value="2">Female</option>
+                                        <option value="1">Other</option>
+                                    </select>
+                                </div>
+
+                                {/* Active Status Filter */}
+                                <div className="min-w-[120px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                                    <select
+                                        value={activeFilter}
+                                        onChange={(e) => setActiveFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Status</option>
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                        </div>
+                    </div>
+                    {/* Loading and Error States */}
                     {internalIsLoading && <p className="text-center py-4">Loading accounts...</p>}
                     {internalError && <p className="text-center py-4 text-red-500">Error loading accounts: {internalError}</p>}
-                    {!internalIsLoading && !internalError && internalAccountsData.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full text-left mt-4 text-sm">
-                                <thead className="border-b bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 font-medium text-gray-600">ID</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Name</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Email</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Role</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Gender</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Phone</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Created</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Active</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {internalAccountsData.map((account) => (
-                                        <tr key={account.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-gray-700 truncate max-w-[100px]" title={account.id}>{account.id}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.name}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.email}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.role?.name || 'N/A'}</td>
-                                            <td className="px-4 py-3 text-gray-700">{formatGender(account.gender)}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.phone || 'N/A'}</td>
-                                            <td className="px-4 py-3 text-gray-700">{new Date(account.createDate).toLocaleDateString()}</td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                                    account.active ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-                                                }`}>
-                                                    {account.active ? 'Yes' : 'No'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <button className="text-blue-600 hover:text-blue-800 hover:underline mr-3 text-xs">Edit</button>
-                                                <button className="text-red-600 hover:text-red-800 hover:underline text-xs">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (!internalIsLoading && !internalError && <p className="text-center py-4 text-gray-500">No accounts to display.</p>)}
+                    {!internalIsLoading && !internalError && (
+                        <>
+                            {/* Show "No results" message when filters are applied but no results */}
+                            {(roleFilter || genderFilter || activeFilter) && filteredAccounts.length === 0 ? (
+                                <div className="p-6 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-center">
+                                    <div className="flex items-center justify-center mb-2">
+                                        <svg className="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <h3 className="text-lg font-medium">No Accounts Found</h3>
+                                    </div>
+                                    <p className="mb-2">No accounts match your current filter selection:</p>
+                                    <div className="text-sm space-y-1">
+                                        {roleFilter && <p>• Role: <span className="font-medium">{roleFilter}</span></p>}
+                                        {genderFilter && <p>• Gender: <span className="font-medium">{genderFilter === '0' ? 'Male' : genderFilter === '2' ? 'Female' : 'Other'}</span></p>}
+                                        {activeFilter && <p>• Status: <span className="font-medium">{activeFilter === 'true' ? 'Active' : 'Inactive'}</span></p>}
+                                    </div>
+                                </div>
+                            ) : filteredAccounts.length > 0 ? (
+                                /* Show table when there are results */
+                                <div className="bg-white rounded-lg shadow overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <div className="max-h-96 overflow-y-auto">
+                                            <table className="w-full text-left text-sm">
+                                                <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                                                    <tr>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">ID</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Name</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Email</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Role</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Gender</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Phone</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Created</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Active</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {filteredAccounts.map((account) => (
+                                                        <tr key={account.id} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-3 text-gray-700 font-mono text-xs break-all">{account.id.substring(0, 8)}...</td>
+                                                            <td className="px-4 py-3 text-gray-700 font-medium">{account.name}</td>
+                                                            <td className="px-4 py-3 text-gray-700 break-all">{account.email}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                                    roleFilter && account.role?.name === roleFilter 
+                                                                        ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
+                                                                        : 'bg-blue-100 text-blue-800'
+                                                                }`}>
+                                                                    {account.role?.name || 'N/A'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`${
+                                                                    genderFilter && account.gender.toString() === genderFilter 
+                                                                        ? 'font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full ring-2 ring-green-400' 
+                                                                        : 'text-gray-700'
+                                                                }`}>
+                                                                    {formatGender(account.gender)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-gray-700">{account.phone || 'N/A'}</td>
+                                                            <td className="px-4 py-3 text-gray-700 text-xs">{new Date(account.createDate).toLocaleDateString()}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                    account.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                                } ${
+                                                                    activeFilter && account.active.toString() === activeFilter 
+                                                                        ? 'ring-2 ring-yellow-400' 
+                                                                        : ''
+                                                                }`}>
+                                                                    {account.active ? 'Yes' : 'No'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    {/* Scroll indicator */}
+                                    {filteredAccounts.length > 10 && (
+                                        <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500 border-t">
+                                            Showing {filteredAccounts.length} accounts - Scroll to view more
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* Show when no accounts exist and no filters applied */
+                                <p className="text-center py-4 text-gray-500">No accounts to display.</p>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
         </div>

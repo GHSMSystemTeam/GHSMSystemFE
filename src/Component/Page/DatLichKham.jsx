@@ -324,7 +324,7 @@ export default function DatLichKham() {
                                         {/* Content Body */}
                                         <div className="p-8">
                                             {currentStep === 1 && (
-                                                <div className="space-y-4">
+                                                <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
                                                     {availableDoctors.map((doctor) => (
                                                         <div
                                                             key={doctor.id}
