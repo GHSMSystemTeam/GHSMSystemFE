@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
 
 const STATUS_OPTIONS = [
-  { value: 'created', label: 'Created' },
-  { value: 'in progress', label: 'In Progress' },
-  { value: 'done', label: 'Done' },
-  { value: 'canceled', label: 'Canceled' },
+  { value: 0, label: 'Created' },
+  { value: 1, label: 'Pending' },
+  { value: 2, label: 'Finished' },
+  { value: 3, label: 'Canceled' },
 ];
 
 function getGenderText(gender) {
@@ -14,12 +14,22 @@ function getGenderText(gender) {
   return 'Khác';
 }
 
+import api from '../../config/axios';
+
 export default function SchedulesPanel({ bookings, loading, error, updateBookingStatus, selectedAppointment, setSelectedAppointment }) {
   const [updatingId, setUpdatingId] = useState(null);
 
-  const handleStatusChange = async (id, newStatus) => {
+  const handleStatusChange = async (id, statusNumber) => {
     setUpdatingId(id);
-    await updateBookingStatus(id, newStatus);
+    try {
+      await api.put(`/api/servicebookings/status/${id}/${statusNumber}`);
+      // Cập nhật lại trạng thái trong UI
+      if (typeof updateBookingStatus === 'function') {
+        await updateBookingStatus(id, statusNumber);
+      }
+    } catch (err) {
+      alert('Cập nhật trạng thái thất bại!');
+    }
     setUpdatingId(null);
   };
 
@@ -52,7 +62,7 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                   className="border rounded px-2 py-1"
                   value={booking.status}
                   disabled={updatingId === booking.id}
-                  onChange={e => handleStatusChange(booking.id, e.target.value)}
+                  onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
                 >
                   {STATUS_OPTIONS.map(opt => (
                     <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -72,7 +82,7 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
               <p><strong>Giới tính:</strong> {getGenderText(selectedAppointment.customerId?.gender)}</p>
               <p><strong>Dịch vụ:</strong> {selectedAppointment.serviceTypeId?.name}</p>
               <p><strong>Ngày:</strong> {selectedAppointment.appointmentDate?.slice(0, 10)}</p>
-              <p><strong>Trạng thái:</strong> {selectedAppointment.status}</p>
+              <p><strong>Trạng thái:</strong> {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}</p>
             </div>
             <div className="flex gap-2 mt-4">
               <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
