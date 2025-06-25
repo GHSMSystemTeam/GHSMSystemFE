@@ -1,11 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Eye } from 'lucide-react';
 
-export default function SchedulesPanel({ appointments, loading, error, selectedAppointment, setSelectedAppointment }) {
+const STATUS_OPTIONS = [
+  { value: 0, label: 'Created' },
+  { value: 1, label: 'Pending' },
+  { value: 2, label: 'Finished' },
+  { value: 3, label: 'Canceled' },
+];
+
+function getGenderText(gender) {
+  if (gender === 0) return 'Nam';
+  if (gender === 1) return 'Nữ';
+  return 'Khác';
+}
+
+import api from '../../config/axios';
+
+export default function SchedulesPanel({ bookings, loading, error, updateBookingStatus, selectedAppointment, setSelectedAppointment }) {
+  const [updatingId, setUpdatingId] = useState(null);
+
+  const handleStatusChange = async (id, statusNumber) => {
+    setUpdatingId(id);
+    try {
+      await api.put(`/api/servicebookings/status/${id}/${statusNumber}`);
+      // Cập nhật lại trạng thái trong UI
+      if (typeof updateBookingStatus === 'function') {
+        await updateBookingStatus(id, statusNumber);
+      }
+    } catch (err) {
+      alert('Cập nhật trạng thái thất bại!');
+    }
+    setUpdatingId(null);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Lịch tư vấn</h2>
+        <h2 className="text-2xl font-bold">Lịch đặt dịch vụ</h2>
       </div>
       {loading ? (
         <p>Đang tải...</p>
@@ -13,26 +44,30 @@ export default function SchedulesPanel({ appointments, loading, error, selectedA
         <p className="text-red-500">{error}</p>
       ) : (
         <div className="bg-white rounded-lg shadow">
-          {appointments.map((apt) => (
-            <div key={apt.id} className="p-4 border-b border-gray-200 last:border-b-0">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="font-medium">{apt.user}</h3>
-                  <p className="text-sm text-gray-600">{apt.service}</p>
-                  <p className="text-sm text-gray-500">{apt.date} - {apt.time}</p>
-                  <span className={`inline-block px-2 py-1 rounded text-xs mt-1 ${
-                    apt.status === 'Đã xác nhận' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {apt.status}
-                  </span>
-                </div>
-                <button 
-                  onClick={() => setSelectedAppointment(apt)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+          <div className="grid grid-cols-5 font-semibold border-b p-4 bg-gray-50">
+            <div>Họ tên</div>
+            <div>Giới tính</div>
+            <div>Ngày hẹn</div>
+            <div>Dịch vụ</div>
+            <div>Trạng thái</div>
+          </div>
+          {bookings.map((booking) => (
+            <div key={booking.id} className="grid grid-cols-5 items-center p-4 border-b last:border-b-0">
+              <div>{booking.customerId?.name}</div>
+              <div>{getGenderText(booking.customerId?.gender)}</div>
+              <div>{booking.appointmentDate?.slice(0, 10)}</div>
+              <div>{booking.serviceTypeId?.name}</div>
+              <div>
+                <select
+                  className="border rounded px-2 py-1"
+                  value={booking.status}
+                  disabled={updatingId === booking.id}
+                  onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
                 >
-                  <Eye size={16} />
-                  Xem chi tiết
-                </button>
+                  {STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
               </div>
             </div>
           ))}
@@ -43,11 +78,11 @@ export default function SchedulesPanel({ appointments, loading, error, selectedA
           <div className="bg-white p-6 rounded-lg w-96">
             <h3 className="font-bold mb-4">Thông tin chi tiết</h3>
             <div className="space-y-2">
-              <p><strong>Khách hàng:</strong> {selectedAppointment.user}</p>
-              <p><strong>Dịch vụ:</strong> {selectedAppointment.service}</p>
-              <p><strong>Ngày:</strong> {selectedAppointment.date}</p>
-              <p><strong>Giờ:</strong> {selectedAppointment.time}</p>
-              <p><strong>Trạng thái:</strong> {selectedAppointment.status}</p>
+              <p><strong>Khách hàng:</strong> {selectedAppointment.customerId?.name}</p>
+              <p><strong>Giới tính:</strong> {getGenderText(selectedAppointment.customerId?.gender)}</p>
+              <p><strong>Dịch vụ:</strong> {selectedAppointment.serviceTypeId?.name}</p>
+              <p><strong>Ngày:</strong> {selectedAppointment.appointmentDate?.slice(0, 10)}</p>
+              <p><strong>Trạng thái:</strong> {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}</p>
             </div>
             <div className="flex gap-2 mt-4">
               <button className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">

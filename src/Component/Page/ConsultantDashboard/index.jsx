@@ -7,12 +7,13 @@ import BlogsPanel from './BlogsPanel';
 import ServicesPanel from './ServicesPanel';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
+import api from '../../config/axios';
 
 export default function ConsultantDashboard() {
   const [activeTab, setActiveTab] = useState('questions');
   // State cho dữ liệu
   const [questions, setQuestions] = useState([]);
-  const [appointments, setAppointments] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [examBookings, setExamBookings] = useState([]);
   const [examResults, setExamResults] = useState([]);
   const [blogs, setBlogs] = useState([]);
@@ -20,7 +21,7 @@ export default function ConsultantDashboard() {
   // State cho loading và error
   const [loading, setLoading] = useState({
     questions: false,
-    appointments: false,
+    bookings: false,
     examBookings: false,
     examResults: false,
     blogs: false,
@@ -28,7 +29,7 @@ export default function ConsultantDashboard() {
   });
   const [error, setError] = useState({
     questions: null,
-    appointments: null,
+    bookings: null,
     examBookings: null,
     examResults: null,
     blogs: null,
@@ -43,8 +44,35 @@ export default function ConsultantDashboard() {
   const [openProfile, setOpenProfile] = useState(false);
 
   useEffect(() => {
-    console.log('ConsultantDashboard mounted');
-  }, []);
+    if (user && user.id) {
+      fetchBookings(user.id);
+    }
+  }, [user]);
+
+  const fetchBookings = async (consultantId) => {
+    setLoading((prev) => ({ ...prev, bookings: true }));
+    setError((prev) => ({ ...prev, bookings: null }));
+    try {
+      const res = await api.get(`/api/servicebookings/consultant/${consultantId}`);
+      setBookings(res.data);
+    } catch (err) {
+      setError((prev) => ({ ...prev, bookings: 'Không thể tải danh sách lịch hẹn.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, bookings: false }));
+    }
+  };
+
+  // Hàm cập nhật trạng thái booking
+  const updateBookingStatus = async (bookingId, newStatus) => {
+    try {
+      await api.patch(`/api/servicebookings/${bookingId}`, { status: newStatus });
+      setBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      );
+    } catch (err) {
+      alert('Cập nhật trạng thái thất bại!');
+    }
+  };
 
   const renderContent = () => {
     switch(activeTab) {
@@ -61,9 +89,10 @@ export default function ConsultantDashboard() {
       case 'schedules':
         return (
           <SchedulesPanel
-            appointments={appointments}
-            loading={loading.appointments}
-            error={error.appointments}
+            bookings={bookings}
+            loading={loading.bookings}
+            error={error.bookings}
+            updateBookingStatus={updateBookingStatus}
             selectedAppointment={selectedAppointment}
             setSelectedAppointment={setSelectedAppointment}
           />

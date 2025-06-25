@@ -13,75 +13,7 @@ import {
     Tag,
     X
 } from 'lucide-react';
-
-   const sampleBookings = [
-        {
-            id: 'bk001',
-            date: '2025-06-10', // YYYY-MM-DD format for easier comparison
-            time: '10:00',
-            type: 'Consultation', // 'Consultation' or 'Test'
-            patientName: 'Nguyen Van X',
-            consultantId: 'c1', // Link to consultantsData
-            serviceName: 'Sexual Health Consultation',
-            status: 'Scheduled', // e.g., Scheduled, Completed, Cancelled
-            notes: 'Follow-up discussion required.'
-        },
-        {
-            id: 'bk002',
-            date: '2025-06-10',
-            time: '14:00',
-            type: 'Test',
-            patientName: 'Tran Thi Y',
-            consultantId: null, // Tests might not always have a specific consultant assigned initially
-            serviceName: 'STD Panel Basic',
-            status: 'Scheduled',
-            notes: 'Patient requested discretion.'
-        },
-        {
-            id: 'bk003',
-            date: '2025-06-18',
-            time: '11:30',
-            type: 'Consultation',
-            patientName: 'Le Van Z',
-            consultantId: 'c2',
-            serviceName: 'Pre-test Counseling',
-            status: 'Completed',
-        },
-        {
-            id: 'bk004',
-            date: '2025-07-05', // A booking in the next month
-            time: '09:00',
-            type: 'Test',
-            patientName: 'Pham Thi Q',
-            serviceName: 'Advanced Hormone Test',
-            status: 'Scheduled',
-        }
-    ];
-const updatedSampleBookings = [
-    ...sampleBookings, 
-    {
-        id: 'bk_test_005',
-        date: '2025-06-20',
-        time: '09:30',
-        type: 'Test',
-        patientName: 'Hoang Van E',
-        consultantId: null,
-        serviceName: 'Basic Blood Panel',
-        status: 'Completed',
-        notes: 'Routine check-up.'
-    },
-    {
-        id: 'bk_test_006',
-        date: '2025-06-22',
-        time: '11:00',
-        type: 'Test',
-        patientName: 'Dang Thi F',
-        consultantId: null,
-        serviceName: 'Urinalysis',
-        status: 'Scheduled', // A test that might not have results yet
-        notes: ''
-    }
-];
+import { useToast } from '../Toast/ToastProvider';
 
 const sampleTestResults = [
     {
@@ -113,42 +45,42 @@ const sampleTestResults = [
 
 
 // Sample Dashboard Overview Data
-const dashboardOverviewData = {
-        totalAccounts: 1234,
-        totalConsultants: 120, 
-        totalCustomers: 1114,
-        totalBookingsThisMonth: 45,
-        monthlyRevenue: 78515000, 
-        averageServiceRating: 4.5, 
-        totalFeedback: 87,
-        totalActiveUsers: 1234,
-        pendingTestResults: 15, 
-        newFeedbackToday: 5,  
-    };
-    const bookingTrendsData = { // For a bar chart or line chart
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
-        consultationBookings: [18, 22, 20, 25, 30, 15, 10],
-        testBookings: [10, 12, 8, 15, 12, 20, 18],
-    };
+// const dashboardOverviewData = {
+//         totalAccounts: 1234,
+//         totalConsultants: 120, 
+//         totalCustomers: 1114,
+//         totalBookingsThisMonth: 45,
+//         monthlyRevenue: 78515000, 
+//         averageServiceRating: 4.5, 
+//         totalFeedback: 87,
+//         totalActiveUsers: 1234,
+//         pendingTestResults: 15, 
+//         newFeedbackToday: 5,  
+//     };
+//     const bookingTrendsData = { // For a bar chart or line chart
+//         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
+//         consultationBookings: [18, 22, 20, 25, 30, 15, 10],
+//         testBookings: [10, 12, 8, 15, 12, 20, 18],
+//     };
 
-    const genderDistributionData = { // For a pie chart
-        labels: ['Male', 'Female', 'Other'],
-        counts: [650, 720, 34], // Number of customers or all users
-    };
+//     const genderDistributionData = { // For a pie chart
+//         labels: ['Male', 'Female', 'Other'],
+//         counts: [650, 720, 34], // Number of customers or all users
+//     };
 
-    const topPerformingConsultants = [
-        { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
-        { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
-        { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
-        // ... more consultants
-    ];
+//     const topPerformingConsultants = [
+//         { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
+//         { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
+//         { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
+//         // ... more consultants
+//     ];
 
-    const popularServicesData = [
-        { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
-        { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
-        { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
-        // ... more services
-    ];
+//     const popularServicesData = [
+//         { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
+//         { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
+//         { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
+//         // ... more services
+//     ];
     // Sample Booking Data    
  
 // --- Sample Data for Feedback ---
@@ -194,76 +126,544 @@ const sampleFeedback = [
         isActive: true,
     }
 ];
-// Sample Consultant Data
-{/*const consultantsData = [
-    {
-        id: 'c1',
-        name: "NGUYEN ANH TU",
-        email: "nguyen.anh.tu@example.com",
-        phone: "0901111111", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c2',
-        name: "PHAM MINH NGOC",
-        email: "pham.minh.ngoc@example.com",
-        phone: "0902222222", // Placeholder
-        gender: "Nữ", // Assuming Female
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c3',
-        name: "HO HUU PHUC",
-        email: "ho.huu.phuc@example.com",
-        phone: "0903333333", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c4',
-        name: "NGUYEN TRONG HOANG HIEP",
-        email: "nguyen.hoang.hiep@example.com",
-        phone: "0904444444", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Y học Giới tính & Nam học",
-    },
-    {
-        id: 'c5',
-        name: "NGUYEN QUOC LINH",
-        email: "nguyen.quoc.linh@example.com",
-        phone: "0905555555", // Placeholder
-        gender: "Nam", // Assuming Male
-        specialty: "Tư vấn tâm lý", // Based on description "lĩnh vực tư vấn tâm lý"
+
+// Create a new, dedicated component for Consultant Management
+const ConsultantManagementComponent = () => {
+    const [consultants, setConsultants] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingConsultant, setEditingConsultant] = useState(null);
+    const [editFormData, setEditFormData] = useState({ phone: '', specialization: '' });
+    const SPECIALTIES = [
+        "Y học Giới tính & Nam học", "Tư vấn tâm lý", "Phụ khoa", "Nội tiết",
+        "Da liễu", "Sản khoa", "Tiết niệu"
+    ];
+    const toast = useToast();
+    const handleToggleActive = async (consultant) => {
+        const id = consultant.id;
+        const willActivate = !consultant.active;
+        try {
+            // Optimistic UI update (optional)
+            setConsultants(prev =>
+                prev.map(c =>
+                    c.id === id ? { ...c, active: willActivate } : c
+                )
+            );
+
+            // Call the correct API
+            if (willActivate) {
+                await api.put(`/api/active/${id}`);
+            } else {
+                await api.put(`/api/deactive/${id}`);
+            }
+            toast.showToast(`Consultant ${consultant.active ? 'deactivated' : 'activated'} successfully!`, 'success');
+            // Optionally refetch or confirm update
+            // await fetchConsultants();
+        } catch (error) {
+            // Rollback optimistic update on error
+            setConsultants(prev =>
+                prev.map(c =>
+                    c.id === id ? { ...c, active: !willActivate } : c
+                )
+            );
+            toast.showToast('Failed to update consultant status.', 'error');
+        }
+    };
+    const fetchConsultants = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.get('/api/consultants');
+            setConsultants(response.data || []);
+        } catch (err) {
+            setError('Failed to load consultants.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchConsultants();
+    }, []);
+
+    const handleOpenEditModal = (consultant) => {
+        setEditingConsultant(consultant);
+        setEditFormData({
+            phone: consultant.phone || '',
+            specialization: consultant.specialization || SPECIALTIES[0]
+        });
+        setShowEditModal(true);
+    };
+
+    const handleUpdateConsultant = async (e) => {
+        e.preventDefault();
+        if (!editingConsultant) return;
+
+        if (!editFormData.specialization || editFormData.specialization.trim() === "") {
+        setError("Specialization is required.");
+        return;
     }
-];
-*/}
-// Sample Customer Data
-{/*const customersData = [
-    {
-        id: 'cust1',
-        name: "Nguyen Van A",
-        email: "customer1@example.com",
-        phone: "0912345678",
-        gender: "Nam",
-    },
-    {
-        id: 'cust2',
-        name: "Tran Thi B",
-        email: "customer2@example.com",
-        phone: "0987654321",
-        gender: "Nữ",
-    },
-    {
-        id: 'cust3',
-        name: "Le Van C",
-        email: "customer3@example.com",
-        phone: "0911223344",
-        gender: "Nam",
+         const fullPayload = {
+            id:              editingConsultant.id,
+            name:            editingConsultant.name,
+            role:            editingConsultant.role,
+            admin:           editingConsultant.admin,
+            managedUser:     editingConsultant.managedUser,
+            email:           editingConsultant.email,
+            password:        editingConsultant.password,      
+            gender:          editingConsultant.gender,
+            phone:           editFormData.phone,
+            createDate:      editingConsultant.createDate,
+            birthDate:       editingConsultant.birthDate,
+            profilePicture:  editingConsultant.profilePicture,
+            bookingHistory:  editingConsultant.bookingHistory,
+            totalSpending:   editingConsultant.totalSpending,
+            specialization:  editFormData.specialization,
+            licenseDetails:  editingConsultant.licenseDetails,
+            expYear:         editingConsultant.expYear || 0,
+            avgRating:       editingConsultant.avgRating || 0,
+            description:     editingConsultant.description,
+            active:          editingConsultant.active
+        };
+        try {
+            console.log('Sending full payload:', fullPayload);
+            await api.put(`/api/user/${editingConsultant.email}`, fullPayload);
+            toast.showToast('Consultant updated successfully!', 'success');
+            setShowEditModal(false);
+            await fetchConsultants(); // Refresh data
+        } catch (err) {
+            setError('Failed to update consultant. Please try again.');
+            console.error('Update error:', err.response || err);
+        }
+    };    const createConsultant = async (consultantData) => {
+        try {
+            const response = await api.post('/api/createconsultant', consultantData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating consultant:', error);
+            throw error;
+        }
+    };
+    const [showAddModal, setShowAddModal] = useState(false);    const [newConsultant, setNewConsultant] = useState({
+        name: '',
+        email: '',
+        password: '',
+        gender: 0,
+        phone: '',
+        specialization: '',
+        expYear: ''
+    });
+    
+    const handleAddConsultant = async (e) => {
+        e.preventDefault();
+        try {
+            const result = await createConsultant(newConsultant);
+            toast.showToast('Consultant created successfully!', 'success');
+            setShowAddModal(false);            setNewConsultant({
+                name: '',
+                email: '',
+                password: '',
+                gender: 0,
+                phone: '',
+                specialization: '',
+                expYear: ''
+            });
+            fetchConsultants();
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to create consultant.';
+            toast.showToast(errorMessage, 'error');
+        }
+    }; 
+    // Add these state variables to ConsultantManagementComponent
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordFormData, setPasswordFormData] = useState({
+        email: '',
+        newpass: ''
+    });
+
+    // Add the password update API function
+    const updateUserPassword = async (email, newPassword) => {
+        try {
+            // Use query parameters instead of request body
+            const response = await api.put(`/api/user/changepassword?email=${encodeURIComponent(email)}&newpass=${encodeURIComponent(newPassword)}`);
+            return response.data;
+        } catch (error) {
+            console.error('Error updating password:', error);
+            throw error;
+        }
+    };
+
+    // Add the password update handler
+    const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        try {
+            await updateUserPassword(passwordFormData.email, passwordFormData.newpass);
+            toast.showToast('Password updated successfully!', 'success');
+            setShowPasswordModal(false);
+            setPasswordFormData({ email: '', newpass: '' });
+        } catch (err) {
+            const errorMessage = err.response?.data?.message || 'Failed to update password.';
+            toast.showToast(errorMessage, 'error');
+        }
+    };
+
+    // Add the function to open password modal
+    const handleOpenPasswordModal = (consultant) => {
+        setPasswordFormData({
+            email: consultant.email,
+            newpass: ''
+        });
+        setShowPasswordModal(true);
+    };    
+    
+    return (
+        <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Consultant Account Management</h2>
+                <button
+                    onClick={() => setShowAddModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center gap-2"
+                >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                    Add Consultant
+                </button>
+            </div>
+            {error && <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>}
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3">Name</th>
+                            <th className="px-6 py-3">Email</th>
+                            <th className="px-6 py-3">Phone</th>
+                            <th className="px-6 py-3">Status</th>
+                            <th className="px-6 py-3">Specialization</th>
+                            <th className="px-6 py-3 text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan="5" className="text-center py-4">Loading...</td></tr>
+                        ) : consultants.map(consultant => {
+                            console.log('Consultant row:', consultant);
+                            console.log('Specialization:', consultant.specialization);
+                        return (
+                            <tr key={consultant.id} className="bg-white border-b hover:bg-gray-50">
+                                <td className="px-6 py-4 font-medium text-gray-900">{consultant.name}</td>
+                                <td className="px-6 py-4">{consultant.email}</td>
+                                <td className="px-6 py-4">{consultant.phone || 'N/A'}</td>
+                                <td className="px-6 py-4">
+                                    <span
+                                        className={`px-2 py-1 rounded-full text-xs font-semibold
+                                            ${consultant.active
+                                            ? 'bg-green-100 text-green-700'
+                                            : 'bg-red-100 text-red-700'}`}
+                                    >
+                                        {consultant.active ? 'Active' : 'Inactive'}
+                                    </span>
+                                    <button
+                                        onClick={() => handleToggleActive(consultant)}
+                                        className={`px-3 py-1 rounded transition-colors duration-200 ml-2
+                                            ${consultant.active 
+                                                ? ' text-white bg-red-600' 
+                                                : ' text-white bg-green-500'}`}
+                                    >
+                                        {consultant.active ? 'Deactivate' : 'Activate'}
+                                    </button>
+                                </td>
+                                <td className="px-6 py-4">
+                                    {consultant.specialization && consultant.specialization.trim() !== "" 
+                                        ? consultant.specialization 
+                                        : 'N/A'}
+                                </td>
+                                <td className="px-6 py-4">
+                                    <div className="flex gap-3 items-center">
+                                        <button onClick={() => handleOpenEditModal(consultant)} className="text-blue-600 hover:underline">
+                                            Edit
+                                        </button>
+                                        <button 
+                                            onClick={() => handleOpenPasswordModal(consultant)} 
+                                            className="text-purple-600 hover:underline text-sm"
+                                        >
+                                            Change Password
+                                        </button>  
+                                    </div>                                  
+                                </td>
+                            </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+
+            {showEditModal && editingConsultant && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Edit Consultant: {editingConsultant.name}</h3>
+                        <form onSubmit={handleUpdateConsultant}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                                <input
+                                    type="tel"
+                                    value={editFormData.phone}
+                                    onChange={(e) => setEditFormData({ ...editFormData, phone: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                                <select
+                                    value={editFormData.specialization}
+                                    onChange={(e) => setEditFormData({ ...editFormData, specialization: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                >
+                                    <option value="" disabled>Select a specialty</option>
+                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                </select>
+                            </div>                           
+                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowEditModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {/* Password Update Modal */}
+            {showPasswordModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Change Password</h3>
+                        <form onSubmit={handlePasswordUpdate}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input
+                                    type="email"
+                                    value={passwordFormData.email}
+                                    className="w-full p-2 border border-gray-300 rounded-md bg-gray-100"
+                                    disabled
+                                />
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">New Password *</label>
+                                <input
+                                    type="password"
+                                    value={passwordFormData.newpass}
+                                    onChange={(e) => setPasswordFormData({ ...passwordFormData, newpass: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    placeholder="Enter new password"
+                                    required
+                                    minLength="6"
+                                />
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowPasswordModal(false)} 
+                                    className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300"
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700"
+                                >
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Add New Consultant</h3>
+                        <form onSubmit={handleAddConsultant}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                                <input
+                                    type="text"
+                                    value={newConsultant.name}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, name: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                                <input
+                                    type="email"
+                                    value={newConsultant.email}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, email: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+                                <input
+                                    type="password"
+                                    value={newConsultant.password}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, password: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                                <select
+                                    value={newConsultant.gender}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, gender: parseInt(e.target.value) })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                >
+                                    <option value={0}>Female</option>
+                                    <option value={1}>Male</option>
+                                    <option value={2}>Other</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                                <input
+                                    type="tel"
+                                    value={newConsultant.phone}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, phone: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Specialization *</label>
+                                <select
+                                    value={newConsultant.specialization}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, specialization: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                >
+                                    <option value="" disabled>Select a specialty</option>
+                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                </select>
+                            </div>
+                            <div className="mb-6">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Experience Years *</label>
+                                <input
+                                    type="number"
+                                    value={newConsultant.expYear}
+                                    onChange={(e) => setNewConsultant({ ...newConsultant, expYear: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    min="0"
+                                    required
+                                />
+                            </div>
+                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowAddModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Cancel</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Create Consultant</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+const CustomerManagementComponent = () => {
+  const [customers, setCustomers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const toast = useToast();
+  const fetchCustomers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.get("/api/customers");
+      setCustomers(response.data || []);
+    } catch (err) {
+      setError("Failed to load customers.");
+    } finally {
+      setLoading(false);
     }
-];
-*/}
-// Placeholder Components
+  };
+
+  useEffect(() => {
+    fetchCustomers();
+  }, []);
+
+  const handleToggleActive = async (customer) => {
+    try {
+      const url = customer.active
+        ? `/api/deactive/${customer.id}`
+        : `/api/active/${customer.id}`;
+      await api.put(url);
+      toast.showToast(`Customer ${customer.active ? 'deactivated' : 'activated'} successfully!`, 'success');
+      fetchCustomers();
+    } catch (err) {
+      toast.showToast('Failed to update customer status.', 'error');
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        Customer Account Management
+      </h2>
+      {error && (
+        <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>
+      )}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm text-left text-gray-500">
+          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+            <tr>
+              <th className="px-6 py-3">Name</th>
+              <th className="px-6 py-3">Email</th>
+              <th className="px-6 py-3">Phone</th>
+              <th className="px-6 py-3">Status</th>
+              <th className="px-6 py-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  Loading...
+                </td>
+              </tr>
+            ) : (
+              customers.map((customer) => (
+                <tr key={customer.id} className="bg-white border-b hover:bg-gray-50">
+                  <td className="px-6 py-4 font-medium text-gray-900">{customer.name}</td>
+                  <td className="px-6 py-4">{customer.email}</td>
+                  <td className="px-6 py-4">{customer.phone || "N/A"}</td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded text-xs font-semibold ${customer.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                      {customer.active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <button
+                      onClick={() => handleToggleActive(customer)}
+                                        className={`px-3 py-1 rounded transition-colors duration-200 ml-2
+                                            ${customer.active 
+                                                ? ' text-white bg-red-600' 
+                                                : ' text-white bg-green-500'}`}
+                                    >
+                                        {customer.active ? 'Deactivate' : 'Activate'}
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+};
 // Get all service types
 export const getServiceTypes = async () => {
     const response = await api.get('/api/servicetypes');
@@ -530,55 +930,58 @@ const BookingManagementComponent = () => {
             </div>
 
             {/* Bookings List Table */}
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Date</th>
-                            <th scope="col" className="px-6 py-3">Time</th>
-                            <th scope="col" className="px-6 py-3">Patient</th>
-                            <th scope="col" className="px-6 py-3">Service</th>
-                            <th scope="col" className="px-6 py-3">Type</th>
-                            <th scope="col" className="px-6 py-3">Consultant</th>
-                            <th scope="col" className="px-6 py-3">Status</th>
-                            <th scope="col" className="px-6 py-3">Notes</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
-                            <tr>
-                                <td colSpan={7} className="py-4 text-center">Loading...</td>
-                            </tr>
-                        ) : bookings.length === 0 ? (
-                            <tr>
-                                <td colSpan={7} className="py-4 text-center text-gray-400">No bookings found.</td>
-                            </tr>
-                        ) : (
-                            bookings.map((booking) => (
-                                <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
-                                    <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
-                                    <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
-                                    <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
-                                    <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                            booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
-                                            booking.status === 1 ? 'bg-green-200 text-green-800' :
-                                            'bg-red-200 text-red-800'
-                                        }`}>
-                                            {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 flex items-center gap-2">
-                                        <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
-                                    </td>
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+                <div className="overflow-x-auto">
+                    <div className="max-h-[600px] overflow-y-auto">
+                        <table className="w-full text-sm text-left text-gray-500">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                <tr>
+                                    <th scope="col" className="px-6 py-3">Date</th>
+                                    <th scope="col" className="px-6 py-3">Time</th>
+                                    <th scope="col" className="px-6 py-3">Patient</th>
+                                    <th scope="col" className="px-6 py-3">Service Type</th>
+                                    <th scope="col" className="px-6 py-3">Consultant</th>
+                                    <th scope="col" className="px-6 py-3">Status</th>
+                                    <th scope="col" className="px-6 py-3">Notes</th>
+                                    <th scope="col" className="px-6 py-3">Actions</th>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            </thead>
+                            <tbody>
+                                {loading ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-4 text-center">Loading...</td>
+                                    </tr>
+                                ) : bookings.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="py-4 text-center text-gray-400">No bookings found.</td>
+                                    </tr>
+                                ) : (
+                                    bookings.map((booking) => (
+                                        <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
+                                            <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
+                                            <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
+                                            <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
+                                            <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4">
+                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                                    booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
+                                                    booking.status === 1 ? 'bg-green-200 text-green-800' :
+                                                    'bg-red-200 text-red-800'
+                                                }`}>
+                                                    {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
+                                                </span>
+                                            </td>
+                                            <td className="px-6 py-4 flex items-center gap-2">
+                                                <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             {/* Booking Modal (Add/Edit) */}
@@ -1162,8 +1565,8 @@ const PostManagementComponent = () => {
                                         <td className="px-6 py-4">
                                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                                                 post.isActive 
-                                                    ? 'bg-green-100 text-green-800' 
-                                                    : 'bg-red-100 text-red-800'
+                                                    ? 'bg-green-200 text-green-800' 
+                                                    : 'bg-red-200 text-red-800'
                                             }`}>
                                                 {post.isActive ? 'Hoạt động' : 'Tạm dừng'}
                                             </span>
@@ -1559,7 +1962,7 @@ const TestResultManagementComponent = () => {
                                     onChange={handleFormChange}
                                     placeholder="Enter full test result details here..."
                                     className="border p-2 rounded w-full"
-                                    required={currentFormData.isActive} // Content required if result is active
+                                    required
                                 ></textarea>
                             </div>
                              <div className="mb-4">
@@ -1763,7 +2166,7 @@ const ReportManagementComponent = () => {
     );
 };
 // New component for the Filter Interface
-const FilterInterface = ({ title }) => { // Removed data-related props
+const FilterInterface = ({ title }) => { 
     const [activeTab, setActiveTab] = useState('find');
     const [searchEmail, setSearchEmail] = useState('');
     const [foundAccount, setFoundAccount] = useState(null);
@@ -1816,9 +2219,78 @@ const FilterInterface = ({ title }) => { // Removed data-related props
         setSearchAttempted(false);
         // Optionally, you could re-fetch or ensure data is fresh if 'all' tab is selected
     };
+    const [roleFilter, setRoleFilter] = useState('');
+    const [genderFilter, setGenderFilter] = useState('');
+    const [activeFilter, setActiveFilter] = useState('');
+    const [searchFilter, setSearchFilter] = useState('');
 
+    // Add these computed values:
+    const uniqueRoles = [...new Set(internalAccountsData.map(account => account.role?.name).filter(Boolean))];
+
+    const filteredAccounts = internalAccountsData.filter(account => {
+        // Role filter
+        if (roleFilter && account.role?.name !== roleFilter) return false;
+        
+        // Gender filter
+        if (genderFilter && account.gender.toString() !== genderFilter) return false;
+        
+        // Active status filter
+        if (activeFilter && account.active.toString() !== activeFilter) return false;
+        
+        // Search filter
+        if (searchFilter) {
+            const searchLower = searchFilter.toLowerCase();
+            const nameMatch = account.name?.toLowerCase().includes(searchLower);
+            const emailMatch = account.email?.toLowerCase().includes(searchLower);
+            if (!nameMatch && !emailMatch) return false;
+        }
+        return true;
+    })
+    .sort((a, b) => {
+        // Sort by filter priority - exact matches appear first
+        let scoreA = 0;
+        let scoreB = 0;
+        
+        // Role filter priority
+        if (roleFilter) {
+            if (a.role?.name === roleFilter) scoreA += 4;
+            if (b.role?.name === roleFilter) scoreB += 4;
+        }
+        
+        // Gender filter priority
+        if (genderFilter) {
+            if (a.gender.toString() === genderFilter) scoreA += 3;
+            if (b.gender.toString() === genderFilter) scoreB += 3;
+        }
+        
+        // Active status filter priority
+        if (activeFilter) {
+            if (a.active.toString() === activeFilter) scoreA += 2;
+            if (b.active.toString() === activeFilter) scoreB += 2;
+        }
+        
+        // Search filter priority
+        if (searchFilter) {
+            const searchLower = searchFilter.toLowerCase();
+            const aNameMatch = a.name?.toLowerCase().includes(searchLower);
+            const aEmailMatch = a.email?.toLowerCase().includes(searchLower);
+            const bNameMatch = b.name?.toLowerCase().includes(searchLower);
+            const bEmailMatch = b.email?.toLowerCase().includes(searchLower);
+            
+            if (aNameMatch || aEmailMatch) scoreA += 1;
+            if (bNameMatch || bEmailMatch) scoreB += 1;
+        }
+        
+        // Sort by score (higher scores first), then by name alphabetically
+        if (scoreB !== scoreA) {
+            return scoreB - scoreA;
+        }
+        
+        // Secondary sort by name if scores are equal
+        return (a.name || '').localeCompare(b.name || '');
+    });
     return (
-        <div className="bg-white rounded-xl shadow p-6 mb-8">
+        <div className="bg-white rounded-xl shadow p-6">
             <div className="flex mb-6 border-b">
                 <button
                     onClick={() => handleTabChange('find')}
@@ -1894,52 +2366,150 @@ const FilterInterface = ({ title }) => { // Removed data-related props
 
             {activeTab === 'all' && (
                 <div>
-                    <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
+                        <h2 className="text-xl font-semibold mb-4 text-gray-700">All {title}s List</h2>
+                        {/* Filter Controls */}
+                        <div className="flex flex-wrap gap-4">
+                                {/* Role Filter */}
+                                <div className="min-w-[150px]" >
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+                                    <select
+                                        value={roleFilter}
+                                        onChange={(e) => setRoleFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Roles</option>
+                                        {uniqueRoles.map(role => (
+                                            <option key={role} value={role}>{role}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Gender Filter */}
+                                <div className="min-w-[120px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Gender</label>
+                                    <select
+                                        value={genderFilter}
+                                        onChange={(e) => setGenderFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Genders</option>
+                                        <option value="0">Male</option>
+                                        <option value="2">Female</option>
+                                        <option value="1">Other</option>
+                                    </select>
+                                </div>
+
+                                {/* Active Status Filter */}
+                                <div className="min-w-[120px]">
+                                    <label className="block text-xs font-medium text-gray-600 mb-1">Status</label>
+                                    <select
+                                        value={activeFilter}
+                                        onChange={(e) => setActiveFilter(e.target.value)}
+                                        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    >
+                                        <option value="">All Status</option>
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                        </div>
+                    </div>
+                    {/* Loading and Error States */}
                     {internalIsLoading && <p className="text-center py-4">Loading accounts...</p>}
                     {internalError && <p className="text-center py-4 text-red-500">Error loading accounts: {internalError}</p>}
-                    {!internalIsLoading && !internalError && internalAccountsData.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="min-w-full text-left mt-4 text-sm">
-                                <thead className="border-b bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 py-3 font-medium text-gray-600">ID</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Name</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Email</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Role</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Gender</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Phone</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Created</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Active</th>
-                                        <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {internalAccountsData.map((account) => (
-                                        <tr key={account.id} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 text-gray-700 truncate max-w-[100px]" title={account.id}>{account.id}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.name}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.email}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.role?.name || 'N/A'}</td>
-                                            <td className="px-4 py-3 text-gray-700">{formatGender(account.gender)}</td>
-                                            <td className="px-4 py-3 text-gray-700">{account.phone || 'N/A'}</td>
-                                            <td className="px-4 py-3 text-gray-700">{new Date(account.createDate).toLocaleDateString()}</td>
-                                            <td className="px-4 py-3 text-gray-700">
-                                                <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                                    account.active ? 'bg-green-200 text-green-800' : 'bg-red-200 text-red-800'
-                                                }`}>
-                                                    {account.active ? 'Yes' : 'No'}
-                                                </span>
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                <button className="text-blue-600 hover:text-blue-800 hover:underline mr-3 text-xs">Edit</button>
-                                                <button className="text-red-600 hover:text-red-800 hover:underline text-xs">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    ) : (!internalIsLoading && !internalError && <p className="text-center py-4 text-gray-500">No accounts to display.</p>)}
+                    {!internalIsLoading && !internalError && (
+                        <>
+                            {/* Show "No results" message when filters are applied but no results */}
+                            {(roleFilter || genderFilter || activeFilter) && filteredAccounts.length === 0 ? (
+                                <div className="p-6 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-center">
+                                    <div className="flex items-center justify-center mb-2">
+                                        <svg className="w-6 h-6 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                                        </svg>
+                                        <h3 className="text-lg font-medium">No Accounts Found</h3>
+                                    </div>
+                                    <p className="mb-2">No accounts match your current filter selection:</p>
+                                    <div className="text-sm space-y-1">
+                                        {roleFilter && <p>• Role: <span className="font-medium">{roleFilter}</span></p>}
+                                        {genderFilter && <p>• Gender: <span className="font-medium">{genderFilter === '0' ? 'Male' : genderFilter === '2' ? 'Female' : 'Other'}</span></p>}
+                                        {activeFilter && <p>• Status: <span className="font-medium">{activeFilter === 'true' ? 'Active' : 'Inactive'}</span></p>}
+                                    </div>
+                                </div>
+                            ) : filteredAccounts.length > 0 ? (
+                                /* Show table when there are results */
+                                <div className="bg-white rounded-lg shadow overflow-hidden">
+                                    <div className="overflow-x-auto">
+                                        <div className="max-h-96 overflow-y-auto">
+                                            <table className="w-full text-left text-sm">
+                                                <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+                                                    <tr>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">ID</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Name</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Email</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Role</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Gender</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Phone</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Created</th>
+                                                        <th className="px-4 py-3 font-medium text-gray-600 min-w-[100px]">Active</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white divide-y divide-gray-200">
+                                                    {filteredAccounts.map((account) => (
+                                                        <tr key={account.id} className="hover:bg-gray-50">
+                                                            <td className="px-4 py-3 text-gray-700 font-mono text-xs break-all">{account.id.substring(0, 8)}...</td>
+                                                            <td className="px-4 py-3 text-gray-700 font-medium">{account.name}</td>
+                                                            <td className="px-4 py-3 text-gray-700 break-all">{account.email}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                                                    roleFilter && account.role?.name === roleFilter 
+                                                                        ? 'bg-blue-200 text-blue-900 ring-2 ring-blue-400' 
+                                                                        : 'bg-blue-100 text-blue-800'
+                                                                }`}>
+                                                                    {account.role?.name || 'N/A'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`${
+                                                                    genderFilter && account.gender.toString() === genderFilter 
+                                                                        ? 'font-bold text-green-700 bg-green-100 px-2 py-1 rounded-full ring-2 ring-green-400' 
+                                                                        : 'text-gray-700'
+                                                                }`}>
+                                                                    {formatGender(account.gender)}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-gray-700">{account.phone || 'N/A'}</td>
+                                                            <td className="px-4 py-3 text-gray-700 text-xs">{new Date(account.createDate).toLocaleDateString()}</td>
+                                                            <td className="px-4 py-3">
+                                                                <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                                    account.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                                } ${
+                                                                    activeFilter && account.active.toString() === activeFilter 
+                                                                        ? 'ring-2 ring-yellow-400' 
+                                                                        : ''
+                                                                }`}>
+                                                                    {account.active ? 'Yes' : 'No'}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    {/* Scroll indicator */}
+                                    {filteredAccounts.length > 10 && (
+                                        <div className="bg-gray-50 px-4 py-2 text-center text-sm text-gray-500 border-t">
+                                            Showing {filteredAccounts.length} accounts - Scroll to view more
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                /* Show when no accounts exist and no filters applied */
+                                <p className="text-center py-4 text-gray-500">No accounts to display.</p>
+                            )}
+                        </>
+                    )}
                 </div>
             )}
         </div>
@@ -1951,30 +2521,10 @@ export default function AdminProfile() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const [profileMenu, setProfileMenu] = useState(false);
-    const [activeView, setActiveView] = useState('dashboard');
+    const [activeView, setActiveView] = useState('accounts');
     const [allUsersForOtherViews, setAllUsersForOtherViews] = useState([]);
     const [loadingOtherViewsData, setLoadingOtherViewsData] = useState(false);
     const [otherViewsDataError, setOtherViewsDataError] = useState(null);
-    const [consultantsData, setConsultantsData] = useState([]);
-    const [customersData, setCustomersData] = useState([]);
-    const [loadingConsultants, setLoadingConsultants] = useState(false);
-    const [loadingCustomers, setLoadingCustomers] = useState(false);
-    const SPECIALTIES = [
-        "Y học Giới tính & Nam học",
-        "Tư vấn tâm lý",
-        "Phụ khoa",
-        "Nội tiết",
-        "Dinh dưỡng",
-        "Da liễu",
-        "Sản khoa",
-        "Tiết niệu"
-    ];
-    const [editingConsultant, setEditingConsultant] = useState(null);
-    const [editSpecialty, setEditSpecialty] = useState("");
-    const [editConsultantData, setEditConsultantData] = useState({
-    phone: '',
-    specialty: ''
-    });
     const handleLogout = () => {
         logout();
         navigate("/login");
@@ -2000,308 +2550,150 @@ export default function AdminProfile() {
             }
         };
         fetchUsersForAdminProfile();
-    }, [activeView, allUsersForOtherViews.length]); // Re-fetch if activeView changes to one requiring data and data isn't there
-    
-      useEffect(() => {
-        // Fetch consultants
-        setLoadingConsultants(true);
-        api.get('/api/consultants')
-            .then(res => setConsultantsData(res.data))
-            .catch(() => setConsultantsData([]))
-            .finally(() => setLoadingConsultants(false));
-
-        // Fetch customers
-        setLoadingCustomers(true);
-        api.get('/api/customers')
-            .then(res => setCustomersData(res.data))
-            .catch(() => setCustomersData([]))
-            .finally(() => setLoadingCustomers(false));
-    }, []);
+    }, [activeView, allUsersForOtherViews.length]); 
 
     const renderMainContent = () => {
         switch (activeView) {
-            case 'dashboard':
-                return (
-                    <>
-                        {/* Row 1: Key Metric Cards */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Total Active Users</div>
-                                    <Users size={24} className="text-blue-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-blue-700 mt-2">{dashboardOverviewData.totalActiveUsers.toLocaleString()}</div>
-                                <div className="text-sm text-green-500 mt-1">+2.5% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Bookings (This Month)</div>
-                                    <CalendarDays size={24} className="text-purple-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-purple-700 mt-2">{dashboardOverviewData.totalBookingsThisMonth.toLocaleString()}</div>
-                                <div className="text-sm text-green-500 mt-1">+5% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Revenue (This Month)</div>
-                                    <BarChart2 size={24} className="text-green-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-green-700 mt-2">{dashboardOverviewData.monthlyRevenue.toLocaleString()} VND</div>
-                                <div className="text-sm text-red-500 mt-1">-1.2% vs last month</div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-gray-500">Avg. Service Rating</div>
-                                    <Star size={24} className="text-yellow-500" />
-                                </div>
-                                <div className="text-3xl font-bold text-yellow-700 mt-2">{dashboardOverviewData.averageServiceRating}/5</div>
-                                <div className="text-sm text-gray-500 mt-1">Based on all services</div>
-                            </div>
-                        </div>
+            // case 'dashboard':
+            //     return (
+            //         <>
+            //             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Total Active Users</div>
+            //                         <Users size={24} className="text-blue-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-blue-700 mt-2">{dashboardOverviewData.totalActiveUsers.toLocaleString()}</div>
+            //                     <div className="text-sm text-green-500 mt-1">+2.5% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Bookings (This Month)</div>
+            //                         <CalendarDays size={24} className="text-purple-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-purple-700 mt-2">{dashboardOverviewData.totalBookingsThisMonth.toLocaleString()}</div>
+            //                     <div className="text-sm text-green-500 mt-1">+5% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Revenue (This Month)</div>
+            //                         <BarChart2 size={24} className="text-green-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-green-700 mt-2">{dashboardOverviewData.monthlyRevenue.toLocaleString()} VND</div>
+            //                     <div className="text-sm text-red-500 mt-1">-1.2% vs last month</div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center justify-between">
+            //                         <div className="text-gray-500">Avg. Service Rating</div>
+            //                         <Star size={24} className="text-yellow-500" />
+            //                     </div>
+            //                     <div className="text-3xl font-bold text-yellow-700 mt-2">{dashboardOverviewData.averageServiceRating}/5</div>
+            //                     <div className="text-sm text-gray-500 mt-1">Based on all services</div>
+            //                 </div>
+            //             </div>
 
-                        {/* Row 2: Charts */}
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                            {/* Booking Trends Chart */}
-                            <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Booking Trends (Last 7 Days)</h3>
-                                <div className="h-64 flex items-center justify-center text-gray-400">
-                                    {/* Placeholder for Bar Chart (e.g., using Recharts or Chart.js) */}
-                                    [Bar Chart: Consultation vs Test Bookings per Day]
-                                    <p className="text-sm">(Data: Mon C:{bookingTrendsData.consultationBookings[0]} T:{bookingTrendsData.testBookings[0]}, ...)</p>
-                                </div>
-                            </div>
-                            {/* Gender Distribution Chart */}
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">User Gender Distribution</h3>
-                                <div className="h-64 flex flex-col items-center justify-center text-gray-400">
-                                    {/* Placeholder for Pie Chart */}
-                                    [Pie Chart Here]
-                                    <ul className="text-sm mt-2">
-                                        <li>Male: {genderDistributionData.counts[0]}</li>
-                                        <li>Female: {genderDistributionData.counts[1]}</li>
-                                        <li>Other: {genderDistributionData.counts[2]}</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
+            //             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
 
-                        {/* Row 3: Tables/Lists - Top Consultants & Popular Services */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Performing Consultants</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase">
-                                            <tr>
-                                                <th className="py-2 px-1">Name</th>
-                                                <th className="py-2 px-1">Appointments</th>
-                                                <th className="py-2 px-1">Rating</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {topPerformingConsultants.slice(0, 3).map(c => ( // Show top 3-5
-                                                <tr key={c.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                    <td className="py-2 px-1 font-medium text-gray-800">{c.name}</td>
-                                                    <td className="py-2 px-1 text-gray-600">{c.appointmentsThisMonth}</td>
-                                                    <td className="py-2 px-1 text-yellow-600 flex items-center"><Star size={14} className="mr-1 fill-current"/>{c.rating}</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
-                                <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Popular Services</h3>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-gray-500 uppercase">
-                                            <tr>
-                                                <th className="py-2 px-1">Service Name</th>
-                                                <th className="py-2 px-1">Bookings</th>
-                                                <th className="py-2 px-1">Revenue</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {popularServicesData.slice(0, 3).map(s => (
-                                                <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
-                                                    <td className="py-2 px-1 font-medium text-gray-800">{s.name}</td>
-                                                    <td className="py-2 px-1 text-gray-600">{s.bookingsThisMonth}</td>
-                                                    <td className="py-2 px-1 text-green-600">{s.revenue.toLocaleString()} VND</td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                         {/* Optional: Quick Stats/Alerts */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                             <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center">
-                                    <ClipboardCheck size={20} className="text-orange-500 mr-3"/>
-                                    <div>
-                                        <div className="text-gray-500 text-sm">Pending Test Results</div>
-                                        <div className="text-xl font-semibold text-orange-700">{dashboardOverviewData.pendingTestResults}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
-                                <div className="flex items-center">
-                                    <Bell size={20} className="text-red-500 mr-3"/>
-                                    <div>
-                                        <div className="text-gray-500 text-sm">New Feedback Today</div>
-                                        <div className="text-xl font-semibold text-red-700">{dashboardOverviewData.newFeedbackToday}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </>
-                );
-                case 'accounts': // Added this case
+            //                 <div className="lg:col-span-2 bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Booking Trends (Last 7 Days)</h3>
+            //                     <div className="h-64 flex items-center justify-center text-gray-400">
+
+            //                         [Bar Chart: Consultation vs Test Bookings per Day]
+            //                         <p className="text-sm">(Data: Mon C:{bookingTrendsData.consultationBookings[0]} T:{bookingTrendsData.testBookings[0]}, ...)</p>
+            //                     </div>
+            //                 </div>
+
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">User Gender Distribution</h3>
+            //                     <div className="h-64 flex flex-col items-center justify-center text-gray-400">
+
+            //                         [Pie Chart Here]
+            //                         <ul className="text-sm mt-2">
+            //                             <li>Male: {genderDistributionData.counts[0]}</li>
+            //                             <li>Female: {genderDistributionData.counts[1]}</li>
+            //                             <li>Other: {genderDistributionData.counts[2]}</li>
+            //                         </ul>
+            //                     </div>
+            //                 </div>
+            //             </div>
+
+
+            //             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Top Performing Consultants</h3>
+            //                     <div className="overflow-x-auto">
+            //                         <table className="w-full text-sm text-left">
+            //                             <thead className="text-xs text-gray-500 uppercase">
+            //                                 <tr>
+            //                                     <th className="py-2 px-1">Name</th>
+            //                                     <th className="py-2 px-1">Appointments</th>
+            //                                     <th className="py-2 px-1">Rating</th>
+            //                                 </tr>
+            //                             </thead>
+            //                             <tbody>
+            //                                 {topPerformingConsultants.slice(0, 3).map(c => ( // Show top 3-5
+            //                                     <tr key={c.id} className="border-b border-gray-200 hover:bg-gray-50">
+            //                                         <td className="py-2 px-1 font-medium text-gray-800">{c.name}</td>
+            //                                         <td className="py-2 px-1 text-gray-600">{c.appointmentsThisMonth}</td>
+            //                                         <td className="py-2 px-1 text-yellow-600 flex items-center"><Star size={14} className="mr-1 fill-current"/>{c.rating}</td>
+            //                                     </tr>
+            //                                 ))}
+            //                             </tbody>
+            //                         </table>
+            //                     </div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow">
+            //                     <h3 className="text-lg font-semibold text-gray-700 mb-4">Most Popular Services</h3>
+            //                     <div className="overflow-x-auto">
+            //                         <table className="w-full text-sm text-left">
+            //                             <thead className="text-xs text-gray-500 uppercase">
+            //                                 <tr>
+            //                                     <th className="py-2 px-1">Service Name</th>
+            //                                     <th className="py-2 px-1">Bookings</th>
+            //                                     <th className="py-2 px-1">Revenue</th>
+            //                                 </tr>
+            //                             </thead>
+            //                             <tbody>
+            //                                 {popularServicesData.slice(0, 3).map(s => (
+            //                                     <tr key={s.id} className="border-b border-gray-200 hover:bg-gray-50">
+            //                                         <td className="py-2 px-1 font-medium text-gray-800">{s.name}</td>
+            //                                         <td className="py-2 px-1 text-gray-600">{s.bookingsThisMonth}</td>
+            //                                         <td className="py-2 px-1 text-green-600">{s.revenue.toLocaleString()} VND</td>
+            //                                     </tr>
+            //                                 ))}
+            //                             </tbody>
+            //                         </table>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            //                  <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center">
+            //                         <ClipboardCheck size={20} className="text-orange-500 mr-3"/>
+            //                         <div>
+            //                             <div className="text-gray-500 text-sm">Pending Test Results</div>
+            //                             <div className="text-xl font-semibold text-orange-700">{dashboardOverviewData.pendingTestResults}</div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //                 <div className="bg-white rounded-xl shadow p-4 hover:shadow-lg transition-shadow">
+            //                     <div className="flex items-center">
+            //                         <Bell size={20} className="text-red-500 mr-3"/>
+            //                         <div>
+            //                             <div className="text-gray-500 text-sm">New Feedback Today</div>
+            //                             <div className="text-xl font-semibold text-red-700">{dashboardOverviewData.newFeedbackToday}</div>
+            //                         </div>
+            //                     </div>
+            //                 </div>
+            //             </div>
+            //         </>
+            //     );
+            case 'accounts': 
                 return <FilterInterface title="Account" />;
             case 'consultantAccounts':
-                return (
-                    <div className="bg-white rounded-xl shadow p-6 mb-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <div className="font-semibold">Consultant Management</div>
-                            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Add Consultant</button>
-                        </div>
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr className="text-gray-600 border-b">
-                                    <th className="py-2">Email</th>
-                                    <th>Name</th>
-                                    <th>Phone</th>
-                                    <th>Gender</th>
-                                    <th>Specialty</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {consultantsData.map((consultant) => (
-                                    <tr key={consultant.id} className="border-b">
-                                        <td className="py-2">{consultant.email}</td>
-                                        <td>{consultant.name}</td>
-                                        <td>{consultant.phone}</td>
-                                        <td>{formatGender(consultant.gender)}</td>
-                                        <td>{consultant.specialty || <span className="text-gray-400">N/A</span>}</td>
-                                        <td>
-                                            <button
-                                                className="text-blue-600 hover:underline mr-2"
-                                                onClick={() => {
-                                                    setEditingConsultant(consultant.id);
-                                                    setEditConsultantData({
-                                                        phone: consultant.phone || '',
-                                                        specialty: consultant.specialty || ''
-                                                    });
-                                                }}
-                                            >
-                                                Edit
-                                            </button>
-                                            <button className="text-red-600 hover:underline">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-
-                        {/* Edit Tab/Panel */}
-                        {editingConsultant && (
-                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-                                <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg relative">
-                                    <button
-                                        className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"
-                                        onClick={() => setEditingConsultant(null)}
-                                        aria-label="Close"
-                                    >
-                                        &times;
-                                    </button>
-                                    <h2 className="text-xl font-semibold mb-6">Chỉnh sửa thông tin tư vấn viên</h2>
-                                    <div className="mb-4">
-                                        <label className="block mb-1 font-medium">Số điện thoại</label>
-                                        <input
-                                            type="text"
-                                            className="border rounded px-3 py-2 w-full"
-                                            value={editConsultantData.phone}
-                                            onChange={e => setEditConsultantData(d => ({ ...d, phone: e.target.value }))}
-                                        />
-                                    </div>
-                                    <div className="mb-6">
-                                        <label className="block mb-1 font-medium">Chuyên môn</label>
-                                        <select
-                                            className="border rounded px-3 py-2 w-full"
-                                            value={editConsultantData.specialty}
-                                            onChange={e => setEditConsultantData(d => ({ ...d, specialty: e.target.value }))}
-                                        >
-                                            <option value="">Chọn chuyên môn</option>
-                                            {SPECIALTIES.map(s => (
-                                                <option key={s} value={s}>{s}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="flex justify-end">
-                                        <button
-                                            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 mr-2"
-                                            onClick={async () => {
-                                                const updated = {
-                                                    ...consultantsData.find(c => c.id === editingConsultant),
-                                                    ...editConsultantData
-                                                };
-                                                // Optionally call: await api.put(`/api/consultants/${editingConsultant}`, updated);
-                                                setConsultantsData(prev =>
-                                                    prev.map(c => c.id === editingConsultant ? updated : c)
-                                                );
-                                                setEditingConsultant(null);
-                                            }}
-                                            disabled={!editConsultantData.phone || !editConsultantData.specialty}
-                                        >
-                                            Lưu
-                                        </button>
-                                        <button
-                                            className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
-                                            onClick={() => setEditingConsultant(null)}
-                                        >
-                                            Hủy
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                );
-                case 'customerAccounts':
-                    return (
-                        <div className="bg-white rounded-xl shadow p-6 mb-8">
-                            <div className="flex justify-between items-center mb-4">
-                                <div className="font-semibold">Customer Management</div>
-                            </div>
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-600 border-b">
-                                        <th className="py-2">Email</th>
-                                        <th>Name</th>
-                                        <th>Phone</th>
-                                        <th>Gender</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {customersData.map((customer) => ( // Map over customersData here
-                                        <tr key={customer.id} className="border-b">
-                                            <td className="py-2">{customer.email}</td>
-                                            <td>{customer.name}</td>
-                                            <td>{customer.phone}</td>
-                                            <td>{formatGender(customer.gender)}</td>
-                                            <td>
-                                                <button className="text-blue-600 hover:underline mr-2">Edit</button>
-                                                <button className="text-red-600 hover:underline">Delete</button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    );
+                return <ConsultantManagementComponent />;
+            case 'customerAccounts':
+                return <CustomerManagementComponent/>;
             case 'services':
                 return <ServiceManagementComponent />;
             case 'bookings':
@@ -2355,13 +2747,13 @@ export default function AdminProfile() {
                 {/* Sidebar */}
                 <aside className="w-64 bg-white shadow-lg pt-8 px-4 hidden md:block">
                     <nav className="flex flex-col gap-1">
-                        <button onClick={() => setActiveView('dashboard')}
+                        {/* <button onClick={() => setActiveView('dashboard')}
                          className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
                             activeView === 'dashboard' ? 'font-semibold text-blue-700 bg-blue-100' : ''
                             }`}>
                             <BarChart2 size={18} />
                             <span>Dashboard</span>
-                        </button>
+                        </button> */}
                         <button onClick={() => setActiveView('accounts')} 
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
                             activeView === 'accounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
@@ -2424,13 +2816,6 @@ export default function AdminProfile() {
                             }`}>
                         <Star size={18} /> 
                         <span>Feedback</span>
-                        </button>
-                        <button onClick={() => setActiveView('help')} 
-                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50${
-                            activeView === 'help' ? 'font-semibold text-blue-700 bg-blue-100' : ''
-                            }`}>
-                            <HelpCircle size={18} />
-                            <span>Help</span>
                         </button>
                     </nav>
                 </aside>

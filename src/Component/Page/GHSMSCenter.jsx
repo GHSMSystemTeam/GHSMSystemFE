@@ -1,12 +1,5 @@
 import React from 'react';
 import { Phone, Mail, ChevronDown, Search, Calendar, MessageCircle, Users, Award, Clock, Star, Stethoscope, ArrowRight } from 'lucide-react';
-import NavItem from '../Nav/NavItem';
-import LogoGHSMS from '../Logo/LogoGHSMS';
-import ServiceItem from '../Service/ServiceItem';
-import CircleIcon from '../Icon/CircleIcon';
-import { Link } from 'react-router-dom';
-import Navigation from '../Nav/Navigation';
-import DoctorTeam from '../Array/DoctorTeam';
 import Footer from '../Footer/Footer';
 import Service from '../Array/Service';
 import { useState, useEffect } from 'react';
@@ -221,7 +214,7 @@ export default function GHSMSCenter() {
                         <h1 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
                             Chào mừng đến với <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                                Trung tâm Y học Giới tính TPHCM
+                               Dịch vụ chăm sóc sức khỏe giới tính 
                             </span>
                         </h1>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
