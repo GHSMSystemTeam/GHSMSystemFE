@@ -14,7 +14,7 @@ export default function ConsultantProfile({ consultant, open, onClose }) {
         </button>
         <div className="flex flex-col items-center gap-3 mb-3">
           <img
-            src={consultant.avatar || "https://i.pravatar.cc/100"}
+            src={consultant.avatar || "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzciIHI9IjE1IiBmaWxsPSIjOUI5QkExIi8+CjxwYXRoIGQ9Ik0yMCA3NkMyMCA2OC4yODQzIDI2LjI4NDMgNjIgMzQgNjJINjZDNzMuNzE1NyA2MiA4MCA2OC4yODQzIDgwIDc2VjEwMEgyMFY3NloiIGZpbGw9IiM5QjlCQTEiLz4KPC9zdmc+"}
             alt="avatar"
             className="w-20 h-20 rounded-full object-cover border"
           />

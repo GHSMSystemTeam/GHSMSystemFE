@@ -22,17 +22,28 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
   const handleStatusChange = async (id, statusNumber) => {
     setUpdatingId(id);
     try {
-      await api.put(`/api/servicebookings/status/${id}/${statusNumber}`);
+      const res =await api.put(`/api/servicebookings/status/${id}/${statusNumber}`);
+      console.log('Cập nhật trạng thái thành công:', res.data);
       // Cập nhật lại trạng thái trong UI
       if (typeof updateBookingStatus === 'function') {
         await updateBookingStatus(id, statusNumber);
       }
+      alert('Cập nhật trạng thái thành công!');
     } catch (err) {
+      console.error('Cập nhật trạng thái thất bại:', err);
       alert('Cập nhật trạng thái thất bại!');
     }
     setUpdatingId(null);
   };
-
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 0: return 'text-gray-500'; // Created
+      case 1: return 'text-yellow-500'; // Pending
+      case 2: return 'text-green-500'; // Finished
+      case 3: return 'text-red-500'; // Canceled
+      default: return 'text-gray-500';
+    }
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
