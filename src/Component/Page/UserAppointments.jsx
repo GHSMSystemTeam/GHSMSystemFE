@@ -80,7 +80,8 @@ export default function UserAppointments() {
         setDeletingId(bookingId);
         try {
             // Gọi API DELETE
-            await api.delete(`/api/user/${bookingId}`);
+            await api.delete(`/api/booking/${bookingId}`);
+            console.log('Booking ID cần xóa:', bookingId);
 
             // Cập nhật state local để loại bỏ booking đã xóa
             setAppointments(prev => ({
