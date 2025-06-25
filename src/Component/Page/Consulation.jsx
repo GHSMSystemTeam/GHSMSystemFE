@@ -33,6 +33,7 @@ import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
 import { useAuthCheck } from '../Auth/UseAuthCheck';
 import { useToast } from '../Toast/ToastProvider';
+import api from '../config/axios';
 
 export default function Consulation() {
     const { user } = useAuth();
@@ -52,6 +53,20 @@ export default function Consulation() {
     const [currentTag, setCurrentTag] = useState('');
     const [filterTag, setFilterTag] = useState('');
     const [expandedAnswers, setExpandedAnswers] = useState({});
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [questionToDelete, setQuestionToDelete] = useState(null);
+    const handleAskDeleteQuestion = (questionId) => {
+        setQuestionToDelete(questionId);
+        setShowDeleteModal(true);
+    };
+    const [showEditQuestionForm, setShowEditQuestionForm] = useState(false);
+    const [editQuestion, setEditQuestion] = useState({
+        id: '',
+        title: '',
+        content: '',
+        tags: []
+    });
+
 
     const tags = ["Sức khỏe sinh sản", "Nam khoa", "Phụ khoa", "Bệnh lây truyền", "Sức khỏe tình dục", "Tâm lý"];
 
@@ -92,82 +107,138 @@ export default function Consulation() {
         }
     ];
 
-    // Mẫu câu hỏi mặc định
-    const sampleQuestions = [
-        {
-            id: 1,
-            userId: "user1",
-            userName: "Nguyễn Hữu Mỹ Hòa",
-            title: "Thường xuyên chóng mặt, buồn nôn có liên quan đến bệnh tim mạch?",
-            content: "Chào bác sĩ. Khoảng 1 năm nay tôi hay bị chóng mặt, buồn nôn. Khi đó, mạch đập thấy bình thường, không bị đau đầu. Hiện tượng hay xảy ra lúc chuyển từ thế tư thế từ ngồi sang nằm hoặc chuyển từ thế lật qua lật lại trong khi nằm. Các xét nghiệm điện tim, huyết áp đều đều bình thường. Cho tôi hỏi, tôi đang gặp vấn đề gì? Làm cách nào để cải thiện sức khỏe?",
-            date: "2023-10-15T08:30:00",
-            tags: ["Tim mạch", "Chóng mặt"],
-            views: 145,
-            likes: 12,
-            answers: [
-                {
-                    id: 1,
-                    doctorId: 1,
-                    doctorName: "THS.BS Phạm Đỗ Anh Thư",
-                    content: "Chào chị, Triệu chứng chóng mặt của chị có thể do nhiều nguyên nhân như chóng mặt tư thế kịch phát lành tính, viêm đầy thần kinh tiền đình, bệnh do mắt như cận thị, hạ huyết áp tư thế, thiếu năng tuần hoàn não, u não,... Tốt nhất chị nên đến bác sĩ chuyên khoa để được thăm khám toàn diện. Từ đó có chẩn đoán chính xác và điều trị thích hợp cho chị. Trân trọng.",
-                    date: "2023-10-15T10:45:00",
-                    likes: 8
-                }
-            ]
-        },
-        {
-            id: 2,
-            userId: "user2",
-            userName: "Trần Văn Minh",
-            title: "Gần đây tôi bị đau tức vùng bụng dưới, đi tiểu buốt",
-            content: "Tôi 28 tuổi, nam giới. Gần đây tôi thấy đau tức vùng bụng dưới, đi tiểu buốt và có mùi hôi. Đôi khi có cả máu trong nước tiểu. Tôi có quan hệ tình dục không an toàn cách đây khoảng 2 tuần. Xin bác sĩ tư vấn giúp tôi.",
-            date: "2023-10-18T14:20:00",
-            tags: ["Nam khoa", "Tiết niệu"],
-            views: 89,
-            likes: 5,
-            answers: [
-                {
-                    id: 2,
-                    doctorId: 2,
-                    doctorName: "BS. Trần Minh Khoa",
-                    content: "Chào anh, các triệu chứng của anh có thể gợi ý đến tình trạng viêm đường tiết niệu hoặc các bệnh lây truyền qua đường tình dục. Tôi khuyên anh nên đi khám ngay để được xét nghiệm và điều trị kịp thời. Trong thời gian chờ đợi, anh nên uống nhiều nước, tránh các chất kích thích và không nên tự ý sử dụng kháng sinh. Hẹn gặp anh tại phòng khám.",
-                    date: "2023-10-18T16:30:00",
-                    likes: 7
-                }
-            ]
-        },
-        {
-            id: 3,
-            userId: "user3",
-            userName: "Phạm Thị Hương",
-            title: "Chu kỳ kinh nguyệt không đều và đau bụng dữ dội",
-            content: "Tôi 32 tuổi và gần đây chu kỳ kinh nguyệt của tôi rất không đều, có khi cách nhau tới 2 tháng. Khi có kinh thì đau bụng dữ dội đến mức không thể đi làm được. Tôi đã dùng thuốc giảm đau nhưng không hiệu quả. Tôi nên làm gì bây giờ?",
-            date: "2023-10-20T09:15:00",
-            tags: ["Phụ khoa", "Kinh nguyệt"],
-            views: 120,
-            likes: 15,
-            answers: [
-                {
-                    id: 3,
-                    doctorId: 3,
-                    doctorName: "BS. Nguyễn Thu Hương",
-                    content: "Chào chị, tình trạng đau bụng kinh và chu kỳ không đều có thể liên quan đến nhiều bệnh lý phụ khoa như lạc nội mạc tử cung, u xơ tử cung, hội chứng buồng trứng đa nang... Chị nên đến khám phụ khoa càng sớm càng tốt để được siêu âm và các xét nghiệm cần thiết. Trong thời gian này, chị có thể dùng túi chườm ấm và các biện pháp không dùng thuốc để giảm đau. Mong chị sớm khỏe.",
-                    date: "2023-10-20T11:30:00",
-                    likes: 12
-                }
-            ]
-        }
-    ];
-
     // Khởi tạo dữ liệu mẫu nếu không có sẵn
     useEffect(() => {
-        if (!localStorage.getItem('healthQuestions')) {
-            localStorage.setItem('healthQuestions', JSON.stringify(sampleQuestions));
-            setQuestions(sampleQuestions);
-        }
+        // Fetch câu hỏi từ API
+        const fetchQuestions = async () => {
+            try {
+                // Sử dụng endpoint đúng
+                const response = await api.get('/api/question/active');
+                console.log('API response:', response.data);
+
+                if (response.data && Array.isArray(response.data)) {
+                    // Map dữ liệu từ API sang format hiện tại của ứng dụng
+                    const formattedQuestions = response.data.map(q => ({
+                        id: q.id,
+                        userId: q.customer?.id || q.customerId,
+                        userName: q.customer?.name || "Người dùng ẩn danh",
+                        title: q.title,
+                        content: q.content,
+                        date: q.createDate,
+                        tags: q.tags || [], // Nếu API không trả về tags, sử dụng mảng rỗng
+                        views: q.views || 0,
+                        likes: q.likes || 0,
+                        answers: q.answers?.map(a => ({
+                            id: a.id,
+                            doctorId: a.user?.id,
+                            doctorName: a.user?.name || "Bác sĩ",
+                            content: a.answerContent,
+                            date: a.createDate,
+                            likes: a.rating || 0
+                        })) || []
+                    }));
+
+                    setQuestions(formattedQuestions);
+                    localStorage.setItem('healthQuestions', JSON.stringify(formattedQuestions));
+                    console.log('Formatted questions:', formattedQuestions);
+                } else {
+                    // Fallback vào localStorage nếu API không trả về dữ liệu hợp lệ
+                    const storedQuestions = JSON.parse(localStorage.getItem('healthQuestions') || '[]');
+                    setQuestions(storedQuestions);
+                }
+            } catch (error) {
+                console.error("Failed to fetch questions:", error);
+
+                // Hiển thị thông báo lỗi cụ thể hơn
+                if (error.response) {
+                    console.error("Error response:", error.response.data);
+                    console.error("Error status:", error.response.status);
+                }
+
+                // Fallback vào localStorage nếu API gặp lỗi
+                const storedQuestions = JSON.parse(localStorage.getItem('healthQuestions') || '[]');
+                setQuestions(storedQuestions);
+
+                // Khởi tạo dữ liệu mẫu nếu không có sẵn
+                if (!localStorage.getItem('healthQuestions')) {
+                    localStorage.setItem('healthQuestions', JSON.stringify(sampleQuestions));
+                    setQuestions(sampleQuestions);
+                }
+            }
+        };
+
+        fetchQuestions();
     }, []);
 
-    const handleNewQuestionSubmit = (e) => {
+    const handleShowEditForm = (question) => {
+        setEditQuestion({
+            id: question.id,
+            title: question.title,
+            content: question.content,
+            tags: question.tags || []
+        });
+        setShowEditQuestionForm(true);
+    };
+
+    const handleUpdateQuestion = async (e) => {
+        e.preventDefault();
+
+        if (!editQuestion.title.trim() || !editQuestion.content.trim()) {
+            showToast('Vui lòng điền đầy đủ tiêu đề và nội dung câu hỏi', 'error');
+            return;
+        }
+
+        try {
+            // Tạo payload theo format API yêu cầu
+            const questionPayload = {
+                customerId: user.id,
+                title: editQuestion.title,
+                content: editQuestion.content,
+                createDate: new Date().toISOString(),
+                isPublic: true
+            };
+
+            // Gọi API PUT để cập nhật câu hỏi
+            const response = await api.put(`/api/question/id/${editQuestion.id}`, questionPayload);
+
+            // Cập nhật state và localStorage
+            const updatedQuestions = questions.map(q => {
+                if (q.id === editQuestion.id) {
+                    return {
+                        ...q,
+                        title: editQuestion.title,
+                        content: editQuestion.content,
+                        tags: editQuestion.tags
+                    };
+                }
+                return q;
+            });
+
+            setQuestions(updatedQuestions);
+            localStorage.setItem('healthQuestions', JSON.stringify(updatedQuestions));
+
+            // Nếu đang xem chi tiết câu hỏi này, cập nhật lại
+            if (selectedQuestion && selectedQuestion.id === editQuestion.id) {
+                setSelectedQuestion({
+                    ...selectedQuestion,
+                    title: editQuestion.title,
+                    content: editQuestion.content,
+                    tags: editQuestion.tags
+                });
+            }
+
+            setShowEditQuestionForm(false);
+            showToast('Cập nhật câu hỏi thành công!', 'success');
+        } catch (error) {
+            console.error('Failed to update question:', error);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Không thể cập nhật câu hỏi. Vui lòng thử lại sau!';
+            showToast(errorMessage, 'error');
+        }
+    };
+
+    const handleNewQuestionSubmit = async (e) => {
         e.preventDefault();
 
         if (!checkAuthAndShowPrompt('đăng câu hỏi')) {
@@ -180,26 +251,77 @@ export default function Consulation() {
             return;
         }
 
-        const newQuestionObj = {
-            id: Date.now(),
-            userId: user.email,
-            userName: user.fullName,
-            title: newQuestion.title,
-            content: newQuestion.content,
-            date: new Date().toISOString(),
-            tags: newQuestion.tags,
-            views: 0,
-            likes: 0,
-            answers: []
-        };
+        try {
+            // Tạo payload theo format API yêu cầu
+            const questionPayload = {
+                customerId: user.id,
+                title: newQuestion.title,
+                content: newQuestion.content,
+                createDate: new Date().toISOString(),
+                isPublic: true // Mặc định là công khai
+            };
 
-        const updatedQuestions = [...questions, newQuestionObj];
-        setQuestions(updatedQuestions);
-        localStorage.setItem('healthQuestions', JSON.stringify(updatedQuestions));
+            console.log("Payload gửi đi:", questionPayload);
 
-        setNewQuestion({ title: '', content: '', tags: [] });
-        setShowNewQuestionForm(false);
-        showToast('Câu hỏi của bạn đã được đăng thành công!', 'success');
+            // Gọi API để tạo câu hỏi mới
+            const config = {
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            };
+
+            const response = await api.post('/api/question', questionPayload, config);
+            console.log('Question created:', response.data);
+
+            // Tạo đối tượng câu hỏi mới để hiển thị trên UI
+            const newQuestionObj = {
+                id: response.data.id || Date.now(), // Sử dụng ID từ server nếu có
+                userId: user.id,
+                userName: user.fullName || user.name,
+                title: newQuestion.title,
+                content: newQuestion.content,
+                date: questionPayload.createDate,
+                tags: newQuestion.tags,
+                views: 0,
+                likes: 0,
+                answers: []
+            };
+
+            // Cập nhật state và localStorage
+            const updatedQuestions = [...questions, newQuestionObj];
+            setQuestions(updatedQuestions);
+            localStorage.setItem('healthQuestions', JSON.stringify(updatedQuestions));
+
+            // Reset form và hiển thị thông báo
+            setNewQuestion({ title: '', content: '', tags: [] });
+            setShowNewQuestionForm(false);
+            showToast('Câu hỏi của bạn đã được đăng thành công!', 'success');
+        } catch (error) {
+            console.error('Failed to create question:', error);
+            console.error('Error details:', error.response);
+
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Không thể đăng câu hỏi. Vui lòng thử lại sau!';
+            showToast(errorMessage, 'error');
+        }
+    };
+
+    const handleDeleteQuestion = async () => {
+        if (!questionToDelete) return;
+        try {
+            await api.delete(`/api/question/${questionToDelete}`);
+            const updatedQuestions = questions.filter(q => q.id !== questionToDelete);
+            setQuestions(updatedQuestions);
+            localStorage.setItem('healthQuestions', JSON.stringify(updatedQuestions));
+            showToast('Đã xóa câu hỏi thành công!', 'success');
+        } catch (error) {
+            console.error('Failed to delete question:', error);
+            showToast('Không thể xóa câu hỏi. Vui lòng thử lại!', 'error');
+        } finally {
+            setShowDeleteModal(false);
+            setQuestionToDelete(null);
+        }
     };
 
     const addTag = () => {
@@ -379,7 +501,6 @@ export default function Consulation() {
                     <p className="text-gray-600 mb-6">
                         Đặt câu hỏi và nhận tư vấn từ các bác sĩ uy tín về các vấn đề sức khỏe giới tính
                     </p>
-
                     <div className="flex flex-col md:flex-row gap-4 mb-6">
                         <div className="flex-grow relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -393,20 +514,6 @@ export default function Consulation() {
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
-
-                        <div className="flex-shrink-0">
-                            <select
-                                className="pl-3 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={filterTag}
-                                onChange={(e) => setFilterTag(e.target.value)}
-                            >
-                                <option value="">Tất cả chủ đề</option>
-                                {tags.map((tag, index) => (
-                                    <option key={index} value={tag}>{tag}</option>
-                                ))}
-                            </select>
-                        </div>
-
                         <button
                             className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-lg flex items-center"
                             onClick={() => {
@@ -421,6 +528,8 @@ export default function Consulation() {
                             Đặt câu hỏi
                         </button>
                     </div>
+
+
 
                     {selectedQuestion ? (
                         <div className="bg-white rounded-lg border border-gray-200">
@@ -467,15 +576,7 @@ export default function Consulation() {
                                     {selectedQuestion.content}
                                 </div>
 
-                                <div className="flex items-center justify-between border-t pt-4">
-                                    <button
-                                        onClick={() => handleLikeQuestion(selectedQuestion.id)}
-                                        className="flex items-center text-gray-600 hover:text-blue-600"
-                                    >
-                                        <ThumbsUp className="h-5 w-5 mr-1" />
-                                        <span className="font-medium">{selectedQuestion.likes}</span>
-                                    </button>
-                                </div>
+
                             </div>
 
                             <div className="border-t">
@@ -523,13 +624,7 @@ export default function Consulation() {
                                                                     {answer.content}
                                                                 </div>
 
-                                                                <button
-                                                                    onClick={() => handleLikeAnswer(selectedQuestion.id, answer.id)}
-                                                                    className="flex items-center text-gray-500 hover:text-blue-600 text-sm"
-                                                                >
-                                                                    <ThumbsUp className="h-4 w-4 mr-1" />
-                                                                    <span>{answer.likes}</span>
-                                                                </button>
+
                                                             </div>
                                                         </div>
                                                     </div>
@@ -612,50 +707,6 @@ export default function Consulation() {
                                             ></textarea>
                                         </div>
 
-                                        <div className="mb-6">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Chủ đề
-                                            </label>
-                                            <div className="flex flex-wrap gap-2 mb-2">
-                                                {newQuestion.tags.map((tag, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className="bg-blue-50 text-blue-700 px-3 py-1 rounded-full flex items-center"
-                                                    >
-                                                        <span className="text-sm">{tag}</span>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeTag(tag)}
-                                                            className="ml-1 text-blue-500 hover:text-blue-700"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                            </svg>
-                                                        </button>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="flex">
-                                                <select
-                                                    className="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                                    value={currentTag}
-                                                    onChange={(e) => setCurrentTag(e.target.value)}
-                                                >
-                                                    <option value="">Chọn chủ đề</option>
-                                                    {tags.map((tag, index) => (
-                                                        <option key={index} value={tag}>{tag}</option>
-                                                    ))}
-                                                </select>
-                                                <button
-                                                    type="button"
-                                                    onClick={addTag}
-                                                    className="px-4 py-2 bg-gray-100 text-gray-700 border border-gray-300 border-l-0 rounded-r-lg hover:bg-gray-200"
-                                                >
-                                                    Thêm
-                                                </button>
-                                            </div>
-                                        </div>
 
                                         <div className="flex justify-end gap-3">
                                             <button
@@ -674,6 +725,67 @@ export default function Consulation() {
                                         </div>
                                     </form>
                                 </div>
+                            ) : showEditQuestionForm ? (<div className="bg-white rounded-lg border border-gray-200 p-6">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h2 className="text-xl font-bold text-gray-800">Chỉnh sửa câu hỏi</h2>
+                                    <button
+                                        onClick={() => setShowEditQuestionForm(false)}
+                                        className="text-gray-500 hover:text-gray-700"
+                                    >
+                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+
+                                <form onSubmit={handleUpdateQuestion}>
+                                    <div className="mb-4">
+                                        <label htmlFor="edit-title" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Tiêu đề
+                                        </label>
+                                        <input
+                                            type="text"
+                                            id="edit-title"
+                                            placeholder="Nhập tiêu đề câu hỏi"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            value={editQuestion.title}
+                                            onChange={(e) => setEditQuestion({ ...editQuestion, title: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="mb-4">
+                                        <label htmlFor="edit-content" className="block text-sm font-medium text-gray-700 mb-1">
+                                            Nội dung
+                                        </label>
+                                        <textarea
+                                            id="edit-content"
+                                            placeholder="Mô tả chi tiết câu hỏi của bạn"
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                            rows="6"
+                                            value={editQuestion.content}
+                                            onChange={(e) => setEditQuestion({ ...editQuestion, content: e.target.value })}
+                                            required
+                                        ></textarea>
+                                    </div>
+
+                                    <div className="flex justify-end gap-3">
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowEditQuestionForm(false)}
+                                            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                                        >
+                                            Hủy
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                                        >
+                                            Cập nhật
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                             ) : (
                                 <div>
                                     <div className="bg-white rounded-lg mb-8">
@@ -704,6 +816,25 @@ export default function Consulation() {
                                                                     <Eye className="h-4 w-4 mr-1" />
                                                                     <span className="text-sm">{question.views}</span>
                                                                 </div>
+                                                                {/* {(user && (user.id === question.userId || user.role === 'admin')) && (
+                                                                    <>
+                                                                        <button
+                                                                            onClick={() => handleShowEditForm(question)}
+                                                                            className="text-blue-600 hover:text-blue-800 text-sm font-medium ml-2"
+                                                                            title="Sửa câu hỏi"
+                                                                        >
+                                                                            Sửa
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleAskDeleteQuestion(question.id)}
+                                                                            className="text-red-600 hover:text-red-800 text-sm font-medium ml-2"
+                                                                            title="Xóa câu hỏi"
+                                                                        >
+                                                                            Xóa
+                                                                        </button>
+                                                                    </>
+                                                                )} */}
+
                                                             </div>
                                                         </div>
 
@@ -730,13 +861,36 @@ export default function Consulation() {
                                                                 <span>{formatDate(question.date)}</span>
                                                             </div>
 
-                                                            <button
-                                                                onClick={() => handleLikeQuestion(question.id)}
-                                                                className="flex items-center text-gray-500 hover:text-blue-600"
-                                                            >
-                                                                <ThumbsUp className="h-4 w-4 mr-1" />
-                                                                <span>{question.likes}</span>
-                                                            </button>
+
+
+                                                            {user && (user.id === question.userId || user.role === 'admin') && (
+                                                                <div className="flex gap-2">
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            handleShowEditForm(question);
+                                                                            setSelectedQuestion(null);
+                                                                        }}
+                                                                        className="flex items-center text-blue-600 hover:text-blue-800"
+                                                                    >
+                                                                        <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                                        </svg>
+                                                                        <span className="font-medium">Chỉnh sửa</span>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            handleAskDeleteQuestion(question.id);
+                                                                            setSelectedQuestion(null);
+                                                                        }}
+                                                                        className="flex items-center text-red-600 hover:text-red-800"
+                                                                    >
+                                                                        <svg className="h-5 w-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                        </svg>
+                                                                        <span className="font-medium">Xóa</span>
+                                                                    </button>
+                                                                </div>
+                                                            )}
                                                         </div>
 
                                                         {/* Hiển thị câu trả lời ngay dưới câu hỏi */}
@@ -792,30 +946,10 @@ export default function Consulation() {
 
                                                                                         <p className="text-gray-700 text-sm mb-2">{answer.content}</p>
 
-                                                                                        <div className="flex justify-end">
-                                                                                            <button
-                                                                                                onClick={() => handleLikeAnswer(question.id, answer.id)}
-                                                                                                className="flex items-center text-gray-500 hover:text-blue-600 text-xs"
-                                                                                            >
-                                                                                                <ThumbsUp className="h-3 w-3 mr-1" />
-                                                                                                <span>{answer.likes}</span>
-                                                                                            </button>
-                                                                                        </div>
+
                                                                                     </div>
                                                                                 );
                                                                             })}
-                                                                        </div>
-
-                                                                        <div className="mt-3 flex justify-end">
-                                                                            <button
-                                                                                onClick={() => handleViewQuestion(question)}
-                                                                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-                                                                            >
-                                                                                Xem chi tiết câu hỏi
-                                                                                <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                                                                </svg>
-                                                                            </button>
                                                                         </div>
                                                                     </>
                                                                 )}
@@ -848,6 +982,8 @@ export default function Consulation() {
                         </div>
                     )}
                 </div>
+
+
 
                 {/* FAQ Section */}
                 <div className="bg-white shadow-sm rounded-lg p-6 mb-8">
@@ -941,7 +1077,67 @@ export default function Consulation() {
                 </div>
             </main>
 
+            {showDeleteModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+                    <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-100">
+                        {/* Header với icon cảnh báo */}
+                        <div className="flex items-center justify-center mb-4">
+                            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                        </div>
+
+                        {/* Tiêu đề */}
+                        <h3 className="text-xl font-bold mb-2 text-gray-900 text-center">
+                            Xác nhận xóa câu hỏi
+                        </h3>
+
+                        {/* Nội dung */}
+                        <div className="mb-6">
+                            <p className="text-gray-600 text-center leading-relaxed">
+                                Bạn có chắc chắn muốn xóa câu hỏi này không?
+                            </p>
+                            <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                                <p className="text-sm text-red-700 text-center">
+                                    ⚠️ Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn câu hỏi cùng tất cả câu trả lời.
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Buttons */}
+                        <div className="flex flex-col sm:flex-row gap-3">
+                            <button
+                                onClick={() => {
+                                    setShowDeleteModal(false);
+                                    setQuestionToDelete(null);
+                                }}
+                                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                            >
+                                🚫 Hủy bỏ
+                            </button>
+                            <button
+                                onClick={handleDeleteQuestion}
+                                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
+                            >
+                                🗑️ Xóa câu hỏi
+                            </button>
+                        </div>
+
+                        {/* Thông tin bổ sung */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                            <p className="text-xs text-gray-500 text-center">
+                                💡 Tip: Bạn có thể chỉnh sửa câu hỏi thay vì xóa hoàn toàn
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <Footer />
+
+
         </div>
     );
 }

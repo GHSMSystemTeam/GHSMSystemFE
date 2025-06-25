@@ -3,7 +3,7 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2 } from 'lucide-react';
+import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
@@ -51,7 +51,7 @@ export default function UserAppointments() {
                 );
 
                 const medicalBookings = uniqueBookings.filter(
-                    booking => booking.serviceTypeId && booking.serviceTypeId.id === 8 // Đổi từ 8 thành 1
+                    booking => booking.serviceTypeId && booking.serviceTypeId.id === 1 // Đổi từ 8 thành 1
                 );
 
                 console.log('Test bookings:', testBookings);
@@ -80,7 +80,8 @@ export default function UserAppointments() {
         setDeletingId(bookingId);
         try {
             // Gọi API DELETE
-            await api.delete(`/api/user/${bookingId}`);
+            await api.delete(`/api/booking/${bookingId}`);
+            console.log('Booking ID cần xóa:', bookingId);
 
             // Cập nhật state local để loại bỏ booking đã xóa
             setAppointments(prev => ({
@@ -435,13 +436,22 @@ export default function UserAppointments() {
             )}
 
             {/* Modal chi tiết lịch hẹn */}
+            {/* Modal chi tiết lịch hẹn */}
+            {/* Modal chi tiết lịch hẹn */}
             {showDetailModal && selectedAppointment && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-scale-in">
-                        <div className="bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-scale-in">
+                        {/* Header với gradient màu khác nhau tùy loại lịch hẹn */}
+                        <div className={`px-6 py-4 ${selectedAppointment.serviceTypeId?.id === 1
+                            ? 'bg-gradient-to-r from-blue-500 to-cyan-600'
+                            : 'bg-gradient-to-r from-purple-500 to-pink-600'
+                            }`}>
                             <div className="flex justify-between items-center">
-                                <h3 className="text-xl font-bold text-white">
-                                    Chi tiết lịch xét nghiệm
+                                <h3 className="text-xl font-bold text-white flex items-center">
+                                    {selectedAppointment.serviceTypeId?.id === 1
+                                        ? <><Stethoscope className="mr-2" size={20} /> Chi tiết lịch khám bệnh</>
+                                        : <><Package className="mr-2" size={20} /> Chi tiết lịch xét nghiệm</>
+                                    }
                                 </h3>
                                 <button
                                     onClick={closeDetailModal}
@@ -451,35 +461,293 @@ export default function UserAppointments() {
                                 </button>
                             </div>
                         </div>
-                        <div className="p-6 space-y-4">
-                            <div className={`px-4 py-2 rounded-md ${getStatusColor(selectedAppointment.status)} inline-block`}>
-                                {getStatusText(selectedAppointment.status)}
+
+                        {/* Content */}
+                        <div className="p-6 space-y-6">
+                            {/* QR Code cho check-in
+                            <div className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-xl bg-white">
+                                <div className="text-center mb-3">
+                                    <p className="text-sm text-gray-500">Quét mã QR để check-in tại quầy</p>
+                                </div>
+                                <div className="bg-white p-2 rounded-lg border border-gray-200 w-40 h-40 flex items-center justify-center">
+                                    {/* Thay bằng thư viện QR code thật khi implement */}
+                            {/* <div className="border-2 border-gray-800 p-4 w-full h-full flex items-center justify-center">
+                                        <span className="text-xs">Mã QR: {selectedAppointment.id.substring(0, 8)}</span>
+                                    </div>
+                                </div>
+                                <p className="mt-3 text-sm font-semibold">Mã lịch hẹn: {selectedAppointment.id.substring(0, 8).toUpperCase()}</p>
+                            </div> */}
+
+                            {/* Status Badge */}
+                            <div className="flex justify-center">
+                                <div className={`px-4 py-2 rounded-full ${getStatusColor(selectedAppointment.status)} font-medium text-sm inline-flex items-center`}>
+                                    {selectedAppointment.status === 0 && <Clock size={16} className="mr-1" />}
+                                    {selectedAppointment.status === 1 && <CheckCircle size={16} className="mr-1" />}
+                                    {selectedAppointment.status === 2 && <Check size={16} className="mr-1" />}
+                                    {selectedAppointment.status === 3 && <XCircle size={16} className="mr-1" />}
+                                    {getStatusText(selectedAppointment.status)}
+                                </div>
                             </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Gói xét nghiệm</h4>
-                                <p className="font-medium text-gray-800">{selectedAppointment.serviceTypeId?.name}</p>
-                                <p className="text-sm text-gray-600">{selectedAppointment.serviceTypeId?.description}</p>
-                                <p className="text-sm text-gray-600">Giá: {selectedAppointment.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ</p>
-                                <p className="text-sm text-gray-600">Thời gian: {selectedAppointment.duration} phút</p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Ngày hẹn</h4>
-                                <p className="text-sm text-gray-600">
-                                    {new Date(selectedAppointment.appointmentDate).toLocaleDateString('vi-VN')}
-                                </p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-gray-800 mb-2">Ghi chú</h4>
-                                <p className="text-sm text-gray-600">{selectedAppointment.description || 'Không có'}</p>
-                            </div>
+
+                            {/* Layout tùy loại lịch hẹn */}
+                            {selectedAppointment.serviceTypeId?.id === 1 ? (
+                                /* Layout cho lịch khám bệnh - 2 cột với đầy đủ thông tin */
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    {/* Cột 1: Thông tin lịch hẹn */}
+                                    <div className="space-y-4">
+                                        <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <Calendar size={16} className="mr-2 text-blue-500" />
+                                                Thông tin lịch hẹn
+                                            </h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Loại dịch vụ:</span>
+                                                    <span className="font-medium text-gray-800">{selectedAppointment.serviceTypeId?.name}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Ngày:</span>
+                                                    <span className="font-medium text-gray-800">
+                                                        {new Date(selectedAppointment.appointmentDate).toLocaleDateString('vi-VN', {
+                                                            weekday: 'long',
+                                                            day: 'numeric',
+                                                            month: 'numeric',
+                                                            year: 'numeric',
+                                                        })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Chi phí:</span>
+                                                    <span className="font-medium text-blue-600">
+                                                        {selectedAppointment.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Bác sĩ phụ trách - chỉ hiển thị cho lịch khám bệnh */}
+                                        <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100">
+                                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <User size={16} className="mr-2 text-indigo-500" />
+                                                Bác sĩ phụ trách
+                                            </h4>
+                                            <div className="flex items-center mt-2">
+                                                <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full flex items-center justify-center text-white mr-3 shadow-md">
+                                                    {selectedAppointment.consultantId?.profilePicture?.[0] ? (
+                                                        <img
+                                                            src={selectedAppointment.consultantId.profilePicture[0]}
+                                                            alt={selectedAppointment.consultantId.name}
+                                                            className="w-full h-full object-cover rounded-full"
+                                                        />
+                                                    ) : (
+                                                        <UserRound size={24} />
+                                                    )}
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-gray-800">{selectedAppointment.consultantId?.name || "Chưa phân công"}</p>
+                                                    <p className="text-sm text-gray-600">{selectedAppointment.consultantId?.specialization || "Chuyên khoa chung"}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Cột 2: Thông tin bệnh nhân và ghi chú */}
+                                    <div className="space-y-4">
+                                        {/* Thông tin bệnh nhân */}
+                                        <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <UserRound size={16} className="mr-2 text-purple-500" />
+                                                Thông tin bệnh nhân
+                                            </h4>
+                                            <div className="space-y-2 text-sm">
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Họ và tên:</span>
+                                                    <span className="font-medium text-gray-800">{selectedAppointment.customerId?.name || user?.fullName}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Email:</span>
+                                                    <span className="font-medium text-gray-800">{selectedAppointment.customerId?.email || user?.email}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Số điện thoại:</span>
+                                                    <span className="font-medium text-gray-800">{selectedAppointment.customerId?.phone || user?.phone}</span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Giới tính:</span>
+                                                    <span className="font-medium text-gray-800">
+                                                        {selectedAppointment.customerId?.gender === 0 ? "Nam" :
+                                                            selectedAppointment.customerId?.gender === 1 ? "Nữ" : "Không xác định"}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Ghi chú - chỉ hiển thị cho lịch khám bệnh */}
+                                        <div className="bg-amber-50 p-4 rounded-xl border border-amber-100">
+                                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <ClipboardList size={16} className="mr-2 text-amber-500" />
+                                                Ghi chú
+                                            </h4>
+                                            <p className="text-sm text-gray-700 italic">
+                                                {selectedAppointment.description || "Không có ghi chú"}
+                                            </p>
+                                        </div>
+
+                                        {/* Hướng dẫn */}
+                                        <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                                            <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                                <Info size={16} className="mr-2 text-green-500" />
+                                                Hướng dẫn
+                                            </h4>
+                                            <ul className="text-xs text-gray-700 space-y-1">
+                                                <li className="flex items-start">
+                                                    <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                    <span>Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                    <span>Mang theo CMND/CCCD và thẻ BHYT (nếu có)</span>
+                                                </li>
+                                                <li className="flex items-start">
+                                                    <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                    <span>Xuất trình mã QR này cho nhân viên tiếp đón khi đến khám</span>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Layout cho lịch xét nghiệm - 1 cột, không hiển thị bác sĩ phụ trách và ghi chú */
+                                <div className="space-y-4">
+                                    {/* Thông tin chi tiết xét nghiệm */}
+                                    <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
+                                        <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                            <Package size={16} className="mr-2 text-purple-500" />
+                                            Thông tin gói xét nghiệm
+                                        </h4>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Tên gói:</span>
+                                                <span className="font-medium text-gray-800">{selectedAppointment.serviceTypeId?.name}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Mô tả:</span>
+                                                <span className="font-medium text-gray-800">{selectedAppointment.serviceTypeId?.description || "Không có mô tả"}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Ngày hẹn:</span>
+                                                <span className="font-medium text-gray-800">
+                                                    {new Date(selectedAppointment.appointmentDate).toLocaleDateString('vi-VN', {
+                                                        weekday: 'long',
+                                                        day: 'numeric',
+                                                        month: 'numeric',
+                                                        year: 'numeric',
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Chi phí:</span>
+                                                <span className="font-medium text-purple-600">
+                                                    {selectedAppointment.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Thông tin bệnh nhân */}
+                                    <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                        <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                            <UserRound size={16} className="mr-2 text-blue-500" />
+                                            Thông tin người đặt
+                                        </h4>
+                                        <div className="space-y-2 text-sm">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Họ và tên:</span>
+                                                <span className="font-medium text-gray-800">{selectedAppointment.customerId?.name || user?.fullName}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Email:</span>
+                                                <span className="font-medium text-gray-800">{selectedAppointment.customerId?.email || user?.email}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Số điện thoại:</span>
+                                                <span className="font-medium text-gray-800">{selectedAppointment.customerId?.phone || user?.phone}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Giới tính:</span>
+                                                <span className="font-medium text-gray-800">
+                                                    {selectedAppointment.customerId?.gender === 0 ? "Nam" :
+                                                        selectedAppointment.customerId?.gender === 1 ? "Nữ" : "Không xác định"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Hướng dẫn cho xét nghiệm */}
+                                    <div className="bg-green-50 p-4 rounded-xl border border-green-100">
+                                        <h4 className="font-semibold text-gray-800 mb-2 flex items-center">
+                                            <Info size={16} className="mr-2 text-green-500" />
+                                            Hướng dẫn xét nghiệm
+                                        </h4>
+                                        <ul className="text-xs text-gray-700 space-y-1">
+                                            <li className="flex items-start">
+                                                <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                <span>Nhịn ăn 8-12 giờ trước khi lấy máu (nếu có yêu cầu)</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                <span>Vui lòng đến trước giờ hẹn 15 phút để làm thủ tục</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                <span>Mang theo CMND/CCCD và thẻ BHYT (nếu có)</span>
+                                            </li>
+                                            <li className="flex items-start">
+                                                <div className="min-w-[4px] h-1 mt-1.5 rounded-full bg-green-500 mr-1.5"></div>
+                                                <span>Xuất trình mã QR này cho nhân viên tiếp đón khi đến xét nghiệm</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        <div className="mt-6 flex justify-end space-x-3 p-4">
-                            <button
-                                onClick={closeDetailModal}
-                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
-                            >
-                                Đóng
-                            </button>
+
+                        {/* Footer actions */}
+                        <div className="mt-2 border-t border-gray-100 pt-4 flex justify-between p-6">
+                            {/* Nút hủy lịch hẹn */}
+                            {canCancelAppointment(selectedAppointment.status) && (
+                                <button
+                                    onClick={() => {
+                                        closeDetailModal();
+                                        openDeleteModal(selectedAppointment);
+                                    }}
+                                    className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 flex items-center"
+                                >
+                                    <Trash2 size={16} className="mr-1.5" />
+                                    Hủy lịch hẹn
+                                </button>
+                            )}
+
+                            {/* Các nút khác */}
+                            <div className="flex space-x-3">
+                                <button
+                                    onClick={() => {
+                                        // Simulate download as PDF
+                                        showToast('Đang tải lịch hẹn...', 'info');
+                                        setTimeout(() => showToast('Đã tải lịch hẹn thành công!', 'success'), 1500);
+                                    }}
+                                    className="px-4 py-2 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-100 flex items-center"
+                                >
+                                    <Download size={16} className="mr-1.5" />
+                                    Tải xuống
+                                </button>
+                                <button
+                                    onClick={closeDetailModal}
+                                    className="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+                                >
+                                    Đóng
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

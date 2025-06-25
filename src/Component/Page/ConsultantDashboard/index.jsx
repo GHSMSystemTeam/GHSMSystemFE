@@ -49,6 +49,10 @@ export default function ConsultantDashboard() {
     }
   }, [user]);
 
+  useEffect(() => {
+    fetchQuestions(); // <-- Thêm dòng này để luôn lấy câu hỏi khi vào trang
+  }, []);
+
   const fetchBookings = async (consultantId) => {
     setLoading((prev) => ({ ...prev, bookings: true }));
     setError((prev) => ({ ...prev, bookings: null }));
@@ -65,17 +69,54 @@ export default function ConsultantDashboard() {
   // Hàm cập nhật trạng thái booking
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      await api.patch(`/api/servicebookings/${bookingId}`, { status: newStatus });
+      // API đã được gọi trong SchedulesPanel, không cần gọi lại ở đây
+      // Chỉ cần cập nhật state local
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
+      return true;
     } catch (err) {
-      alert('Cập nhật trạng thái thất bại!');
+      console.error('Error updating booking status:', err);
+      return false;
+    }
+  };
+
+  const fetchQuestions = async () => {
+    setLoading((prev) => ({ ...prev, questions: true }));
+    setError((prev) => ({ ...prev, questions: null }));
+    try {
+      const response = await api.get('/api/question/active');
+      // Chuyển đổi định dạng dữ liệu từ API
+      const formattedQuestions = response.data.map(q => ({
+        id: q.id,
+        userId: q.customer?.id || q.customerId,
+        userName: q.customer?.name || "Người dùng ẩn danh",
+        title: q.title,
+        content: q.content,
+        date: q.createDate,
+        tags: q.tags || [],
+        views: q.views || 0,
+        likes: q.likes || 0,
+        status: q.answers && q.answers.length > 0 ? 'Đã trả lời' : 'Chưa trả lời',
+        answers: q.answers?.map(a => ({
+          id: a.id,
+          doctorId: a.user?.id,
+          doctorName: a.user?.name || "Bác sĩ",
+          content: a.answerContent,
+          date: a.createDate,
+          likes: a.rating || 0
+        })) || []
+      }));
+      setQuestions(formattedQuestions);
+    } catch (err) {
+      setError((prev) => ({ ...prev, questions: 'Không thể tải danh sách câu hỏi.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, questions: false }));
     }
   };
 
   const renderContent = () => {
-    switch(activeTab) {
+    switch (activeTab) {
       case 'questions':
         return (
           <QuestionsPanel
@@ -84,6 +125,7 @@ export default function ConsultantDashboard() {
             error={error.questions}
             selectedQuestion={selectedQuestion}
             setSelectedQuestion={setSelectedQuestion}
+            fetchQuestions={fetchQuestions} // Đảm bảo truyền hàm này
           />
         );
       case 'schedules':
