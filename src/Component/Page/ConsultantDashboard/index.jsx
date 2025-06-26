@@ -4,7 +4,7 @@ import QuestionsPanel from './QuestionsPanel';
 import SchedulesPanel from './SchedulesPanel';
 import ExaminationsPanel from './ExaminationsPanel';
 import BlogsPanel from './BlogsPanel';
-import ServicesPanel from './ServicesPanel';
+import ExaminationResult from './ExaminationResult';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
 import api from '../../config/axios';
@@ -42,17 +42,17 @@ export default function ConsultantDashboard() {
     if (user && user.id) {
       fetchConsultationBookings(); // Fetch consultation bookings for "Lịch tư vấn"
       fetchTestingBookings(); // Fetch testing bookings for "Dịch vụ xét nghiệm"
+      fetchExaminationResults(); // Fetch examination results for "Kết quả xét nghiệm"
     }
   }, [user]);
 
   useEffect(() => {
     fetchQuestions(); // <-- Thêm dòng này để luôn lấy câu hỏi khi vào trang
-  }, []);  const fetchConsultationBookings = async () => {
+  }, []);const fetchConsultationBookings = async () => {
     setLoading((prev) => ({ ...prev, bookings: true }));
     setError((prev) => ({ ...prev, bookings: null }));
     try {
-      // Service type ID của "Tư vấn" - thay đổi số này theo API thực tế của bạn
-      // Ví dụ: nếu "Tư vấn" có ID là 3, thay đổi thành '/api/servicebookings/servicetype/3'
+      // Giả sử service type ID của "Tư vấn" là 2, bạn có thể thay đổi theo API thực tế
       const res = await api.get('/api/servicebookings/servicetype/2');
       setBookings(res.data);
     } catch (err) {
@@ -62,7 +62,7 @@ export default function ConsultantDashboard() {
     }
   };
 
-  // Hàm fetch testing bookings với service type id = 1 (Testing)
+  // Hàm fetch testing bookings với service type id = 1
   const fetchTestingBookings = async () => {
     setLoading((prev) => ({ ...prev, examBookings: true }));
     setError((prev) => ({ ...prev, examBookings: null }));
@@ -73,6 +73,21 @@ export default function ConsultantDashboard() {
       setError((prev) => ({ ...prev, examBookings: 'Không thể tải danh sách lịch xét nghiệm.' }));
     } finally {
       setLoading((prev) => ({ ...prev, examBookings: false }));
+    }
+  };
+
+  // Hàm fetch examination results
+  const fetchExaminationResults = async () => {
+    setLoading((prev) => ({ ...prev, examResults: true }));
+    setError((prev) => ({ ...prev, examResults: null }));
+    try {
+      // Giả sử API endpoint để lấy kết quả xét nghiệm
+      const res = await api.get('/api/examination-results');
+      setExamResults(res.data);
+    } catch (err) {
+      setError((prev) => ({ ...prev, examResults: 'Không thể tải danh sách kết quả xét nghiệm.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, examResults: false }));
     }
   };  // Hàm cập nhật trạng thái consultation booking
   const updateBookingStatus = async (bookingId, newStatus) => {
@@ -177,13 +192,31 @@ export default function ConsultantDashboard() {
             loading={loading.blogs}
             error={error.blogs}
           />
-        );
-      case 'services':
+        );      case 'examinationResults':
         return (
-          <ServicesPanel
-            services={services}
-            loading={loading.services}
-            error={error.services}
+          <ExaminationResult
+            examinations={examResults}
+            loading={loading.examResults}
+            error={error.examResults}
+            onUpdateResult={async (examId, resultData) => {
+              try {
+                // Gọi API để cập nhật kết quả xét nghiệm
+                await api.put(`/api/examination-results/${examId}`, resultData);
+                
+                // Cập nhật state local
+                setExamResults((prev) =>
+                  prev.map((exam) =>
+                    exam.id === examId
+                      ? { ...exam, status: 'completed', ...resultData }
+                      : exam
+                  )
+                );
+                
+                console.log('Kết quả xét nghiệm đã được cập nhật thành công');
+              } catch (err) {
+                console.error('Lỗi khi cập nhật kết quả xét nghiệm:', err);
+              }
+            }}
           />
         );
       default:
