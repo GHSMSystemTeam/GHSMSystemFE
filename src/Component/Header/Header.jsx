@@ -124,11 +124,6 @@ export default function Header() {
                         <Phone size={16} className="text-blue-600" />
                         <span className="text-sm">0866249268</span>
                     </div>
-                    <div className="flex gap-2">
-                        <button className="w-6 h-6 flex items-center justify-center rounded-full bg-red-500 text-white text-xs">VN</button>
-                        <button className="w-6 h-6 flex items-center justify-center rounded-full bg-blue-500 text-white text-xs">EN</button>
-
-                    </div>
                 </div>
 
             </div>

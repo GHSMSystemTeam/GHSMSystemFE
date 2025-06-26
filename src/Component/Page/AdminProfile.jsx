@@ -676,6 +676,12 @@ export const addServiceType = async (serviceType) => {
     const response = await api.post('/api/servicetypes', serviceType);
     return response.data;
 };
+// Update an existing service type
+export const updateServiceType = async (id, serviceType) => {
+    const response = await api.put(`/api/servicetypes/id/${id}`, serviceType);
+    return response.data;
+};
+
 const ServiceManagementComponent = () => {
     const [serviceTypes, setServiceTypes] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -684,11 +690,13 @@ const ServiceManagementComponent = () => {
         name: '',
         description: '',
         price: '',
-        active: true
+        active: true,
+        type: 'Consulting',
     });
     const [error, setError] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { showToast } = useToast();
     const [success, setSuccess] = useState('');
-
     // Fetch service types on mount
     useEffect(() => {
         fetchServiceTypes();
@@ -707,31 +715,78 @@ const ServiceManagementComponent = () => {
         }
     };
 
-    const handleAddServiceType = async (e) => {
+    const handleOpenAddModal = () => {
+        setForm({
+            id: null,
+            name: '',
+            description: '',
+            price: '',
+            active: true,
+            type: 'Consulting',
+        });
+        setShowModal(true);
+    };
+
+    const handleOpenEditModal = (service) => {
+        console.log('Service data:', service);
+        setForm({
+            id: service.id,
+            name: service.name,
+            description: service.description,
+            price: service.price,
+            active: service.active,
+            type: service.typeCode === 0 ? 'Consulting' : 'Testing',
+        });
+        setShowModal(true);
+    };
+
+    const handleSaveService = async (e) => {
         e.preventDefault();
-        setError('');
-        setSuccess('');
-        if (!form.name || !form.description || !form.price) {
-            setError('Please fill all required fields.');
+        if (isSubmitting) {
             return;
         }
+        if (!form.name || !form.description || !form.price) {
+            showToast('Vui lòng điền đầy đủ các trường bắt buộc.', 'error');
+            return;
+        }
+
+        const payload = {
+            id: form.id,
+            name: form.name,
+            description: form.description,
+            price: Number(form.price),
+            active: form.active,
+            typeCode: form.type === 'Consulting' ? 0 : 1,
+        };
+        // Chỉ thêm id nếu đang update
+        if (form.id) {
+            payload.id = form.id;
+        }
+        console.log('Payload being sent:', payload); // Debug log
+
+        setIsSubmitting(true);
+        setLoading(true);
         try {
-            const serviceData= {
-                name: form.name,
-                description: form.description,
-                price: Number(form.price),
-                active: form.active
-            };
-            await addServiceType(serviceData);
-            setSuccess('Service type added successfully!');
+            if (form.id) {
+                await updateServiceType(form.id, payload);
+                showToast('Cập nhật dịch vụ thành công!', 'success');
+            } else {
+                const { id, ...addPayload } = payload;
+                await addServiceType(addPayload);
+                showToast('Thêm dịch vụ mới thành công!', 'success');
+            }
             setShowModal(false);
-            setForm({ name: '', description: '', price: '', active: true });
             fetchServiceTypes();
         } catch (err) {
-            console.error('Error adding service type:', err);
-            setError('Failed to add service type');
+            console.error('Error saving service type:', err);
+            const errorMessage = err.response?.data?.title || 'Lưu dịch vụ thất bại.';
+            showToast(errorMessage, 'error');
+            setError(errorMessage);
+        } finally {
+            setLoading(false);
         }
     };
+
 
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
@@ -739,7 +794,7 @@ const ServiceManagementComponent = () => {
                 <h2 className="text-xl font-semibold">Service Type Management</h2>
                 <button
                     className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                    onClick={() => setShowModal(true)}
+                    onClick={handleOpenAddModal}
                 >
                     Add Service Type
                 </button>
@@ -776,6 +831,14 @@ const ServiceManagementComponent = () => {
                                             {type.active ? 'Active' : 'Inactive'}
                                         </span>
                                     </td>
+                                    <td className="py-2">
+                                        <button
+                                            onClick={() => handleOpenEditModal(type)}
+                                            className="text-blue-600 hover:underline font-medium"
+                                        >
+                                            Edit
+                                        </button>
+                                    </td>
                                 </tr>
                             ))
                         )}
@@ -783,7 +846,7 @@ const ServiceManagementComponent = () => {
                 </table>
             </div>
 
-            {/* Add Service Type Modal */}
+            {/* Add / edit Service Type Modal */}
             {showModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                     <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative">
@@ -795,14 +858,29 @@ const ServiceManagementComponent = () => {
                             &times;
                         </button>
                         <h3 className="text-lg font-semibold mb-6">Thêm loại dịch vụ mới</h3>
-                        <form onSubmit={handleAddServiceType} className="space-y-4">
+                        <form onSubmit={handleSaveService} className="space-y-4">
+                            <div>
+                                <label className="block mb-1 font-medium">Loại dịch vụ *</label>
+                                    <select
+                                        name="type"
+                                        value={form.type}
+                                        onChange={e => setForm(f => ({ ...f, type: e.target.value }))}
+                                        className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                                        required
+                                    >
+                                        <option value="Consulting">Tư vấn</option>
+                                        <option value="Testing">Xét nghiệm</option>
+                                    </select>
+                                </div>
                             <div>
                                 <label className="block mb-1 font-medium">Tên dịch vụ *</label>
                                 <input
                                     type="text"
-                                    className="border rounded px-3 py-2 w-full"
-                                    value={form.name}
+                                    name="name"
+                                    value={form.name || ''}
                                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                                    className="border rounded px-3 py-2 w-full"
+                                    placeholder="Ví dụ: Tư vấn tâm lý chuyên sâu, Xét nghiệm STI..."
                                     required
                                 />
                             </div>
@@ -848,9 +926,20 @@ const ServiceManagementComponent = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                                    className={`px-4 py-2 rounded font-medium transition-colors flex items-center
+                                        ${isSubmitting 
+                                            ? 'bg-gray-400 cursor-not-allowed' 
+                                            : 'bg-blue-600 hover:bg-blue-700'
+                                        } text-white`}
+                                    disabled={isSubmitting}
                                 >
-                                    Thêm
+                                    {isSubmitting && (
+                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                    )}
+                                    {isSubmitting ? 'Đang xử lý...' : (form.id ? 'Cập nhật' : 'Thêm')}
                                 </button>
                             </div>
                         </form>

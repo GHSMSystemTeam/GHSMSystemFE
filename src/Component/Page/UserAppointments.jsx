@@ -45,16 +45,17 @@ export default function UserAppointments() {
 
                 console.log('Unique bookings:', uniqueBookings);
 
-                // Lọc từng loại
+                // Lọc chính xác: Lịch xét nghiệm là những dịch vụ có tên chứa "testing"
                 const testBookings = uniqueBookings.filter(
-                    booking => booking.serviceTypeId && booking.serviceTypeId.id === 2
+                    booking => booking.serviceTypeId?.name?.toLowerCase().includes('testing')
                 );
 
+                // Lịch khám bệnh là những dịch vụ KHÔNG phải là "testing"
                 const medicalBookings = uniqueBookings.filter(
-                    booking => booking.serviceTypeId && booking.serviceTypeId.id === 1 // Đổi từ 8 thành 1
+                    booking => !booking.serviceTypeId?.name?.toLowerCase().includes('testing')
                 );
 
-                console.log('Test bookings:', testBookings);
+                console.log('Test bookings (filtered by name "Testing"):', testBookings);
                 console.log('Medical bookings:', medicalBookings);
 
                 setAppointments({

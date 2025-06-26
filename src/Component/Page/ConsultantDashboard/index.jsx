@@ -180,7 +180,7 @@ export default function ConsultantDashboard() {
   return (
     <div className="min-h-screen flex bg-gray-100">
       <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main className="flex-1 p-6">
+      <main className="flex-1 p-6 bg-gradient-to-r from-purple-100">
         {renderContent()}
       </main>
     </div>
