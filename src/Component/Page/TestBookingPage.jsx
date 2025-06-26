@@ -62,7 +62,8 @@ const TestBookingPage = () => {
         name: user.fullName || '',
         phone: user.phone || '',
         email: user.email || '',
-        address: userInfo.address || ''
+        address: userInfo.address || '',
+        description: ""
       });
     }
 

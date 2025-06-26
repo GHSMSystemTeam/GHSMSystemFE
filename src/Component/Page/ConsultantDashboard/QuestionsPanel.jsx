@@ -31,6 +31,8 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
   const [filterTag, setFilterTag] = useState('');
   const { showToast } = useToast();
   const { user } = useAuth();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [answerToDelete, setAnswerToDelete] = useState(null);
 
   // Danh sách các thẻ tags thông dụng
   const tags = ["Sức khỏe sinh sản", "Nam khoa", "Phụ khoa", "Bệnh lây truyền", "Sức khỏe tình dục", "Tâm lý"];
@@ -169,6 +171,62 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
     }));
   };
 
+  const handleAskDeleteAnswer = (answerId) => {
+    setAnswerToDelete(answerId);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteAnswer = async () => {
+    if (!answerToDelete) return;
+    console.log('Deleting answer id:', answerToDelete);
+
+    try {
+      // Gọi API xóa câu trả lời
+      await api.delete(`/api/answer/id/${answerToDelete}`);
+
+      // Cập nhật UI - xóa câu trả lời khỏi danh sách
+      if (selectedQuestion) {
+        const updatedAnswers = selectedQuestion.answers.filter(ans => ans.id !== answerToDelete);
+        setSelectedQuestion({
+          ...selectedQuestion,
+          answers: updatedAnswers,
+          status: updatedAnswers.length > 0 ? 'Đã trả lời' : 'Chưa trả lời'
+        });
+      }
+
+      // Cập nhật danh sách câu hỏi
+      const updatedQuestions = Array.isArray(questions) ? questions.map(q => {
+        if (q.id === selectedQuestion?.id) {
+          const updatedAnswers = q.answers.filter(ans => ans.id !== answerToDelete);
+          return {
+            ...q,
+            answers: updatedAnswers,
+            status: updatedAnswers.length > 0 ? 'Đã trả lời' : 'Chưa trả lời'
+          };
+        }
+        return q;
+      }) : [];
+
+      if (externalQuestions) {
+        // Nếu questions được truyền từ bên ngoài, gọi lại hàm fetch
+        if (fetchQuestions) fetchQuestions();
+      } else {
+        setInternalQuestions(updatedQuestions);
+      }
+
+      showToast('Câu trả lời đã được xóa thành công!', 'success');
+    } catch (error) {
+      console.error('Failed to delete answer:', error);
+      const errorMessage = error.response?.data?.message ||
+        error.response?.data?.error ||
+        'Không thể xóa câu trả lời. Vui lòng thử lại sau!';
+      showToast(errorMessage, 'error');
+    } finally {
+      setShowDeleteModal(false);
+      setAnswerToDelete(null);
+    }
+  };
+
   // Lọc câu hỏi dựa trên search và filter
   const filteredQuestions = Array.isArray(questions) ? questions.filter(question => {
     if (!question) return false;
@@ -231,7 +289,12 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
               </button>
             </div>
 
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">{selectedQuestion.title}</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+              {selectedQuestion.title}
+              {selectedQuestion.edited && (
+                <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
+              )}
+            </h2>
 
             <div className="flex items-center text-gray-500 text-sm mb-4">
               <div className="flex items-center mr-4">
@@ -276,11 +339,24 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
                     <div key={answer.id} className="border-b border-gray-100 pb-6 last:border-b-0">
                       <div className="flex items-start">
                         <div className="flex-grow">
-                          <div className="flex items-center mb-1">
-                            <h4 className="font-semibold text-blue-700">{answer.doctorName}</h4>
-                            <svg className="w-4 h-4 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center">
+                              <h4 className="font-semibold text-blue-700">{answer.doctorName}</h4>
+                              <svg className="w-4 h-4 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                              </svg>
+                            </div>
+
+                            {/* Hiển thị nút xóa nếu câu trả lời này là của bác sĩ hiện tại */}
+                            {user && (user.id === answer.doctorId || user.role === 'admin') && (
+                              <button
+                                onClick={() => handleAskDeleteAnswer(answer.id)}
+                                className="text-red-500 hover:text-red-700 focus:outline-none"
+                                title="Xóa câu trả lời"
+                              >
+                                <X size={16} />
+                              </button>
+                            )}
                           </div>
 
                           <p className="text-sm text-gray-600 mb-3">{formatDate(answer.date)}</p>
@@ -301,6 +377,7 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
                     </div>
                   ))}
                 </div>
+
               ) : (
                 <p className="text-gray-500 italic text-center py-6">
                   Chưa có câu trả lời nào. Hãy là người đầu tiên trả lời!
@@ -361,9 +438,12 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
                     <div className="mb-2 flex items-center justify-between">
                       <button
                         onClick={() => setSelectedQuestion(question)}
-                        className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left"
+                        className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left flex items-center"
                       >
                         {question.title}
+                        {question.edited && (
+                          <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
+                        )}
                       </button>
 
                       <div className="flex items-center space-x-3">
@@ -465,6 +545,54 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
                 <p className="mt-1">Hiện tại không có câu hỏi nào cần được trả lời.</p>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal xác nhận xóa câu trả lời */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 scale-100">
+            <div className="flex items-center justify-center mb-4">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+            </div>
+
+            <h3 className="text-xl font-bold mb-2 text-gray-900 text-center">
+              Xác nhận xóa câu trả lời
+            </h3>
+
+            <div className="mb-6">
+              <p className="text-gray-600 text-center leading-relaxed">
+                Bạn có chắc chắn muốn xóa câu trả lời này không?
+              </p>
+              <div className="mt-3 p-3 bg-red-50 rounded-lg border border-red-200">
+                <p className="text-sm text-red-700 text-center">
+                  ⚠️ Hành động này không thể hoàn tác và sẽ xóa vĩnh viễn câu trả lời.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  setShowDeleteModal(false);
+                  setAnswerToDelete(null);
+                }}
+                className="flex-1 px-4 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+              >
+                🚫 Hủy bỏ
+              </button>
+              <button
+                onClick={handleDeleteAnswer}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transform hover:scale-105"
+              >
+                🗑️ Xóa câu trả lời
+              </button>
+            </div>
           </div>
         </div>
       )}
