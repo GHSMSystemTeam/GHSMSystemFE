@@ -34,49 +34,70 @@ export default function ConsultantDashboard() {
     examResults: null,
     blogs: null,
     services: null,
-  });
-  // State cho modal
+  });  // State cho modal
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  // State cho tab xét nghiệm
-  const [examTab, setExamTab] = useState('bookings');
   const { user } = useAuth();
-  const [openProfile, setOpenProfile] = useState(false);
-
-  useEffect(() => {
+  const [openProfile, setOpenProfile] = useState(false);  useEffect(() => {
     if (user && user.id) {
-      fetchBookings(user.id);
+      fetchConsultationBookings(); // Fetch consultation bookings for "Lịch tư vấn"
+      fetchTestingBookings(); // Fetch testing bookings for "Dịch vụ xét nghiệm"
     }
   }, [user]);
 
   useEffect(() => {
     fetchQuestions(); // <-- Thêm dòng này để luôn lấy câu hỏi khi vào trang
-  }, []);
-
-  const fetchBookings = async (consultantId) => {
+  }, []);  const fetchConsultationBookings = async () => {
     setLoading((prev) => ({ ...prev, bookings: true }));
     setError((prev) => ({ ...prev, bookings: null }));
     try {
-      const res = await api.get(`/api/servicebookings/consultant/${consultantId}`);
+      // Service type ID của "Tư vấn" - thay đổi số này theo API thực tế của bạn
+      // Ví dụ: nếu "Tư vấn" có ID là 3, thay đổi thành '/api/servicebookings/servicetype/3'
+      const res = await api.get('/api/servicebookings/servicetype/2');
       setBookings(res.data);
     } catch (err) {
-      setError((prev) => ({ ...prev, bookings: 'Không thể tải danh sách lịch hẹn.' }));
+      setError((prev) => ({ ...prev, bookings: 'Không thể tải danh sách lịch tư vấn.' }));
     } finally {
       setLoading((prev) => ({ ...prev, bookings: false }));
     }
   };
 
-  // Hàm cập nhật trạng thái booking
+  // Hàm fetch testing bookings với service type id = 1 (Testing)
+  const fetchTestingBookings = async () => {
+    setLoading((prev) => ({ ...prev, examBookings: true }));
+    setError((prev) => ({ ...prev, examBookings: null }));
+    try {
+      const res = await api.get('/api/servicebookings/servicetype/1');
+      setExamBookings(res.data);
+    } catch (err) {
+      setError((prev) => ({ ...prev, examBookings: 'Không thể tải danh sách lịch xét nghiệm.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, examBookings: false }));
+    }
+  };  // Hàm cập nhật trạng thái consultation booking
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      // API đã được gọi trong SchedulesPanel, không cần gọi lại ở đây
-      // Chỉ cần cập nhật state local
+      // Cập nhật state local cho consultation bookings
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
       return true;
     } catch (err) {
-      console.error('Error updating booking status:', err);
+      console.error('Error updating consultation booking status:', err);
+      return false;
+    }
+  };
+
+  // Hàm cập nhật trạng thái exam booking
+  const updateExamBookingStatus = async (bookingId, newStatus) => {
+    try {
+      // Cập nhật state local cho exam bookings
+      setExamBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      );
+      return true;
+    } catch (err) {
+      console.error('Error updating exam booking status:', err);
       return false;
     }
   };
@@ -138,16 +159,15 @@ export default function ConsultantDashboard() {
             selectedAppointment={selectedAppointment}
             setSelectedAppointment={setSelectedAppointment}
           />
-        );
-      case 'examinations':
+        );      case 'examinations':
         return (
           <ExaminationsPanel
-            examTab={examTab}
-            setExamTab={setExamTab}
             examBookings={examBookings}
-            examResults={examResults}
             loading={loading}
             error={error}
+            updateExamBookingStatus={updateExamBookingStatus}
+            selectedAppointment={selectedAppointment}
+            setSelectedAppointment={setSelectedAppointment}
           />
         );
       case 'blogs':
