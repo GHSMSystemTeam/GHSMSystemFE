@@ -72,77 +72,47 @@ export default function Consulation() {
 
     // Tải dữ liệu câu hỏi từ localStorage khi component được mount
     useEffect(() => {
+        // Lấy dữ liệu từ localStorage
         const storedQuestions = JSON.parse(localStorage.getItem('healthQuestions') || '[]');
         setQuestions(storedQuestions);
     }, []);
-
-    // Mẫu bác sĩ
-    const doctors = [
-        {
-            id: 1,
-            name: "THS.BS Phạm Đỗ Anh Thư",
-            avatar: "https://vinmec-prod.s3.amazonaws.com/images/20190522_080648_368680_bs-dung2.max-800x800.jpg",
-            specialty: "Tim mạch",
-            position: "Trưởng đơn vị Bệnh Van tim",
-            hospital: "Bệnh viện Đa khoa Tâm Anh TP.HCM",
-            isOnline: true
-        },
-        {
-            id: 2,
-            name: "BS. Trần Minh Khoa",
-            avatar: "https://vinmec-prod.s3.amazonaws.com/images/20220217_172142_404935_BS.Quan.max-1800x1800.jpg",
-            specialty: "Nam khoa",
-            position: "Bác sĩ chuyên khoa Nam học",
-            hospital: "Trung tâm Y học Giới tính TP.HCM",
-            isOnline: false
-        },
-        {
-            id: 3,
-            name: "BS. Nguyễn Thu Hương",
-            avatar: "https://vinmec-prod.s3.amazonaws.com/images/20180418_022811_043232_bs-hong-nhung.max-800x800.jpg",
-            specialty: "Phụ khoa",
-            position: "Trưởng khoa Phụ sản",
-            hospital: "Bệnh viện Đa khoa Tâm Anh TP.HCM",
-            isOnline: true
-        }
-    ];
 
     // Khởi tạo dữ liệu mẫu nếu không có sẵn
     useEffect(() => {
         // Fetch câu hỏi từ API
         const fetchQuestions = async () => {
             try {
-                // Sử dụng endpoint đúng
                 const response = await api.get('/api/question/active');
-                console.log('API response:', response.data);
-
+                let formattedQuestions = [];
                 if (response.data && Array.isArray(response.data)) {
-                    // Map dữ liệu từ API sang format hiện tại của ứng dụng
-                    const formattedQuestions = response.data.map(q => ({
-                        id: q.id,
-                        userId: q.customer?.id || q.customerId,
-                        userName: q.customer?.name || "Người dùng ẩn danh",
-                        title: q.title,
-                        content: q.content,
-                        date: q.createDate,
-                        tags: q.tags || [], // Nếu API không trả về tags, sử dụng mảng rỗng
-                        views: q.views || 0,
-                        likes: q.likes || 0,
-                        answers: q.answers?.map(a => ({
-                            id: a.id,
-                            doctorId: a.user?.id,
-                            doctorName: a.user?.name || "Bác sĩ",
-                            content: a.answerContent,
-                            date: a.createDate,
-                            likes: a.rating || 0
-                        })) || []
-                    }));
-
+                    // Lấy dữ liệu edited từ localStorage (nếu có)
+                    const storedQuestions = JSON.parse(localStorage.getItem('healthQuestions') || '[]');
+                    formattedQuestions = response.data.map(q => {
+                        const local = storedQuestions.find(lq => lq.id === q.id);
+                        return {
+                            id: q.id,
+                            userId: q.customer?.id || q.customerId,
+                            userName: q.customer?.name || "Người dùng ẩn danh",
+                            title: q.title,
+                            content: q.content,
+                            date: q.createDate,
+                            tags: q.tags || [],
+                            views: q.views || 0,
+                            likes: q.likes || 0,
+                            answers: q.answers?.map(a => ({
+                                id: a.id,
+                                doctorId: a.user?.id,
+                                doctorName: a.user?.name || "Bác sĩ",
+                                content: a.answerContent,
+                                date: a.createDate,
+                                likes: a.rating || 0
+                            })) || [],
+                            edited: local?.edited || false // Giữ lại trạng thái edited nếu có
+                        };
+                    });
                     setQuestions(formattedQuestions);
                     localStorage.setItem('healthQuestions', JSON.stringify(formattedQuestions));
-                    console.log('Formatted questions:', formattedQuestions);
                 } else {
-                    // Fallback vào localStorage nếu API không trả về dữ liệu hợp lệ
                     const storedQuestions = JSON.parse(localStorage.getItem('healthQuestions') || '[]');
                     setQuestions(storedQuestions);
                 }
@@ -208,7 +178,8 @@ export default function Consulation() {
                         ...q,
                         title: editQuestion.title,
                         content: editQuestion.content,
-                        tags: editQuestion.tags
+                        tags: editQuestion.tags,
+                        edited: true
                     };
                 }
                 return q;
@@ -223,7 +194,8 @@ export default function Consulation() {
                     ...selectedQuestion,
                     title: editQuestion.title,
                     content: editQuestion.content,
-                    tags: editQuestion.tags
+                    tags: editQuestion.tags,
+                    edited: true
                 });
             }
 
@@ -544,7 +516,12 @@ export default function Consulation() {
                                     </button>
                                 </div>
 
-                                <h2 className="text-2xl font-bold text-gray-800 mb-2">{selectedQuestion.title}</h2>
+                                <h2 className="text-2xl font-bold text-gray-800 mb-2 flex items-center">
+                                    {selectedQuestion.title}
+                                    {selectedQuestion.edited && (
+                                        <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
+                                    )}
+                                </h2>
 
                                 <div className="flex items-center text-gray-500 text-sm mb-4">
                                     <div className="flex items-center mr-4">
@@ -573,7 +550,7 @@ export default function Consulation() {
                                 </div>
 
                                 <div className="text-gray-800 mb-6 whitespace-pre-line">
-                                    {selectedQuestion.content}
+                                    {selectedQuestion.content.replace(/\(edited\)/gi, '').trim()}
                                 </div>
 
 
@@ -801,9 +778,12 @@ export default function Consulation() {
                                                         <div className="mb-2 flex items-center justify-between">
                                                             <button
                                                                 onClick={() => handleViewQuestion(question)}
-                                                                className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left"
+                                                                className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left flex items-center"
                                                             >
                                                                 {question.title}
+                                                                {question.edited && (
+                                                                    <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
+                                                                )}
                                                             </button>
 
                                                             <div className="flex items-center space-x-3">
@@ -839,7 +819,7 @@ export default function Consulation() {
                                                         </div>
 
                                                         <p className="text-gray-600 line-clamp-2 mb-3">
-                                                            {question.content}
+                                                            {question.content.replace(/\(edited\)/gi, '').trim()}
                                                         </p>
 
                                                         <div className="flex flex-wrap gap-2 mb-2">
