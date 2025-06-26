@@ -16,7 +16,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
   const [openProfile, setOpenProfile] = useState(false);
 
   return (
-    <aside className="w-64 bg-blue-700 text-white py-6 px-4 flex flex-col h-screen">
+    <aside className="w-64 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-6 px-4 flex flex-col h-screen">
       <h1 className="text-xl font-bold mb-6">Bảng điều khiển</h1>
       <nav className="space-y-2 flex-1">
         {navItems.map((item) => {
@@ -42,7 +42,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           onClick={() => setOpenProfile(true)}
         >
           <img
-            src={user.avatar || 'https://i.pravatar.cc/100'}
+            src={user.avatar || 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSIjRjNGNEY2Ii8+CjxjaXJjbGUgY3g9IjUwIiBjeT0iMzciIHI9IjE1IiBmaWxsPSIjOUI5QkExIi8+CjxwYXRoIGQ9Ik0yMCA3NkMyMCA2OC4yODQzIDI2LjI4NDMgNjIgMzQgNjJINjZDNzMuNzE1NyA2MiA4MCA2OC4yODQzIDgwIDc2VjEwMEgyMFY3NloiIGZpbGw9IiM5QjlCQTEiLz4KPC9zdmc+'}
             alt="avatar"
             className="w-10 h-10 rounded-full object-cover border"
           />

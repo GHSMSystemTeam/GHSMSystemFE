@@ -61,7 +61,15 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
   const handleViewDetail = (booking) => {
     setSelectedAppointment(booking);
   };
-
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 0: return 'text-gray-500'; // Created
+      case 1: return 'text-yellow-500'; // Pending
+      case 2: return 'text-green-500'; // Finished
+      case 3: return 'text-red-500'; // Canceled
+      default: return 'text-gray-500';
+    }
+  };
   return (
     <div>
       <div className="flex justify-between items-center mb-6">

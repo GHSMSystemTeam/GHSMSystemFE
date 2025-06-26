@@ -78,13 +78,17 @@ const TestBookingPage = () => {
     };
     fetchBookings();
 
-    // Lấy danh sách service types từ backend
+    // Lấy danh sách service types từ backend và lọc ra các gói Testing
     const fetchTestKits = async () => {
       setLoadingKits(true);
       try {
         const res = await api.get('/api/servicetypes/active');
+        const allActiveServices = res.data || [];
 
-        setTestKits(res.data || []);
+        // Lọc chỉ những dịch vụ có typeCode là 1 (Testing)
+        const testingServices = allActiveServices.filter(service => service.typeCode === 1);
+
+        setTestKits(testingServices);
       } catch (err) {
         showToast('Không thể tải danh sách gói xét nghiệm!', 'error');
         console.error('Error fetching service types:', err);
@@ -93,6 +97,7 @@ const TestBookingPage = () => {
       }
     };
     fetchTestKits();
+
 
     // Lấy bác sĩ mặc định (chạy ngầm)
     // Gọi API lấy danh sách bác sĩ khi vào trang
@@ -170,8 +175,9 @@ const TestBookingPage = () => {
       consultantId: String(selectedDoctor.id),
       customerId: user.id,
       serviceTypeId: selectedKit.id,
-      appointmentDate: new Date(appointmentDate).toISOString(),
-      duration: 0
+      appointmentDate: new Date(appointmentDate).toISOString(),     
+      duration: 0,
+      description: userInfo.address || `Địa chỉ: ${userInfo.address}` 
     };
 
     try {
