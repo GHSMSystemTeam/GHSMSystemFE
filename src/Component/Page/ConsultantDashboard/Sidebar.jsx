@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { MessageCircle, Calendar, FileText, Edit, Settings } from 'lucide-react';
+import { MessageCircle, Calendar, FileText, Edit, TestTube } from 'lucide-react';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
 
 const navItems = [
   { id: 'questions', label: 'Câu hỏi', icon: MessageCircle },
-  { id: 'schedules', label: 'Lịch tư vấn', icon: Calendar },
-  { id: 'examinations', label: 'Dịch vụ xét nghiệm', icon: FileText },
+  { id: 'schedules', label: 'Dịch vụ xét nghiệm', icon: FileText },
+  { id: 'examinations', label: 'Lịch tư vấn', icon: Calendar }, 
   { id: 'blogs', label: 'Quản lý blog', icon: Edit },
-  { id: 'services', label: 'Quản lý dịch vụ', icon: Settings }
+  { id: 'examinationResults', label: 'Kết quả xét nghiệm', icon: TestTube }
 ];
 
 export default function Sidebar({ activeTab, setActiveTab }) {

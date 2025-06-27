@@ -30,9 +30,8 @@ function getStatusClass(status) {
 export default function SchedulesPanel({ bookings, loading, error, updateBookingStatus, selectedAppointment, setSelectedAppointment }) {
   const [updatingId, setUpdatingId] = useState(null);
   const { showToast } = useToast();
-
   const handleStatusChange = async (id, statusNumber) => {
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch hẹn này?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
       return;
     }
 
@@ -70,10 +69,9 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
       default: return 'text-gray-500';
     }
   };
-  return (
-    <div>
+  return (    <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Lịch đặt dịch vụ</h2>
+        <h2 className="text-2xl font-bold">Lịch đặt xét nghiệm</h2>
       </div>
 
       {loading ? (
@@ -85,18 +83,16 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
           {error}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {bookings.length === 0 ? (
+        <div className="bg-white rounded-lg shadow overflow-hidden">          {bookings.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              Chưa có lịch hẹn nào
+              Chưa có lịch tư vấn nào
             </div>
           ) : (
-            <>
-              <div className="grid grid-cols-6 font-semibold border-b p-4 bg-gray-50">
+            <>              <div className="grid grid-cols-6 font-semibold border-b p-4 bg-gray-50">
                 <div>Họ tên</div>
                 <div>Giới tính</div>
                 <div>Ngày hẹn</div>
-                <div>Dịch vụ</div>
+                <div>Dịch vụ xét nghiệm</div>
                 <div>Trạng thái</div>
                 <div className="text-right">Thao tác</div>
               </div>
@@ -156,9 +152,8 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
       {/* Modal chi tiết lịch hẹn */}
       {selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Chi tiết lịch hẹn</h3>
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Chi tiết lịch xét nghiệm</h3>
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -185,10 +180,8 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                   <p><span className="text-gray-500">Email:</span></p>
                   <p className="font-medium">{selectedAppointment.customerId?.email || 'Không có'}</p>
                 </div>
-              </div>
-
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch hẹn</h4>
+              </div>              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch xét nghiệm</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><span className="text-gray-500">Dịch vụ:</span></p>
                   <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
@@ -238,15 +231,14 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                   </button>
                 )}
 
-                {selectedAppointment.status !== 3 && (
-                  <button
+                {selectedAppointment.status !== 3 && (                  <button
                     onClick={() => {
                       handleStatusChange(selectedAppointment.id, 3);
                       setSelectedAppointment(null);
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                   >
-                    Hủy lịch hẹn
+                    Hủy lịch xét nghiệm
                   </button>
                 )}
               </div>

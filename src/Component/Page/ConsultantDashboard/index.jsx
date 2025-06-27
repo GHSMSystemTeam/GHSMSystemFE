@@ -4,7 +4,7 @@ import QuestionsPanel from './QuestionsPanel';
 import SchedulesPanel from './SchedulesPanel';
 import ExaminationsPanel from './ExaminationsPanel';
 import BlogsPanel from './BlogsPanel';
-import ServicesPanel from './ServicesPanel';
+import ExaminationResult from './ExaminationResult';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
 import api from '../../config/axios';
@@ -34,49 +34,85 @@ export default function ConsultantDashboard() {
     examResults: null,
     blogs: null,
     services: null,
-  });
-  // State cho modal
+  });  // State cho modal
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
-  // State cho tab xét nghiệm
-  const [examTab, setExamTab] = useState('bookings');
   const { user } = useAuth();
-  const [openProfile, setOpenProfile] = useState(false);
-
-  useEffect(() => {
+  const [openProfile, setOpenProfile] = useState(false);  useEffect(() => {
     if (user && user.id) {
-      fetchBookings(user.id);
+      fetchConsultationBookings(); // Fetch consultation bookings for "Lịch tư vấn"
+      fetchTestingBookings(); // Fetch testing bookings for "Dịch vụ xét nghiệm"
+      fetchExaminationResults(); // Fetch examination results for "Kết quả xét nghiệm"
     }
   }, [user]);
 
   useEffect(() => {
     fetchQuestions(); // <-- Thêm dòng này để luôn lấy câu hỏi khi vào trang
-  }, []);
-
-  const fetchBookings = async (consultantId) => {
+  }, []);const fetchConsultationBookings = async () => {
     setLoading((prev) => ({ ...prev, bookings: true }));
     setError((prev) => ({ ...prev, bookings: null }));
     try {
-      const res = await api.get(`/api/servicebookings/consultant/${consultantId}`);
+      // Giả sử service type ID của "Tư vấn" là 2, bạn có thể thay đổi theo API thực tế
+      const res = await api.get('/api/servicebookings/servicetype/2');
       setBookings(res.data);
     } catch (err) {
-      setError((prev) => ({ ...prev, bookings: 'Không thể tải danh sách lịch hẹn.' }));
+      setError((prev) => ({ ...prev, bookings: 'Không thể tải danh sách lịch tư vấn.' }));
     } finally {
       setLoading((prev) => ({ ...prev, bookings: false }));
     }
   };
 
-  // Hàm cập nhật trạng thái booking
+  // Hàm fetch testing bookings với service type id = 1
+  const fetchTestingBookings = async () => {
+    setLoading((prev) => ({ ...prev, examBookings: true }));
+    setError((prev) => ({ ...prev, examBookings: null }));
+    try {
+      const res = await api.get('/api/servicebookings/servicetype/1');
+      setExamBookings(res.data);
+    } catch (err) {
+      setError((prev) => ({ ...prev, examBookings: 'Không thể tải danh sách lịch xét nghiệm.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, examBookings: false }));
+    }
+  };
+
+  // Hàm fetch examination results
+  const fetchExaminationResults = async () => {
+    setLoading((prev) => ({ ...prev, examResults: true }));
+    setError((prev) => ({ ...prev, examResults: null }));
+    try {
+      // Giả sử API endpoint để lấy kết quả xét nghiệm
+      const res = await api.get('/api/examination-results');
+      setExamResults(res.data);
+    } catch (err) {
+      setError((prev) => ({ ...prev, examResults: 'Không thể tải danh sách kết quả xét nghiệm.' }));
+    } finally {
+      setLoading((prev) => ({ ...prev, examResults: false }));
+    }
+  };  // Hàm cập nhật trạng thái consultation booking
   const updateBookingStatus = async (bookingId, newStatus) => {
     try {
-      // API đã được gọi trong SchedulesPanel, không cần gọi lại ở đây
-      // Chỉ cần cập nhật state local
+      // Cập nhật state local cho consultation bookings
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
       );
       return true;
     } catch (err) {
-      console.error('Error updating booking status:', err);
+      console.error('Error updating consultation booking status:', err);
+      return false;
+    }
+  };
+
+  // Hàm cập nhật trạng thái exam booking
+  const updateExamBookingStatus = async (bookingId, newStatus) => {
+    try {
+      // Cập nhật state local cho exam bookings
+      setExamBookings((prev) =>
+        prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b))
+      );
+      return true;
+    } catch (err) {
+      console.error('Error updating exam booking status:', err);
       return false;
     }
   };
@@ -138,16 +174,15 @@ export default function ConsultantDashboard() {
             selectedAppointment={selectedAppointment}
             setSelectedAppointment={setSelectedAppointment}
           />
-        );
-      case 'examinations':
+        );      case 'examinations':
         return (
           <ExaminationsPanel
-            examTab={examTab}
-            setExamTab={setExamTab}
             examBookings={examBookings}
-            examResults={examResults}
             loading={loading}
             error={error}
+            updateExamBookingStatus={updateExamBookingStatus}
+            selectedAppointment={selectedAppointment}
+            setSelectedAppointment={setSelectedAppointment}
           />
         );
       case 'blogs':
@@ -157,13 +192,31 @@ export default function ConsultantDashboard() {
             loading={loading.blogs}
             error={error.blogs}
           />
-        );
-      case 'services':
+        );      case 'examinationResults':
         return (
-          <ServicesPanel
-            services={services}
-            loading={loading.services}
-            error={error.services}
+          <ExaminationResult
+            examinations={examResults}
+            loading={loading.examResults}
+            error={error.examResults}
+            onUpdateResult={async (examId, resultData) => {
+              try {
+                // Gọi API để cập nhật kết quả xét nghiệm
+                await api.put(`/api/examination-results/${examId}`, resultData);
+                
+                // Cập nhật state local
+                setExamResults((prev) =>
+                  prev.map((exam) =>
+                    exam.id === examId
+                      ? { ...exam, status: 'completed', ...resultData }
+                      : exam
+                  )
+                );
+                
+                console.log('Kết quả xét nghiệm đã được cập nhật thành công');
+              } catch (err) {
+                console.error('Lỗi khi cập nhật kết quả xét nghiệm:', err);
+              }
+            }}
           />
         );
       default:
