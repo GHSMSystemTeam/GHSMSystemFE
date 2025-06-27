@@ -3,6 +3,9 @@ import { Eye, CheckCircle, Clock, XCircle, Check } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 
+
+//đây là trang lịch tư vấn, do call 1 api 2 lần nên đã bị lộn và tạm thời chưa sửa, nội dung trong này liên quan đến lịch tư vấn
+
 // Mã trạng thái theo API
 const STATUS_OPTIONS = [
   { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
@@ -255,4 +258,4 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
     </div>
   );
 } 
-//this is actually schedule panel, it is switched due to call same api  
+ 
