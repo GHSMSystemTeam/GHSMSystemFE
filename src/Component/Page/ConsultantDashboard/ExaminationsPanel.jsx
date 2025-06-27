@@ -87,7 +87,7 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
                 <div>Họ tên</div>
                 <div>Giới tính</div>
                 <div>Ngày hẹn</div>
-                <div>Dịch vụ xét nghiệm</div>
+                <div>Dịch vụ tư vấn</div>
                 <div>Trạng thái</div>
                 <div className="text-right">Thao tác</div>
               </div>

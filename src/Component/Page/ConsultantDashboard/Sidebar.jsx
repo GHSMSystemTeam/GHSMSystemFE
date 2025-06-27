@@ -5,8 +5,8 @@ import ConsultantProfile from './ConsultantProfile';
 
 const navItems = [
   { id: 'questions', label: 'Câu hỏi', icon: MessageCircle },
-  { id: 'schedules', label: 'Lịch tư vấn', icon: Calendar },
-  { id: 'examinations', label: 'Dịch vụ xét nghiệm', icon: FileText },
+  { id: 'schedules', label: 'Dịch vụ xét nghiệm', icon: FileText },
+  { id: 'examinations', label: 'Lịch tư vấn', icon: Calendar }, 
   { id: 'blogs', label: 'Quản lý blog', icon: Edit },
   { id: 'examinationResults', label: 'Kết quả xét nghiệm', icon: TestTube }
 ];
