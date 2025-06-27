@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, CheckCircle, Clock, XCircle, Check } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
+import { useAuth } from '../../Auth/AuthContext';
 
 // Mã trạng thái theo API
 const STATUS_OPTIONS = [
@@ -27,30 +28,57 @@ function getStatusClass(status) {
   }
 }
 
-export default function SchedulesPanel({ bookings, loading, error, updateBookingStatus, selectedAppointment, setSelectedAppointment }) {
+export default function SchedulesPanel({ selectedAppointment, setSelectedAppointment }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const { showToast } = useToast();
+  const { user } = useAuth();
+
+  const fetchTestBookings = async () => {
+    if (!user || !user.id) {
+      setError("Không thể xác thực người dùng.");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.get(`/api/servicebookings/consultant/${user.id}`);
+      const testBookings = response.data.filter(
+        booking => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1
+      );
+      setBookings(testBookings);
+    } catch (err) {
+      console.error("Failed to fetch test bookings:", err);
+      setError("Không thể tải danh sách lịch xét nghiệm.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTestBookings();
+  }, [user]);
+
   const handleStatusChange = async (id, statusNumber) => {
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
+    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch xét nghiệm này?')) {
       return;
     }
 
     setUpdatingId(id);
     try {
-      // Gọi API cập nhật trạng thái theo endpoint mới
       await api.put(`/api/servicebooking/status/${id}/${statusNumber}`);
-
-      // Cập nhật UI thông qua prop function
-      if (typeof updateBookingStatus === 'function') {
-        await updateBookingStatus(id, statusNumber);
-      }
-
+      setBookings(prevBookings =>
+        prevBookings.map(booking =>
+          booking.id === id ? { ...booking, status: statusNumber } : booking
+        )
+      );
       showToast('Cập nhật trạng thái thành công!', 'success');
     } catch (err) {
       console.error('Error updating booking status:', err);
-      const errorMessage = err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Cập nhật trạng thái thất bại!';
+      const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
       showToast(errorMessage, 'error');
     } finally {
       setUpdatingId(null);
@@ -60,18 +88,11 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
   const handleViewDetail = (booking) => {
     setSelectedAppointment(booking);
   };
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 0: return 'text-gray-500'; // Created
-      case 1: return 'text-yellow-500'; // Pending
-      case 2: return 'text-green-500'; // Finished
-      case 3: return 'text-red-500'; // Canceled
-      default: return 'text-gray-500';
-    }
-  };
-  return (    <div>
+
+  return (
+    <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Lịch đặt tư vấn</h2>
+        <h2 className="text-2xl font-bold">Lịch đặt xét nghiệm</h2>
       </div>
 
       {loading ? (
@@ -83,12 +104,14 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
           {error}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">          {bookings.length === 0 ? (
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          {bookings.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              Chưa có lịch tư vấn nào
+              Chưa có lịch xét nghiệm nào
             </div>
           ) : (
-            <>              <div className="grid grid-cols-6 font-semibold border-b p-4 bg-gray-50">
+            <>
+              <div className="grid grid-cols-6 font-semibold border-b p-4 bg-gray-50">
                 <div>Họ tên</div>
                 <div>Giới tính</div>
                 <div>Ngày hẹn</div>
@@ -101,7 +124,7 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                 <div key={booking.id} className="grid grid-cols-6 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
                   <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
                   <div>{getGenderText(booking.customerId?.gender)}</div>
-                  <div>{new Date(booking.appointmentDate).toLocaleDateString('vi-VN', {
+                  <div>{new Date(booking.appointmentDate).toLocaleString('vi-VN', {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
@@ -152,8 +175,9 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
       {/* Modal chi tiết lịch hẹn */}
       {selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md">            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Chi tiết lịch tư vấn</h3>
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Chi tiết lịch xét nghiệm</h3>
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -180,8 +204,9 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                   <p><span className="text-gray-500">Email:</span></p>
                   <p className="font-medium">{selectedAppointment.customerId?.email || 'Không có'}</p>
                 </div>
-              </div>              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch tư vấn</h4>
+              </div>
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch xét nghiệm</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><span className="text-gray-500">Dịch vụ:</span></p>
                   <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
@@ -231,14 +256,15 @@ export default function SchedulesPanel({ bookings, loading, error, updateBooking
                   </button>
                 )}
 
-                {selectedAppointment.status !== 3 && (                  <button
+                {selectedAppointment.status !== 3 && (
+                  <button
                     onClick={() => {
                       handleStatusChange(selectedAppointment.id, 3);
                       setSelectedAppointment(null);
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                   >
-                    Hủy lịch tư vấn
+                    Hủy lịch xét nghiệm
                   </button>
                 )}
               </div>

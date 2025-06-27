@@ -353,13 +353,13 @@ export default function DatLichKham() {
                                                                     <div className="flex items-start justify-between">
                                                                         <div className="flex-1 pr-4"> {/* Added pr-4 for spacing */}
                                                                             <h3 className="font-semibold text-gray-900 text-lg break-words whitespace-normal leading-tight">
-                                                                                {doctor.name || 'Tên tư vấn viên'}
+                                                                                {doctor.name || 'Tên bác sĩ'}
                                                                             </h3>
                                                                             <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
                                                                                 {doctor.specialization || 'Chuyên khoa tổng quát'}
                                                                             </p>
                                                                             <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
-                                                                                {doctor.description || 'Tư vấn viên có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
+                                                                                {doctor.description || 'Bác sĩ có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
                                                                             </p>
                                                                         </div>
                                                                         <div className="text-right ml-4 flex-shrink-0">
@@ -496,7 +496,7 @@ export default function DatLichKham() {
                                                         <h4 className="font-semibold text-gray-900 mb-4">Tóm tắt lịch hẹn</h4>
                                                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                                                             <div className="flex justify-between">
-                                                                <span className="text-gray-600">Tư vấn viên:</span>
+                                                                <span className="text-gray-600">Bác sĩ:</span>
                                                                 <span className="text-gray-900 font-medium text-right break-words max-w-[200px]">
                                                                     {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name || 'Chưa chọn'}
                                                                 </span>
@@ -550,7 +550,7 @@ export default function DatLichKham() {
                                             <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                                                 <div className="flex justify-center">
                                                     <div className="text-sm text-gray-500 self-center">
-                                                        Chọn tư vấn viên để tiếp tục
+                                                        Chọn bác sĩ để tiếp tục
                                                     </div>
                                                 </div>
                                             </div>
@@ -574,7 +574,7 @@ export default function DatLichKham() {
                                         <h4 className="font-semibold text-gray-900 mb-4">Thông tin lịch hẹn</h4>
                                         <div className="space-y-3 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600">Tư vấn viên:</span>
+                                                <span className="text-gray-600">Bác sĩ:</span>
                                                 <span className="text-gray-900 font-medium text-right break-words max-w-[250px]">
                                                     {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name}
                                                 </span>
