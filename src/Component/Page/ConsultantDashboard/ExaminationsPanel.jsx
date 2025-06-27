@@ -64,7 +64,7 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
 
   return (    <div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Lịch đặt xét nghiệm</h2>
+        <h2 className="text-2xl font-bold">Lịch đặt tư vấn</h2>
       </div>
 
       {loading.examBookings ? (
@@ -149,7 +149,7 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Chi tiết lịch xét nghiệm</h3>
+              <h3 className="text-lg font-bold">Chi tiết lịch tư vấn</h3>
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="text-gray-400 hover:text-gray-600"
@@ -179,7 +179,7 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
               </div>
 
               <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch xét nghiệm</h4>
+                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch tư vấn</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><span className="text-gray-500">Dịch vụ:</span></p>
                   <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
@@ -237,7 +237,7 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
                     }}
                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
                   >
-                    Hủy lịch xét nghiệm
+                    Hủy lịch tư vấn
                   </button>
                 )}
               </div>
@@ -255,3 +255,4 @@ export default function ExaminationsPanel({ examBookings, loading, error, update
     </div>
   );
 } 
+//this is actually schedule panel, it is switched due to call same api  
