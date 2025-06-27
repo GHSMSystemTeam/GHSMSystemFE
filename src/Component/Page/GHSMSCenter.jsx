@@ -28,7 +28,18 @@ export default function GHSMSCenter() {
     // Thay đổi: Lấy danh sách bác sĩ từ API
     const [featuredDoctors, setFeaturedDoctors] = useState([]);
     const [loadingDoctors, setLoadingDoctors] = useState(true);
-
+    const SPECIALTIES = {
+        "Sexology_Andrology": "Y học Giới tính & Nam học",
+        "Psychology": "Tư vấn tâm lý",
+        "Gynecology": "Phụ khoa",
+        "Endocrinology": "Nội tiết",
+        "Dermatology": "Da liễu",
+        "Obstetrics": "Sản khoa",
+        "Urology": "Tiết niệu"
+    };
+    const getVietnameseSpecialization = (englishValue) => {
+        return SPECIALTIES[englishValue] || englishValue;
+    };
     // Lấy danh sách bác sĩ từ API
     useEffect(() => {
         const fetchDoctors = async () => {
@@ -363,7 +374,7 @@ export default function GHSMSCenter() {
                                                                         {doctor.name}
                                                                     </h3>
                                                                     <p className="text-blue-600 font-semibold text-sm mb-2">
-                                                                        {doctor.specialization || 'Chuyên khoa tổng quát'}
+                                                                        {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
                                                                     </p>
                                                                     <p className="text-gray-600 text-sm leading-relaxed line-clamp-2">
                                                                         {doctor.description || 'Bác sĩ giàu kinh nghiệm trong lĩnh vực y học giới tính'}

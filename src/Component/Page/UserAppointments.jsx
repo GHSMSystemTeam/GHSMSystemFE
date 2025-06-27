@@ -585,7 +585,7 @@ export default function UserAppointments() {
                                                     <span className="text-gray-600">Giới tính:</span>
                                                     <span className="font-medium text-gray-800">
                                                         {selectedAppointment.customerId?.gender === 0 ? "Nam" :
-                                                            selectedAppointment.customerId?.gender === 1 ? "Nữ" : "Không xác định"}
+                                                            selectedAppointment.customerId?.gender === 2 ? "Nữ" : "Không xác định"}
                                                     </span>
                                                 </div>
                                             </div>

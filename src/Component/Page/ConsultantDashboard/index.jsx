@@ -174,7 +174,8 @@ export default function ConsultantDashboard() {
             selectedAppointment={selectedAppointment}
             setSelectedAppointment={setSelectedAppointment}
           />
-        );      case 'examinations':
+        );      
+        case 'examinations':
         return (
           <ExaminationsPanel
             examBookings={examBookings}
@@ -192,7 +193,8 @@ export default function ConsultantDashboard() {
             loading={loading.blogs}
             error={error.blogs}
           />
-        );      case 'examinationResults':
+        );      
+        case 'examinationResults':
         return (
           <ExaminationResult
             examinations={examResults}

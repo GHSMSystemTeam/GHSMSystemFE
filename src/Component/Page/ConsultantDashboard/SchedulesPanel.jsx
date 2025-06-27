@@ -14,7 +14,7 @@ const STATUS_OPTIONS = [
 
 function getGenderText(gender) {
   if (gender === 0) return 'Nam';
-  if (gender === 1) return 'Nữ';
+  if (gender === 2) return 'Nữ';
   return 'Khác';
 }
 

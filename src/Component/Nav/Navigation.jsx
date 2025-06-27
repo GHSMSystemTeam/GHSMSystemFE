@@ -301,6 +301,11 @@ export default function Navigation() {
                                             transition-colors duration-200">
                                         Đặt lịch xét nghiệm
                                     </Link>
+                                    <Link to="/appointment"
+                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                            transition-colors duration-200">
+                                        Đặt lịch tư vấn
+                                    </Link>
                                     <Link to="/family-plan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                         Quản lý kế hoạch hóa gia đình, tránh thai
@@ -419,14 +424,6 @@ export default function Navigation() {
                                 </div>
                             )}
                         </div>
-
-
-                        <Link
-                            to="/appointment"
-                            className="bg-red-600 text-white px-3 py-2 rounded font-medium hover:bg-red-700 transition-colors whitespace-nowrap text-sm"
-                        >
-                            Đặt lịch khám
-                        </Link>
                     </div>
 
                     <button className="md:hidden text-gray-500">

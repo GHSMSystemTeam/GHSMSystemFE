@@ -24,6 +24,18 @@ export default function DatLichKham() {
     const [currentStep, setCurrentStep] = useState(1);
     const [consultingService, setConsultingService] = useState(null);
     const [availableDoctors, setAvailableDoctors] = useState([]);
+    const SPECIALTIES = {
+        "Sexology_Andrology": "Y học Giới tính & Nam học",
+        "Psychology": "Tư vấn tâm lý",
+        "Gynecology": "Phụ khoa",
+        "Endocrinology": "Nội tiết",
+        "Dermatology": "Da liễu",
+        "Obstetrics": "Sản khoa",
+        "Urology": "Tiết niệu"
+    };
+    const getVietnameseSpecialization = (englishValue) => {
+        return SPECIALTIES[englishValue] || englishValue;
+    };
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -118,18 +130,18 @@ export default function DatLichKham() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!checkAuthAndShowPrompt('đặt lịch khám')) return;
+        if (!checkAuthAndShowPrompt('đặt lịch tư vấn')) return;
 
         if (!consultingService) {
             showToast('Dịch vụ tư vấn chưa được tải, vui lòng thử lại.', 'error');
             return;
         }
         if (!formData.doctor) {
-            showToast('Vui lòng chọn bác sĩ.', 'error');
+            showToast('Vui lòng chọn tư vấn viên.', 'error');
             return;
         }
         if (!formData.date) {
-            showToast('Vui lòng chọn ngày khám.', 'error');
+            showToast('Vui lòng chọn ngày tư vấn.', 'error');
             return;
         }
 
@@ -153,7 +165,7 @@ export default function DatLichKham() {
         if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
             setSubmitting(false);
             if (!bookingPayload.consultantId) {
-                showToast('Không tìm thấy thông tin bác sĩ. Vui lòng chọn lại bác sĩ.', 'error');
+                showToast('Không tìm thấy thông tin tư vấn viên. Vui lòng chọn lại tư vấn viên.', 'error');
             } else if (!bookingPayload.customerId) {
                 showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
             } else if (!bookingPayload.serviceTypeId) {
@@ -168,7 +180,7 @@ export default function DatLichKham() {
             console.log('Booking Response:', response.data);
 
             setSubmitted(true);
-            showToast('Đặt lịch khám thành công!', 'success');
+            showToast('Đặt lịch tư vấn thành công!', 'success');
         } catch (error) {
             console.error("API Error:", error.response || error);
             const errorMessage = error.response?.data?.message ||
@@ -193,7 +205,7 @@ export default function DatLichKham() {
         });
     };
     const steps = [
-        { id: 1, title: "Chọn bác sĩ", desc: "Tìm bác sĩ chuyên khoa" },
+        { id: 1, title: "Chọn tư vấn viên", desc: "Tìm tư vấn viên chuyên khoa" },
         { id: 2, title: "Thông tin", desc: "Hoàn tất thông tin" },
         { id: 3, title: "Xác nhận", desc: "Xác nhận đặt lịch" }
     ];
@@ -218,22 +230,11 @@ export default function DatLichKham() {
             <div className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
                 <div className="container mx-auto px-4">
                     <div className="text-center space-y-4">
-                        <h1 className="text-4xl font-bold">Đặt Lịch Khám Chuyên Khoa</h1>
-                        <p className="text-xl text-indigo-100 max-w-2xl mx-auto">
-                            Hệ thống chăm sóc sức khỏe giới tính chuyên nghiệp với đội ngũ bác sĩ giàu kinh nghiệm
-                        </p>
+                        <h1 className="text-4xl font-bold">Đặt Lịch Tư Vấn Viên Chuyên Khoa</h1>
                         <div className="flex items-center justify-center space-x-8 mt-8">
-                            <div className="text-center">
-                                <div className="text-2xl font-bold">1000+</div>
-                                <div className="text-sm text-indigo-200">Bệnh nhân hài lòng</div>
-                            </div>
                             <div className="text-center">
                                 <div className="text-2xl font-bold">24/7</div>
                                 <div className="text-sm text-indigo-200">Hỗ trợ tư vấn</div>
-                            </div>
-                            <div className="text-center">
-                                <div className="text-2xl font-bold">15+</div>
-                                <div className="text-sm text-indigo-200">Năm kinh nghiệm</div>
                             </div>
                         </div>
                     </div>
@@ -305,12 +306,12 @@ export default function DatLichKham() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                                        {currentStep === 1 && "Chọn bác sĩ"}
+                                                        {currentStep === 1 && "Chọn tư vấn viên"}
                                                         {currentStep === 2 && "Thông tin cá nhân"}
                                                         {currentStep === 3 && "Xác nhận đặt lịch"}
                                                     </h2>
                                                     <p className="text-gray-600 mt-1">
-                                                        {currentStep === 1 && "Chọn bác sĩ chuyên khoa phù hợp"}
+                                                        {currentStep === 1 && "Chọn tư vấn viên chuyên khoa phù hợp"}
                                                         {currentStep === 2 && "Hoàn tất thông tin để đặt lịch"}
                                                         {currentStep === 3 && "Kiểm tra và xác nhận thông tin"}
                                                     </p>
@@ -353,13 +354,13 @@ export default function DatLichKham() {
                                                                     <div className="flex items-start justify-between">
                                                                         <div className="flex-1 pr-4"> {/* Added pr-4 for spacing */}
                                                                             <h3 className="font-semibold text-gray-900 text-lg break-words whitespace-normal leading-tight">
-                                                                                {doctor.name || 'Tên bác sĩ'}
+                                                                                {doctor.name || 'Tên tư vấn viên'}
                                                                             </h3>
                                                                             <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
-                                                                                {doctor.specialization || 'Chuyên khoa tổng quát'}
+                                                                               {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
                                                                             </p>
                                                                             <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
-                                                                                {doctor.description || 'Bác sĩ có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
+                                                                                {doctor.description || 'Tư vấn viên có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
                                                                             </p>
                                                                         </div>
                                                                         <div className="text-right ml-4 flex-shrink-0">
@@ -455,7 +456,7 @@ export default function DatLichKham() {
                                                         </div>
                                                         <div className="md:col-span-2">
                                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Ngày khám mong muốn <span className="text-red-500">*</span>
+                                                                Ngày tư vấn mong muốn <span className="text-red-500">*</span>
                                                             </label>
                                                             <div className="relative">
                                                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -472,7 +473,7 @@ export default function DatLichKham() {
                                                                 />
                                                             </div>
                                                             <p className="text-xs text-gray-500 mt-1">
-                                                                Chúng tôi sẽ liên hệ để xác nhận giờ khám cụ thể
+                                                                Chúng tôi sẽ liên hệ để xác nhận giờ tư vấn cụ thể
                                                             </p>
                                                         </div>
 
@@ -496,19 +497,19 @@ export default function DatLichKham() {
                                                         <h4 className="font-semibold text-gray-900 mb-4">Tóm tắt lịch hẹn</h4>
                                                         <div className="grid md:grid-cols-2 gap-4 text-sm">
                                                             <div className="flex justify-between">
-                                                                <span className="text-gray-600">Bác sĩ:</span>
+                                                                <span className="text-gray-600">Tư vấn viên:</span>
                                                                 <span className="text-gray-900 font-medium text-right break-words max-w-[200px]">
                                                                     {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name || 'Chưa chọn'}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
-                                                                <span className="text-gray-600">Dịch vụ:</span>
+                                                                <span className="text-gray-600">Dịch vụ tư vấn:</span>
                                                                 <span className="text-gray-900 font-medium">
                                                                     {consultingService?.name || 'Đang tải...'}
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
-                                                                <span className="text-gray-600">Ngày khám:</span>
+                                                                <span className="text-gray-600">Ngày tư vấn :</span>
                                                                 <span className="text-gray-900 font-medium">{formData.date || 'Chưa chọn'}</span>
                                                             </div>
                                                         </div>
@@ -550,7 +551,7 @@ export default function DatLichKham() {
                                             <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                                                 <div className="flex justify-center">
                                                     <div className="text-sm text-gray-500 self-center">
-                                                        Chọn bác sĩ để tiếp tục
+                                                        Chọn tư vấn viên để tiếp tục
                                                     </div>
                                                 </div>
                                             </div>
@@ -566,7 +567,7 @@ export default function DatLichKham() {
                                     </div>
                                     <h2 className="text-3xl font-bold text-gray-900 mb-4">Đặt lịch thành công!</h2>
                                     <p className="text-gray-600 mb-8 text-lg">
-                                        Cảm ơn bạn đã đặt lịch khám tại Trung tâm Y học Giới tính TPHCM.
+                                        Cảm ơn bạn đã đặt lịch tư vấn tại Dịch vụ chăm sóc sức khỏe giới tính.
                                         Chúng tôi sẽ liên hệ lại với bạn để xác nhận lịch hẹn trong thời gian sớm nhất.
                                     </p>
 
