@@ -15,118 +15,6 @@ import {
 } from 'lucide-react';
 import { useToast } from '../Toast/ToastProvider';
 
-const sampleTestResults = [
-    {
-        id: 'res001',
-        serviceAppointmentOrderId: 'bk002', // Links to an existing 'Test' in sampleBookings
-        content: 'All markers within normal limits. No abnormalities detected.',
-        isActive: true, // True = result is published/active
-        resultDate: '2025-06-12',
-        recordedBy: 'Dr. Smith (Lab)', // Optional: who recorded the result
-    },
-    {
-        id: 'res002',
-        serviceAppointmentOrderId: 'bk_test_005', // Links to the new test booking
-        content: 'Slightly elevated cholesterol. Lifestyle adjustment recommended.',
-        isActive: true,
-        resultDate: '2025-06-22',
-        recordedBy: 'LabTech Unit 2',
-    },
-    {
-        id: 'res003',
-        serviceAppointmentOrderId: 'bk004', // Links to another existing 'Test'
-        content: 'Hormone panel results pending further analysis for specific markers.',
-        isActive: false, // False = result is pending or draft
-        resultDate: null, // No result date yet if pending
-        recordedBy: null,
-    }
-];
-
-
-
-// Sample Dashboard Overview Data
-// const dashboardOverviewData = {
-//         totalAccounts: 1234,
-//         totalConsultants: 120, 
-//         totalCustomers: 1114,
-//         totalBookingsThisMonth: 45,
-//         monthlyRevenue: 78515000, 
-//         averageServiceRating: 4.5, 
-//         totalFeedback: 87,
-//         totalActiveUsers: 1234,
-//         pendingTestResults: 15, 
-//         newFeedbackToday: 5,  
-//     };
-//     const bookingTrendsData = { // For a bar chart or line chart
-//         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], // Last 7 days
-//         consultationBookings: [18, 22, 20, 25, 30, 15, 10],
-//         testBookings: [10, 12, 8, 15, 12, 20, 18],
-//     };
-
-//     const genderDistributionData = { // For a pie chart
-//         labels: ['Male', 'Female', 'Other'],
-//         counts: [650, 720, 34], // Number of customers or all users
-//     };
-
-//     const topPerformingConsultants = [
-//         { id: 'c1', name: "NGUYEN ANH TU", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 25, rating: 4.8 },
-//         { id: 'c2', name: "PHAM MINH NGOC", specialty: "Y học Giới tính & Nam học", appointmentsThisMonth: 22, rating: 4.7 },
-//         { id: 'c5', name: "NGUYEN QUOC LINH", specialty: "Tư vấn tâm lý", appointmentsThisMonth: 18, rating: 4.9 },
-//         // ... more consultants
-//     ];
-
-//     const popularServicesData = [
-//         { id: 'serv001', name: "Comprehensive Sexual Health Check-up", bookingsThisMonth: 55, revenue: 15000000 },
-//         { id: 'serv002', name: "Relationship Counseling Session", bookingsThisMonth: 40, revenue: 8000000 },
-//         { id: 'serv003', name: "Advanced STD Panel", bookingsThisMonth: 35, revenue: 10500000 },
-//         // ... more services
-//     ];
-    // Sample Booking Data    
- 
-// --- Sample Data for Feedback ---
-const sampleFeedback = [
-    {
-        id: 'fb001',
-        customerId: 'cust1', // Links to customersData
-        serviceAppointmentOrderId: 'bk001', // Links to a completed/relevant booking in updatedSampleBookings
-        title: 'Great Consultation Experience',
-        content: 'The consultation with Dr. Tu was very insightful and helpful. He addressed all my concerns with patience and professionalism. The booking process was also very smooth. Highly recommend!',
-        createDate: '2025-06-11',
-        isPublic: true, // Admin can toggle this
-        isActive: true, // Admin can toggle this (e.g., to hide inappropriate feedback)
-    },
-    {
-        id: 'fb002',
-        customerId: 'cust2',
-        serviceAppointmentOrderId: 'bk003', // Link to another booking
-        title: 'Follow-up on Test Results',
-        content: 'The pre-test counseling was good, but I am still awaiting a detailed explanation of my test results. The online portal shows them as available but I would appreciate a call.',
-        createDate: '2025-06-19',
-        isPublic: false,
-        isActive: true,
-    },
-    {
-        id: 'fb003',
-        customerId: 'cust3',
-        serviceAppointmentOrderId: 'bk004', // Link to a test booking
-        title: 'Suggestion for Improvement',
-        content: 'The clinic environment is very clean and welcoming. However, the waiting time for my scheduled test was a bit longer than expected. Perhaps scheduling could be optimized.',
-        createDate: '2025-07-06',
-        isPublic: true,
-        isActive: true,
-    },
-    {
-        id: 'fb004',
-        customerId: 'cust1',
-        serviceAppointmentOrderId: 'bk_test_005',
-        title: 'Quick and Efficient Testing',
-        content: 'The blood panel test was done very quickly and the staff were very professional. Results were also delivered promptly online. Good service.',
-        createDate: '2025-06-21',
-        isPublic: false, // Example of feedback admin might keep private
-        isActive: true,
-    }
-];
-
 // Create a new, dedicated component for Consultant Management
 const ConsultantManagementComponent = () => {
     const [consultants, setConsultants] = useState([]);
@@ -135,10 +23,19 @@ const ConsultantManagementComponent = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingConsultant, setEditingConsultant] = useState(null);
     const [editFormData, setEditFormData] = useState({ phone: '', specialization: '' });
-    const SPECIALTIES = [
-        "Y học Giới tính & Nam học", "Tư vấn tâm lý", "Phụ khoa", "Nội tiết",
-        "Da liễu", "Sản khoa", "Tiết niệu"
-    ];
+    const SPECIALTIES = {
+        "Sexology_Andrology": "Y học Giới tính & Nam học",
+        "Psychology": "Tư vấn tâm lý", 
+        "Gynecology": "Phụ khoa",
+        "Endocrinology": "Nội tiết",
+        "Dermatology": "Da liễu",
+        "Obstetrics": "Sản khoa",
+        "Urology": "Tiết niệu"
+    };
+    // Function to get Vietnamese display name
+    const getVietnameseSpecialization = (englishValue) => {
+        return SPECIALTIES[englishValue] || englishValue || 'N/A';
+    };
     const toast = useToast();
     const handleToggleActive = async (consultant) => {
         const id = consultant.id;
@@ -191,8 +88,10 @@ const ConsultantManagementComponent = () => {
     const handleOpenEditModal = (consultant) => {
         setEditingConsultant(consultant);
         setEditFormData({
+            name: consultant.name || '',
+            gender: consultant.gender || 0,
             phone: consultant.phone || '',
-            specialization: consultant.specialization || SPECIALTIES[0]
+            specialization: getVietnameseSpecialization(consultant.specialization) || SPECIALTIES[0]
         });
         setShowEditModal(true);
     };
@@ -200,27 +99,31 @@ const ConsultantManagementComponent = () => {
     const handleUpdateConsultant = async (e) => {
         e.preventDefault();
         if (!editingConsultant) return;
-
+        // Validation
+        if (!editFormData.name || editFormData.name.trim() === "") {
+            setError("Name is required.");
+            return;
+        }
         if (!editFormData.specialization || editFormData.specialization.trim() === "") {
         setError("Specialization is required.");
         return;
     }
          const fullPayload = {
             id:              editingConsultant.id,
-            name:            editingConsultant.name,
+            name:            editFormData.name.trim(),
             role:            editingConsultant.role,
             admin:           editingConsultant.admin,
             managedUser:     editingConsultant.managedUser,
             email:           editingConsultant.email,
             password:        editingConsultant.password,      
-            gender:          editingConsultant.gender,
-            phone:           editFormData.phone,
+            gender:          parseInt(editFormData.gender),
+            phone:           editFormData.phone.trim(),
             createDate:      editingConsultant.createDate,
             birthDate:       editingConsultant.birthDate,
             profilePicture:  editingConsultant.profilePicture,
             bookingHistory:  editingConsultant.bookingHistory,
             totalSpending:   editingConsultant.totalSpending,
-            specialization:  editFormData.specialization,
+            specialization:  getEnglishSpecialization(editFormData.specialization),
             licenseDetails:  editingConsultant.licenseDetails,
             expYear:         editingConsultant.expYear || 0,
             avgRating:       editingConsultant.avgRating || 0,
@@ -246,7 +149,8 @@ const ConsultantManagementComponent = () => {
             throw error;
         }
     };
-    const [showAddModal, setShowAddModal] = useState(false);    const [newConsultant, setNewConsultant] = useState({
+    const [showAddModal, setShowAddModal] = useState(false);    
+    const [newConsultant, setNewConsultant] = useState({
         name: '',
         email: '',
         password: '',
@@ -259,7 +163,11 @@ const ConsultantManagementComponent = () => {
     const handleAddConsultant = async (e) => {
         e.preventDefault();
         try {
-            const result = await createConsultant(newConsultant);
+            const consultantData = {
+                ...newConsultant,
+                specialization: getEnglishSpecialization(newConsultant.specialization)
+            };
+            const result = await createConsultant(consultantData);
             toast.showToast('Consultant created successfully!', 'success');
             setShowAddModal(false);            
             setNewConsultant({
@@ -341,6 +249,7 @@ const ConsultantManagementComponent = () => {
                             <th className="px-6 py-3">Name</th>
                             <th className="px-6 py-3">Email</th>
                             <th className="px-6 py-3">Phone</th>
+                            <th className="px-6 py-3">Gender</th>
                             <th className="px-6 py-3">Status</th>
                             <th className="px-6 py-3">Specialization</th>
                             <th className="px-6 py-3 text-center">Actions</th>
@@ -357,6 +266,16 @@ const ConsultantManagementComponent = () => {
                                 <td className="px-6 py-4 font-medium text-gray-900">{consultant.name}</td>
                                 <td className="px-6 py-4">{consultant.email}</td>
                                 <td className="px-6 py-4">{consultant.phone || 'N/A'}</td>
+                                <td className="px-6 py-4">
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        consultant.gender === 0 ? 'bg-blue-100 text-blue-800' : 
+                                        consultant.gender === 1 ? 'bg-purple-100 text-purple-800' : 
+                                        'bg-pink-100 text-pink-800'
+                                    }`}>
+                                        {consultant.gender === 0 ? 'Male' : 
+                                         consultant.gender === 1 ? 'Other' : 'Female'}
+                                    </span>
+                                </td>
                                 <td className="px-6 py-4">
                                     <span
                                         className={`px-2 py-1 rounded-full text-xs font-semibold
@@ -377,9 +296,8 @@ const ConsultantManagementComponent = () => {
                                     </button>
                                 </td>
                                 <td className="px-6 py-4">
-                                    {consultant.specialization && consultant.specialization.trim() !== "" 
-                                        ? consultant.specialization 
-                                        : 'N/A'}
+                                    {/* Display Vietnamese specialization */}
+                                    {getVietnameseSpecialization(consultant.specialization)}
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="flex gap-3 items-center">
@@ -407,6 +325,17 @@ const ConsultantManagementComponent = () => {
                         <h3 className="text-xl font-semibold mb-4">Edit Consultant: {editingConsultant.name}</h3>
                         <form onSubmit={handleUpdateConsultant}>
                             <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                <input
+                                    type="text"
+                                    value={editFormData.name}
+                                    onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    placeholder="Enter full name"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 <input
                                     type="tel"
@@ -415,15 +344,34 @@ const ConsultantManagementComponent = () => {
                                     className="w-full p-2 border border-gray-300 rounded-md"
                                 />
                             </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
+                                <select
+                                    value={editFormData.gender}
+                                    onChange={(e) => setEditFormData({ ...editFormData, gender: parseInt(e.target.value) })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                >
+                                    <option value={0}>Male</option>
+                                    <option value={2}>Female</option>
+                                    <option value={1}>Other</option>
+                                </select>
+                            </div>
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
                                 <select
                                     value={editFormData.specialization}
                                     onChange={(e) => setEditFormData({ ...editFormData, specialization: e.target.value })}
                                     className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
                                 >
                                     <option value="" disabled>Select a specialty</option>
-                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                    {/* Show Vietnamese options */}
+                                    {Object.values(SPECIALTIES).map(vietnameseSpec => (
+                                        <option key={vietnameseSpec} value={vietnameseSpec}>
+                                            {vietnameseSpec}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>                           
                             <div className="flex justify-end gap-4">
@@ -547,7 +495,12 @@ const ConsultantManagementComponent = () => {
                                     required
                                 >
                                     <option value="" disabled>Select a specialty</option>
-                                    {SPECIALTIES.map(spec => <option key={spec} value={spec}>{spec}</option>)}
+                                    {/* Show Vietnamese options */}
+                                    {Object.values(SPECIALTIES).map(vietnameseSpec => (
+                                        <option key={vietnameseSpec} value={vietnameseSpec}>
+                                            {vietnameseSpec}
+                                        </option>
+                                    ))}
                                 </select>
                             </div>
                             <div className="mb-6">
@@ -926,20 +879,9 @@ const ServiceManagementComponent = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className={`px-4 py-2 rounded font-medium transition-colors flex items-center
-                                        ${isSubmitting 
-                                            ? 'bg-gray-400 cursor-not-allowed' 
-                                            : 'bg-blue-600 hover:bg-blue-700'
-                                        } text-white`}
-                                    disabled={isSubmitting}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium transition-colors"
                                 >
-                                    {isSubmitting && (
-                                        <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                        </svg>
-                                    )}
-                                    {isSubmitting ? 'Đang xử lý...' : (form.id ? 'Cập nhật' : 'Thêm')}
+                                    {form.id ? 'Cập nhật' : 'Thêm'}
                                 </button>
                             </div>
                         </form>
