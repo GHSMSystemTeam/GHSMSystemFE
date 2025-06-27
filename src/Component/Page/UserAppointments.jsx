@@ -47,12 +47,12 @@ export default function UserAppointments() {
 
                 // Lọc chính xác: Lịch xét nghiệm là những dịch vụ có tên chứa "testing"
                 const testBookings = uniqueBookings.filter(
-                    booking => booking.serviceTypeId?.name?.toLowerCase().includes('testing')
+                    (booking) => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1
                 );
 
                 // Lịch khám bệnh là những dịch vụ KHÔNG phải là "testing"
                 const medicalBookings = uniqueBookings.filter(
-                    booking => !booking.serviceTypeId?.name?.toLowerCase().includes('testing')
+                    (booking) => booking.serviceTypeId && booking.serviceTypeId.typeCode === 0
                 );
 
                 console.log('Test bookings (filtered by name "Testing"):', testBookings);
@@ -182,6 +182,14 @@ export default function UserAppointments() {
                                 </div>
                                 <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có lịch khám bệnh</h3>
                                 <p className="text-gray-600 mb-6">Đặt lịch khám bệnh với các bác sĩ chuyên khoa</p>
+
+                                <Link
+                                    to="/appointment"
+                                    className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
+                                >
+                                    <Plus size={18} />
+                                    <span>Đặt lịch khám</span>
+                                </Link>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

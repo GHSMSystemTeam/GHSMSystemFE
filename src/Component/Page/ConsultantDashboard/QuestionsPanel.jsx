@@ -325,7 +325,7 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
             )}
 
             <div className="text-gray-800 mb-6 whitespace-pre-line">
-              {selectedQuestion.content || selectedQuestion.question}
+              {(selectedQuestion.content || selectedQuestion.question)?.replace(/\(edited\)/gi, '').trim()}
             </div>
 
             <div className="border-t pt-6">
@@ -462,7 +462,7 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
                     </div>
 
                     <p className="text-gray-600 line-clamp-2 mb-3">
-                      {question.content || question.question}
+                      {(question.content || question.question)?.replace(/\(edited\)/gi, '').trim()}
                     </p>
 
                     {question.tags && question.tags.length > 0 && (
