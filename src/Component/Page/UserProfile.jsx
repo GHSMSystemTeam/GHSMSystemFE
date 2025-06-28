@@ -6,23 +6,23 @@ import { User, Camera, UserCheck, Edit3, Mail, Phone, Lock, X, Save, CalendarDay
 import Footer from '../Footer/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
-
+import api from '../config/axios';
 export default function UserProfile() {
     const { user, login } = useAuth();
     const { showToast } = useToast();
     const navigate = useNavigate();
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
+    const [isLoading, setIsLoading] = useState(false);
     const [formData, setFormData] = useState({
-        fullName: user?.fullName || 'Nguyễn Văn A',
-        email: user?.email || 'nguyenvana@example.com',
-        phone: user?.phone || '0912345678',
-        dateOfBirth: '1990-01-01',
-
-        gender: 'male',
+        fullName: '',
+        email: '',
+        phone: '',
+        dateOfBirth: '',
+        gender: 0,
         avatar: null,
     });
-
+    const [originalData, setOriginalData] = useState(formData);
     // Add this useEffect to handle redirection
     useEffect(() => {
         if (!user) {
@@ -31,20 +31,19 @@ export default function UserProfile() {
             // If user is logged in, update formData if it hasn't been set yet
             // or if user details change (e.g., after an update elsewhere)
             const initialData = {
-                fullName: user.fullName || 'Nguyễn Văn A',
-                email: user.email || 'nguyenvana@example.com',
-                phone: user.phone || '0912345678',
-                dateOfBirth: user.dateOfBirth || '1990-01-01',
-                address: user.address || 'TP. Hồ Chí Minh',
-                gender: user.gender || 'male',
-                avatar: user.avatar || null,
+                fullName: user.name || user.fullName || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                dateOfBirth: user.birthDate ? user.birthDate.split('T')[0] : '',
+                gender: user.gender !== undefined ? user.gender : 0,
+                avatar: user.profilePicture && user.profilePicture.length > 0 ? user.profilePicture[0] : null,
             };
             setFormData(initialData);
             setOriginalData(initialData);
         }
     }, [user, navigate]);
 
-    const [originalData, setOriginalData] = useState(formData);
+
     const [passwordData, setPasswordData] = useState({
         currentPassword: '',
         newPassword: '',
@@ -67,67 +66,50 @@ export default function UserProfile() {
         }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
+        setIsLoading(true);
         try {
-            // Validate required fields
-            if (
-                !formData.fullName.trim() ||
-                !formData.email.trim() ||
-                !formData.phone.trim() ||
-                !formData.dateOfBirth.trim() ||
-                !formData.address.trim() ||
-                !formData.gender.trim()
-            ) {
-                showToast('Có lỗi xảy ra khi cập nhật thông tin!', 'error');
-                return;
-            }
-            // Lấy danh sách users từ localStorage
-            const users = JSON.parse(localStorage.getItem('users') || '[]');
-            let userFoundAndUpdated = false;
-            // Tìm và cập nhật thông tin user hiện tại
-            const updatedUsers = users.map(u => {
-                if (u.email === user.email) {
-                    userFoundAndUpdated = true;
-                    return {
-                        ...u,
-                        fullName: formData.fullName,
-                        phone: formData.phone,
-                        dateOfBirth: formData.dateOfBirth,
-                        address: formData.address,
-                        gender: formData.gender,
-                        avatar: formData.avatar,
-                    };
-                }
-                return u;
-            });
+            // Start with the full, original user object to preserve all data
+            const payload = { ...user };
 
-            if (!userFoundAndUpdated) {
-                // Handle case where user might not be in 'users' list, though unlikely if logged in
-                // Or if email was changed and lookup key needs adjustment
-                console.warn("User not found in users list for update, or email key mismatch.");
+            // Update only the fields that are editable on the form
+            payload.name = formData.fullName.trim();
+            payload.phone = formData.phone.trim();
+            payload.gender = parseInt(formData.gender);
+            payload.birthDate = formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : user.birthDate;
+            payload.profilePicture = formData.avatar ? [formData.avatar] : user.profilePicture || [];
+            // Ensure role is an object, not a string
+            if (typeof payload.role !== 'object' || payload.role === null) {
+                payload.role = { id: 3, name: "Customer", description: "Customer role" };
             }
-            // Lưu lại vào localStorage
-            localStorage.setItem('users', JSON.stringify(updatedUsers));
+            // The API expects the full user object, so we send the modified payload
+            await api.put(`/api/user/${user.email}`, payload);
 
-            // Cập nhật thông tin user trong AuthContext
+            // Create the updated user data for the context
             const updatedUserData = {
                 ...user,
-                fullName: formData.fullName,
-                phone: formData.phone,
-                dateOfBirth: formData.dateOfBirth,
-                address: formData.address,
-                gender: formData.gender,
-                avatar: formData.avatar,
+                name: payload.name,
+                fullName: payload.name, // for frontend consistency
+                phone: payload.phone,
+                birthDate: payload.birthDate,
+                gender: payload.gender,
+                profilePicture: payload.profilePicture,
             };
+
+            // Update context and localStorage
             localStorage.setItem('user', JSON.stringify(updatedUserData));
-            login(updatedUserData); // Cập nhật context
+            login(updatedUserData);
 
             setOriginalData(formData);
             setIsEditing(false);
-            showToast('Cập nhật thông tin thành công!');
+            showToast('Cập nhật thông tin thành công!', 'success');
+
         } catch (error) {
-            console.error("Error saving profile:", error);
-            showToast('Có lỗi xảy ra khi cập nhật thông tin!', 'error');
+            console.error("Error updating profile:", error);
+            const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin!';
+            showToast(errorMessage, 'error');
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -198,7 +180,18 @@ export default function UserProfile() {
         }
 
     };
+    const getGenderDisplay = (genderValue) => {
+        switch (parseInt(genderValue)) {
+            case 0: return 'Nam';
+            case 2: return 'Nữ';
+            case 1: return 'Khác';
+            default: return 'Không xác định';
+        }
+    };
 
+    if (!user) {
+        return null;
+    }
 
     return (
 
@@ -255,23 +248,11 @@ export default function UserProfile() {
                     <div className="bg-white rounded-2xl shadow-lg mb-10 border border-blue-100">
                         <div className="border-b border-gray-200">
                             <nav className="flex">
-                                <button
-                                    onClick={() => setActiveTab('profile')}
-                                    className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'profile'
-                                        ? 'border-blue-600 text-blue-600 bg-blue-50'
-                                        : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                                        }`}
-                                >
+                                <button onClick={() => setActiveTab('profile')} className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'profile' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}>
                                     <User className="inline mr-2 mb-1" size={18} />
                                     Thông tin cá nhân
                                 </button>
-                                <button
-                                    onClick={() => setActiveTab('security')}
-                                    className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'security'
-                                        ? 'border-blue-600 text-blue-600 bg-blue-50'
-                                        : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-                                        }`}
-                                >
+                                <button onClick={() => setActiveTab('security')} className={`px-8 py-4 text-base font-semibold border-b-2 transition-colors duration-200 ${activeTab === 'security' ? 'border-blue-600 text-blue-600 bg-blue-50' : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-blue-50'}`}>
                                     <Lock className="inline mr-2 mb-1" size={18} />
                                     Bảo mật
                                 </button>
@@ -287,28 +268,19 @@ export default function UserProfile() {
                                         Thông tin cá nhân
                                     </h2>
                                     {!isEditing ? (
-                                        <button
-                                            onClick={() => setIsEditing(true)}
-                                            className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition-colors"
-                                        >
+                                        <button onClick={() => setIsEditing(true)} className="flex items-center space-x-2 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow transition-colors" disabled={isLoading}>
                                             <Edit3 size={18} />
                                             <span>Chỉnh sửa</span>
                                         </button>
                                     ) : (
                                         <div className="flex space-x-3">
-                                            <button
-                                                onClick={handleCancel}
-                                                className="flex items-center space-x-2 px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 shadow transition-colors"
-                                            >
+                                            <button onClick={handleCancel} className="flex items-center space-x-2 px-5 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 shadow transition-colors" disabled={isLoading}>
                                                 <X size={18} />
                                                 <span>Hủy</span>
                                             </button>
-                                            <button
-                                                onClick={handleSave}
-                                                className="flex items-center space-x-2 px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow transition-colors"
-                                            >
-                                                <Save size={18} />
-                                                <span>Lưu</span>
+                                            <button onClick={handleSave} className="flex items-center space-x-2 px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow transition-colors disabled:opacity-50" disabled={isLoading}>
+                                                {isLoading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={18} />}
+                                                <span>{isLoading ? 'Đang lưu...' : 'Lưu'}</span>
                                             </button>
                                         </div>
                                     )}
@@ -317,108 +289,35 @@ export default function UserProfile() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Họ và tên */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                            <User size={16} className="mr-2" />
-                                            Họ và tên
-                                        </label>
-                                        <input
-                                            type="text"
-                                            name="fullName"
-                                            value={formData.fullName}
-                                            onChange={handleInputChange}
-                                            disabled={!isEditing}
-                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
-                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
-                                                : 'border-gray-200 bg-gray-50 text-gray-700'
-                                                }`}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><User size={16} className="mr-2" />Họ và tên</label>
+                                        <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} disabled={!isEditing} className={`w-full pl-3 pr-3 py-2 border rounded-lg transition-all ${isEditing ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white' : 'border-gray-200 bg-gray-50 text-gray-700'}`} />
                                     </div>
-
                                     {/* Email */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                            <Mail size={16} className="mr-2" />
-                                            Email
-                                        </label>
-                                        <input
-                                            type="email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleInputChange}
-                                            disabled
-                                            className="w-full pl-10 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><Mail size={16} className="mr-2" />Email</label>
+                                        <input type="email" name="email" value={formData.email} disabled className="w-full pl-3 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700" />
                                     </div>
-
                                     {/* Số điện thoại */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                            <Phone size={16} className="mr-2" />
-                                            Số điện thoại
-                                        </label>
-                                        <input
-                                            type="tel"
-                                            name="phone"
-                                            value={formData.phone}
-                                            onChange={handleInputChange}
-                                            disabled={!isEditing}
-                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
-                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
-                                                : 'border-gray-200 bg-gray-50 text-gray-700'
-                                                }`}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><Phone size={16} className="mr-2" />Số điện thoại</label>
+                                        <input type="tel" name="phone" value={formData.phone} onChange={handleInputChange} disabled={!isEditing} className={`w-full pl-3 pr-3 py-2 border rounded-lg transition-all ${isEditing ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white' : 'border-gray-200 bg-gray-50 text-gray-700'}`} />
                                     </div>
-
                                     {/* Ngày sinh */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                            <CalendarDays size={16} className="mr-2" />
-                                            Ngày sinh
-                                        </label>
-                                        <input
-                                            type="date"
-                                            name="dateOfBirth"
-                                            value={formData.dateOfBirth}
-                                            onChange={handleInputChange}
-                                            disabled={!isEditing}
-                                            className={`w-full pl-10 pr-3 py-2 border rounded-lg transition-all ${isEditing
-                                                ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white'
-                                                : 'border-gray-200 bg-gray-50 text-gray-700'
-                                                }`}
-                                        />
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><CalendarDays size={16} className="mr-2" />Ngày sinh</label>
+                                        <input type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleInputChange} disabled={!isEditing} className={`w-full pl-3 pr-3 py-2 border rounded-lg transition-all ${isEditing ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white' : 'border-gray-200 bg-gray-50 text-gray-700'}`} />
                                     </div>
-
                                     {/* Giới tính */}
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
-                                            <Users size={16} className="mr-2" />
-                                            Giới tính
-                                        </label>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><Users size={16} className="mr-2" />Giới tính</label>
                                         {isEditing ? (
-                                            <select
-                                                name="gender"
-                                                value={formData.gender}
-                                                onChange={handleInputChange}
-                                                className="w-full pl-10 pr-3 py-2 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
-                                            >
-                                                <option value="male">Nam</option>
-                                                <option value="female">Nữ</option>
-                                                <option value="other">Khác</option>
+                                            <select name="gender" value={formData.gender} onChange={handleInputChange} className="w-full pl-3 pr-3 py-2 border border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white">
+                                                <option value={0}>Nam</option>
+                                                <option value={2}>Nữ</option>
+                                                <option value={1}>Khác</option>
                                             </select>
                                         ) : (
-                                            <input
-                                                type="text"
-                                                name="gender"
-                                                value={
-                                                    formData.gender === 'male'
-                                                        ? 'Nam'
-                                                        : formData.gender === 'female'
-                                                            ? 'Nữ'
-                                                            : 'Khác'
-                                                }
-                                                disabled
-                                                className="w-full pl-10 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700"
-                                            />
+                                            <input type="text" value={getGenderDisplay(formData.gender)} disabled className="w-full pl-3 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700" />
                                         )}
                                     </div>
                                 </div>

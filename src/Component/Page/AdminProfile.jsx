@@ -36,6 +36,11 @@ const ConsultantManagementComponent = () => {
     const getVietnameseSpecialization = (englishValue) => {
         return SPECIALTIES[englishValue] || englishValue || 'N/A';
     };
+    // Function to get English value from Vietnamese - THÊM FUNCTION NÀY
+    const getEnglishSpecialization = (vietnameseValue) => {
+        const entry = Object.entries(SPECIALTIES).find(([key, value]) => value === vietnameseValue);
+        return entry ? entry[0] : vietnameseValue;
+    };
     const toast = useToast();
     const handleToggleActive = async (consultant) => {
         const id = consultant.id;
@@ -123,6 +128,7 @@ const ConsultantManagementComponent = () => {
             profilePicture:  editingConsultant.profilePicture,
             bookingHistory:  editingConsultant.bookingHistory,
             totalSpending:   editingConsultant.totalSpending,
+            // Convert Vietnamese specialization back to English for storage
             specialization:  getEnglishSpecialization(editFormData.specialization),
             licenseDetails:  editingConsultant.licenseDetails,
             expYear:         editingConsultant.expYear || 0,
@@ -140,7 +146,8 @@ const ConsultantManagementComponent = () => {
             setError('Failed to update consultant. Please try again.');
             console.error('Update error:', err.response || err);
         }
-    };    const createConsultant = async (consultantData) => {
+    };    
+    const createConsultant = async (consultantData) => {
         try {
             const response = await api.post('/api/createconsultant', consultantData);
             return response.data;

@@ -36,6 +36,7 @@ export default function DatLichKham() {
     const getVietnameseSpecialization = (englishValue) => {
         return SPECIALTIES[englishValue] || englishValue;
     };
+
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -77,7 +78,6 @@ export default function DatLichKham() {
         };
         fetchAndSetConsultingService();
     }, [showToast]);
-
     // Fetch active consultants
     useEffect(() => {
         const fetchConsultants = async () => {
@@ -92,7 +92,7 @@ export default function DatLichKham() {
                 setAvailableDoctors(activeConsultants);
             } catch (error) {
                 console.error("Failed to fetch consultants:", error);
-                showToast('Không thể tải danh sách tư vấn viên.', 'error');
+                showToast('Không thể tải danh sách chuyên gia tư vấn.', 'error');
             }
         };
         fetchConsultants();
@@ -165,11 +165,11 @@ export default function DatLichKham() {
         if (!bookingPayload.consultantId || !bookingPayload.customerId || !bookingPayload.serviceTypeId) {
             setSubmitting(false);
             if (!bookingPayload.consultantId) {
-                showToast('Không tìm thấy thông tin tư vấn viên. Vui lòng chọn lại tư vấn viên.', 'error');
+                showToast('Không tìm thấy thông tin tư vấn. Vui lòng chọn lại bác sĩ.', 'error');
             } else if (!bookingPayload.customerId) {
                 showToast('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.', 'error');
             } else if (!bookingPayload.serviceTypeId) {
-                showToast('Không tìm thấy thông tin dịch vụ. Vui lòng tải lại trang.', 'error');
+                showToast('Không tìm thấy thông tin dịch vụ tư vấn. Vui lòng tải lại trang.', 'error');
             }
             return;
         }
@@ -230,7 +230,7 @@ export default function DatLichKham() {
             <div className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-12">
                 <div className="container mx-auto px-4">
                     <div className="text-center space-y-4">
-                        <h1 className="text-4xl font-bold">Đặt Lịch Tư Vấn Viên Chuyên Khoa</h1>
+                        <h1 className="text-4xl font-bold">Đặt Lịch Tư Vấn Chuyên Khoa</h1>
                         <div className="flex items-center justify-center space-x-8 mt-8">
                             <div className="text-center">
                                 <div className="text-2xl font-bold">24/7</div>
@@ -357,7 +357,7 @@ export default function DatLichKham() {
                                                                                 {doctor.name || 'Tên tư vấn viên'}
                                                                             </h3>
                                                                             <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
-                                                                               {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
+                                                                                 {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
                                                                             </p>
                                                                             <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
                                                                                 {doctor.description || 'Tư vấn viên có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
@@ -479,7 +479,7 @@ export default function DatLichKham() {
 
                                                         <div className="md:col-span-2">
                                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Ghi chú
+                                                                Lý do cần được tư vấn: 
                                                             </label>
                                                             <textarea
                                                                 name="notes"
@@ -509,7 +509,7 @@ export default function DatLichKham() {
                                                                 </span>
                                                             </div>
                                                             <div className="flex justify-between">
-                                                                <span className="text-gray-600">Ngày tư vấn :</span>
+                                                                <span className="text-gray-600">Ngày tư vấn:</span>
                                                                 <span className="text-gray-900 font-medium">{formData.date || 'Chưa chọn'}</span>
                                                             </div>
                                                         </div>
@@ -575,7 +575,7 @@ export default function DatLichKham() {
                                         <h4 className="font-semibold text-gray-900 mb-4">Thông tin lịch hẹn</h4>
                                         <div className="space-y-3 text-sm">
                                             <div className="flex justify-between">
-                                                <span className="text-gray-600">Bác sĩ:</span>
+                                                <span className="text-gray-600">Tư vấn viên:</span>
                                                 <span className="text-gray-900 font-medium text-right break-words max-w-[250px]">
                                                     {availableDoctors.find(d => d.id.toString() === formData.doctor)?.name}
                                                 </span>
@@ -638,7 +638,7 @@ export default function DatLichKham() {
                                         </li>
                                         <li className="flex items-start">
                                             <CheckCircle className="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-                                            <span className="text-sm">Thông tin bệnh nhân được bảo mật tuyệt đối.</span>
+                                            <span className="text-sm">Thông tin khách hàng được bảo mật tuyệt đối.</span>
                                         </li>
                                     </ul>
                                 </div>
