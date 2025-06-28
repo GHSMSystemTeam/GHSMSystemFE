@@ -24,6 +24,7 @@ export default function DatLichKham() {
     const [currentStep, setCurrentStep] = useState(1);
     const [consultingService, setConsultingService] = useState(null);
     const [availableDoctors, setAvailableDoctors] = useState([]);
+    const [selectedSlot, setSelectedSlot] = useState(null);
     const SPECIALTIES = {
         "Sexology_Andrology": "Y học Giới tính & Nam học",
         "Psychology": "Tư vấn tâm lý",
@@ -36,7 +37,14 @@ export default function DatLichKham() {
     const getVietnameseSpecialization = (englishValue) => {
         return SPECIALTIES[englishValue] || englishValue;
     };
-
+    // Thời gian tư vấn (mapping từ backend)
+    const timeSlots = [
+        { value: 1, label: "07:00 - 09:00", display: "07:00 - 09:00" },
+        { value: 2, label: "09:00 - 11:00", display: "09:00 - 11:00" },
+        { value: 3, label: "11:00 - 13:00", display: "11:00 - 13:00" },
+        { value: 4, label: "13:00 - 15:00", display: "13:00 - 15:00" },
+        { value: 5, label: "15:00 - 17:00", display: "15:00 - 17:00" },
+    ];
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -103,13 +111,9 @@ export default function DatLichKham() {
         phone: '',
         email: '',
         date: '',
-        time: '',
-        service: '',
         doctor: '',
         notes: '',
     });
-
-
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
 
@@ -120,6 +124,7 @@ export default function DatLichKham() {
         type: ''
     });
     const toastTimeoutRef = React.useRef(null);
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prevState => ({
@@ -156,7 +161,7 @@ export default function DatLichKham() {
             customerId: user?.id || null,
             serviceTypeId: consultingService?.id || null,
             appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
-            appointmentSlot: 0,
+            slot: selectedSlot.value,  
             duration: 0,
             description: formData.notes || ""
         };
@@ -477,6 +482,33 @@ export default function DatLichKham() {
                                                             </p>
                                                         </div>
 
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                Khung giờ tư vấn <span className="text-red-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                                    <Clock size={18} className="text-gray-400" />
+                                                                </div>
+                                                                <select
+                                                                    value={selectedSlot?.value || ''}
+                                                                    onChange={(e) => {
+                                                                        const slot = timeSlots.find(s => s.value === parseInt(e.target.value));
+                                                                        setSelectedSlot(slot);
+                                                                    }}
+                                                                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                    required
+                                                                >
+                                                                    <option value="">Chọn khung giờ...</option>
+                                                                    {timeSlots.map(slot => (
+                                                                        <option key={slot.value} value={slot.value}>
+                                                                            {slot.display}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        
                                                         <div className="md:col-span-2">
                                                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                                                 Lý do cần được tư vấn: 

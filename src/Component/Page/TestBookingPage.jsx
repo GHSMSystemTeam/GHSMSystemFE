@@ -39,6 +39,7 @@ const TestBookingPage = () => {
 
   const [selectedKit, setSelectedKit] = useState(null);
   const [appointmentDate, setAppointmentDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [currentStep, setCurrentStep] = useState(1);
   const [bookingRatings, setBookingRatings] = useState({});
@@ -55,6 +56,15 @@ const TestBookingPage = () => {
     email: '',
     address: ''
   });
+
+  // Time slots với mapping tương ứng với backend (1-5)
+  const timeSlots = [
+    { value: 1, label: "07:00 - 09:00", display: "07:00 - 09:00" },
+    { value: 2, label: "09:00 - 11:00", display: "09:00 - 11:00" },
+    { value: 3, label: "11:00 - 13:00", display: "11:00 - 13:00" },
+    { value: 4, label: "13:00 - 15:00", display: "13:00 - 15:00" },
+    { value: 5, label: "15:00 - 17:00", display: "15:00 - 17:00" },
+  ];
 
   useEffect(() => {
     if (user) {
@@ -100,7 +110,6 @@ const TestBookingPage = () => {
 
 
     // Lấy bác sĩ mặc định (chạy ngầm)
-    // Gọi API lấy danh sách bác sĩ khi vào trang
     const fetchDefaultDoctor = async () => {
       try {
         const res = await api.get('/api/activeconsultants'); // Đổi endpoint nếu backend bạn khác
@@ -114,11 +123,6 @@ const TestBookingPage = () => {
     fetchDefaultDoctor();
 
   }, []);
-
-  const timeSlots = [
-    '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
-    '13:30', '14:00', '14:30', '15:00', '15:30', '16:00'
-  ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -175,7 +179,8 @@ const TestBookingPage = () => {
       consultantId: String(selectedDoctor.id),
       customerId: user.id,
       serviceTypeId: selectedKit.id,
-      appointmentDate: new Date(appointmentDate).toISOString(),     
+      appointmentDate: new Date(appointmentDate).toISOString(),
+      slot: selectedSlot.value,     
       duration: 0,
       description: userInfo.address || `Địa chỉ: ${userInfo.address}` 
     };
@@ -187,15 +192,11 @@ const TestBookingPage = () => {
 
       showToast('Đặt lịch thành công!', 'success');
       setShowConfirmation(true);
-
-      // XÓA PHẦN NÀY để tránh reload ngay lập tức
-      // const res = await api.get('/api/activebookings');
-      // setBookings(res.data || []);
-
       // Reset form
       setTimeout(() => {
         setSelectedKit(null);
         setAppointmentDate('');
+        setSelectedSlot(null);
         setCurrentStep(1);
         setShowConfirmation(false);
       }, 3000);
@@ -449,7 +450,7 @@ const TestBookingPage = () => {
                       <div className="bg-white rounded-lg">
                         <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                           <Calendar className="mr-2 text-blue-600" size={20} />
-                          Chọn Ngày Xét Nghiệm
+                          Chọn Ngày và Giờ Xét Nghiệm
                         </h3>
                         <div className="grid md:grid-cols-2 gap-6">
                           <div>
@@ -463,6 +464,26 @@ const TestBookingPage = () => {
                               min={new Date().toISOString().split('T')[0]}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Chọn khung giờ <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={selectedSlot?.value || ''}
+                              onChange={(e) => {
+                                const slot = timeSlots.find(s => s.value === parseInt(e.target.value));
+                                setSelectedSlot(slot);
+                              }}
+                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value="">Chọn khung giờ...</option>
+                              {timeSlots.map(slot => (
+                                <option key={slot.value} value={slot.value}>
+                                  {slot.display}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>

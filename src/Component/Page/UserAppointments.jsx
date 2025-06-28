@@ -24,6 +24,17 @@ export default function UserAppointments() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [appointmentToDelete, setAppointmentToDelete] = useState(null);
 
+    // Thêm hàm chuyển đổi slot thành khung giờ
+    const getSlotTimeRange = (slot) => {
+        switch (slot) {
+            case 1: return "07:00 - 09:00";
+            case 2: return "09:00 - 11:00";
+            case 3: return "11:00 - 13:00";
+            case 4: return "13:00 - 15:00";
+            case 5: return "15:00 - 17:00";
+            default: return "Chưa xác định";
+        }
+    };
     // Lấy lịch xét nghiệm từ API backend
     useEffect(() => {
         if (!user) {
@@ -238,6 +249,10 @@ export default function UserAppointments() {
                                                         year: 'numeric'
                                                     })}</span>
                                                 </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Clock size={16} className="text-green-500" />
+                                                    <span className="font-medium">{getSlotTimeRange(booking.slot)}</span>
+                                                </div>
                                             </div>
 
                                             {/* Status and Actions */}
@@ -350,6 +365,10 @@ export default function UserAppointments() {
                                                         year: 'numeric'
                                                     })}</span>
                                                 </div>
+                                                <div className="flex items-center space-x-2">
+                                                    <Clock size={16} className="text-green-500" />
+                                                    <span className="font-medium">{getSlotTimeRange(booking.slot)}</span>
+                                                </div>
                                             </div>
 
                                             {/* Status and Actions */}
@@ -443,9 +462,6 @@ export default function UserAppointments() {
                     </div>
                 </div>
             )}
-
-            {/* Modal chi tiết lịch hẹn */}
-            {/* Modal chi tiết lịch hẹn */}
             {/* Modal chi tiết lịch hẹn */}
             {showDetailModal && selectedAppointment && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -523,6 +539,12 @@ export default function UserAppointments() {
                                                             month: 'numeric',
                                                             year: 'numeric',
                                                         })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex justify-between">
+                                                    <span className="text-gray-600">Khung giờ:</span>
+                                                    <span className="font-medium text-green-600">
+                                                        {getSlotTimeRange(selectedAppointment.slot)}
                                                     </span>
                                                 </div>
                                                 <div className="flex justify-between">
@@ -652,6 +674,12 @@ export default function UserAppointments() {
                                                         month: 'numeric',
                                                         year: 'numeric',
                                                     })}
+                                                </span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Khung giờ:</span>
+                                                <span className="font-medium text-green-600">
+                                                    {getSlotTimeRange(selectedAppointment.slot)}
                                                 </span>
                                             </div>
                                             <div className="flex justify-between">

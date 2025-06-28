@@ -904,7 +904,9 @@ const BookingManagementComponent = () => {
     const [loading, setLoading] = useState(false);
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [selectedBooking, setSelectedBooking] = useState(null);
-
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const { showToast } = useToast();
+    
     useEffect(() => {
         fetchBookings();
     }, []);
@@ -920,7 +922,29 @@ const BookingManagementComponent = () => {
             setLoading(false);
         }
     };
-
+    const getSlotTimeRange = (slot) => {
+        switch (slot) {
+            case 1: return "07:00 - 09:00";
+            case 2: return "09:00 - 11:00";
+            case 3: return "11:00 - 13:00";
+            case 4: return "13:00 - 15:00";
+            case 5: return "15:00 - 17:00";
+            default: return "N/A";
+        }
+    };
+    const slotOptions = [
+        { value: 1, label: "07:00 - 09:00" },
+        { value: 2, label: "09:00 - 11:00" },
+        { value: 3, label: "11:00 - 13:00" },
+        { value: 4, label: "13:00 - 15:00" },
+        { value: 5, label: "15:00 - 17:00" },
+    ];
+    const statusOptions = [
+        { value: 0, label: "Chờ xác nhận" },
+        { value: 1, label: "Xác nhận" },
+        { value: 2, label: "Hoàn thành" },
+        { value: 3, label: "Hủy" },
+    ];
     const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     // Functions to handle modal operations
     const openAddBookingModal = () => {
@@ -933,17 +957,28 @@ const BookingManagementComponent = () => {
         setShowBookingModal(true);
     };
     // Placeholder for saving/updating a booking
-    const handleSaveBooking = (bookingData) => {
-        if (selectedBooking) {
-            // Update existing booking
-            setBookings(bookings.map(b => b.id === selectedBooking.id ? { ...b, ...bookingData } : b));
-        } else {
-            // Add new booking
-            const newBooking = { ...bookingData, id: `bk${Date.now()}` }; // Simple ID generation
-            setBookings([...bookings, newBooking]);
+    const handleUpdateBooking = async (e) => {
+        e.preventDefault();
+        if (!selectedBooking) return;
+
+        setIsSubmitting(true);
+        try {
+            // Gọi API cập nhật slot
+            await api.put(`/api/booking/slot/${selectedBooking.id}`, selectedBooking.slot);
+            
+            // Gọi API cập nhật status
+            await api.put(`/api/servicebooking/status/${selectedBooking.id}/${selectedBooking.status}`);
+            
+            showToast('Cập nhật booking thành công!', 'success');
+            setShowBookingModal(false);
+            await fetchBookings(); // Tải lại danh sách
+        } catch (err) {
+            showToast('Cập nhật thất bại. Vui lòng thử lại.', 'error');
+            console.error("Update error:", err);
+        } finally {
+            setIsSubmitting(false);
         }
-        setShowBookingModal(false);
-    }
+    };
     // Placeholder for cancelling/deleting a booking
     const handleCancelBooking = (bookingId) => {
         // Add confirmation logic here if needed
@@ -976,7 +1011,7 @@ const BookingManagementComponent = () => {
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">Date</th>
-                                    <th scope="col" className="px-6 py-3">Time</th>
+                                    <th scope="col" className="px-6 py-3">Time Slot</th>
                                     <th scope="col" className="px-6 py-3">Patient</th>
                                     <th scope="col" className="px-6 py-3">Service Type</th>
                                     <th scope="col" className="px-6 py-3">Consultant</th>
@@ -998,7 +1033,7 @@ const BookingManagementComponent = () => {
                                     bookings.map((booking) => (
                                         <tr key={booking.id} className="bg-white border-b hover:bg-gray-50">
                                             <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleDateString() : ''}</td>
-                                            <td className="px-6 py-4">{booking.appointmentDate ? new Date(booking.appointmentDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}</td>
+                                            <td className="px-6 py-4">{getSlotTimeRange(booking.slot)}</td>
                                             <td className="px-6 py-4">{booking.customerId?.name || booking.customerId?.email || 'N/A'}</td>
                                             <td className="px-6 py-4">{booking.serviceTypeId?.name || 'N/A'}</td>
                                             <td className="px-6 py-4">{booking.consultantId?.name || 'N/A'}</td>
@@ -1012,7 +1047,12 @@ const BookingManagementComponent = () => {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 flex items-center gap-2">
-                                                <button onClick={() => setSelectedBooking(booking)} className="text-sm text-blue-600 hover:underline">View</button>
+                                                    <button 
+                                                        onClick={() => openEditBookingModal(booking)}
+                                                        className="text-sm text-blue-600 hover:underline"
+                                                    >
+                                                        Edit
+                                                    </button>
                                             </td>
                                         </tr>
                                     ))
@@ -1023,78 +1063,83 @@ const BookingManagementComponent = () => {
                 </div>
             </div>
 
-            {/* Booking Modal (Add/Edit) */}
-            {showBookingModal && (
+            {/*Edit Booking Modal */}
+            {showBookingModal && selectedBooking && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-semibold mb-4">{selectedBooking ? 'Edit Booking' : 'Add New Booking'}</h3>
-                        
+                        <h3 className="text-xl font-semibold mb-4">Edit Booking</h3>  
                         {/* Basic Form Structure - Needs to be built out with state and handlers */}
-                        <form onSubmit={(e) => {
-                            e.preventDefault();
-                            // Collect form data and call handleSaveBooking
-                            const formData = { // Example: replace with actual form field values
-                                date: e.target.date.value,
-                                time: e.target.time.value,
-                                patientName: e.target.patientName.value,
-                                serviceName: e.target.serviceName.value,
-                                type: e.target.type.value,
-                                consultantId: e.target.consultantId.value || null,
-                                status: e.target.status.value,
-                                notes: e.target.notes.value,
-                            };
-                            handleSaveBooking(formData);
-                        }}>
+                        <form onSubmit={handleUpdateBooking}>
+                            {/* Display booking info */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                 <div>
-                                    <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                                    <input type="date" name="date" id="date" defaultValue={selectedBooking?.date || new Date().toISOString().split('T')[0]} className="border p-2 rounded w-full" required />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Patient</label>
+                                    <p className="text-gray-900 font-medium">{selectedBooking.customerId?.name || 'N/A'}</p>
                                 </div>
                                 <div>
-                                    <label htmlFor="time" className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                                    <input type="time" name="time" id="time" defaultValue={selectedBooking?.time} className="border p-2 rounded w-full" required />
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Service</label>
+                                    <p className="text-gray-900 font-medium">{selectedBooking.serviceTypeId?.name || 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                    <p className="text-gray-900 font-medium">{selectedBooking.appointmentDate ? new Date(selectedBooking.appointmentDate).toLocaleDateString() : 'N/A'}</p>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Consultant</label>
+                                    <p className="text-gray-900 font-medium">{selectedBooking.consultantId?.name || 'N/A'}</p>
                                 </div>
                             </div>
-                            <div className="mb-4">
-                                <label htmlFor="patientName" className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
-                                <input type="text" name="patientName" id="patientName" defaultValue={selectedBooking?.patientName} placeholder="Patient Name" className="border p-2 rounded w-full" required />
-                            </div>
-                             <div className="mb-4">
-                                <label htmlFor="serviceName" className="block text-sm font-medium text-gray-700 mb-1">Service Name</label>
-                                <input type="text" name="serviceName" id="serviceName" defaultValue={selectedBooking?.serviceName} placeholder="e.g., STD Panel, Consultation" className="border p-2 rounded w-full" required />
-                            </div>
+
+                            {/* Editable fields */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                               <div>
-                                    <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                                    <select name="type" id="type" defaultValue={selectedBooking?.type || 'Consultation'} className="border p-2 rounded w-full">
-                                        <option value="Consultation">Consultation</option>
-                                        <option value="Test">Test</option>
+                                <div>
+                                    <label htmlFor="slot" className="block text-sm font-medium text-gray-700 mb-1">Time Slot *</label>
+                                    <select
+                                        name="slot"
+                                        id="slot"
+                                        value={selectedBooking.slot || 1}
+                                        onChange={(e) => setSelectedBooking({...selectedBooking, slot: parseInt(e.target.value)})}
+                                        className="border p-2 rounded w-full"
+                                        required
+                                    >
+                                        {slotOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="consultantId" className="block text-sm font-medium text-gray-700 mb-1">Consultant</label>
-                                    <select name="consultantId" id="consultantId" defaultValue={selectedBooking?.consultantId || ""} className="border p-2 rounded w-full">
-                                        <option value="">N/A</option>
-                                        {consultantsData.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                                    <select
+                                        name="status"
+                                        id="status"
+                                        value={selectedBooking.status ?? 0}
+                                        onChange={(e) => setSelectedBooking({...selectedBooking, status: parseInt(e.target.value)})}
+                                        className="border p-2 rounded w-full"
+                                        required
+                                    >
+                                        {statusOptions.map(opt => (
+                                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                        ))}
                                     </select>
                                 </div>
-                            </div>
-                             <div className="mb-4">
-                                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                <select name="status" id="status" defaultValue={selectedBooking?.status || 'Scheduled'} className="border p-2 rounded w-full">
-                                    <option value="Scheduled">Scheduled</option>
-                                    <option value="Completed">Completed</option>
-                                    <option value="Cancelled">Cancelled</option>
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-                                <textarea name="notes" id="notes" rows="3" defaultValue={selectedBooking?.notes} placeholder="Optional notes" className="border p-2 rounded w-full"></textarea>
                             </div>
 
                             <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setShowBookingModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Booking</button>
+                                <button 
+                                    type="button" 
+                                    onClick={() => setShowBookingModal(false)} 
+                                    className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+                                    disabled={isSubmitting}
+                                >
+                                    Cancel
+                                </button>
+                                <button 
+                                    type="submit" 
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-blue-300"
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? 'Updating...' : 'Update Booking'}
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -1315,66 +1360,6 @@ const PostManagementComponent = () => {
         ratings: 4.7,
         feedback: "Thông tin đầy đủ về tránh thai",
         createdDate: "2023-12-08",
-        isActive: true
-    },
-    {
-        id: 16,
-        title: "Sàng lọc ung thư vú: Hướng dẫn tự khám",
-        category: "Phòng chống ung thư",
-        content: "Phát hiện sớm ung thư vú rất quan trọng. Hướng dẫn chi tiết cách tự khám vú tại nhà, nhận biết các dấu hiệu bất thường và lịch trình tầm soát định kỳ.",
-        consultantId: 13,
-        consultantName: "Dr. Phan Van M",
-        ratings: 4.8,
-        feedback: "Kiến thức quan trọng mọi phụ nữ cần biết",
-        createdDate: "2023-12-05",
-        isActive: true
-    },
-    {
-        id: 17,
-        title: "Chăm sóc sức khỏe trong chu kỳ kinh nguyệt",
-        category: "Phụ khoa",
-        content: "Mỗi giai đoạn trong chu kỳ kinh nguyệt có những đặc điểm riêng. Hướng dẫn chăm sóc sức khỏe, điều chỉnh hoạt động và chế độ ăn uống phù hợp với từng giai đoạn.",
-        consultantId: 6,
-        consultantName: "Dr. Vo Thi F",
-        ratings: 4.5,
-        feedback: "Giúp phụ nữ hiểu rõ hơn về cơ thể mình",
-        createdDate: "2023-12-03",
-        isActive: true
-    },
-    {
-        id: 18,
-        title: "Sức khỏe tâm lý nam giới: Vượt qua áp lực xã hội",
-        category: "Tâm lý học",
-        content: "Nam giới thường ít thể hiện cảm xúc và áp lực tâm lý. Phân tích các áp lực xã hội đối với nam giới và cách quản lý stress, duy trì sức khỏe tinh thần tích cực.",
-        consultantId: 1,
-        consultantName: "Dr. Nguyen Van A",
-        ratings: 4.2,
-        feedback: "Chủ đề ít được quan tâm nhưng rất cần thiết",
-        createdDate: "2023-12-01",
-        isActive: true
-    },
-    {
-        id: 19,
-        title: "Dinh dưỡng cho phụ nữ mãn kinh",
-        category: "Dinh dưỡng",
-        content: "Phụ nữ mãn kinh cần chế độ dinh dưỡng đặc biệt để duy trì sức khỏe. Hướng dẫn về calcium, vitamin D, phytoestrogen và các chất dinh dưỡng quan trọng khác.",
-        consultantId: 2,
-        consultantName: "Dr. Tran Thi B",
-        ratings: 4.6,
-        feedback: "Rất hữu ích cho phụ nữ trung niên",
-        createdDate: "2023-11-28",
-        isActive: true
-    },
-    {
-        id: 20,
-        title: "Vô sinh nam: Nguyên nhân và phương pháp điều trị",
-        category: "Sức khỏe sinh sản",
-        content: "Vô sinh nam chiếm 40% các trường hợp vô sinh. Phân tích các nguyên nhân từ chất lượng tinh trùng, hormone đến lối sống và các phương pháp hỗ trợ sinh sản hiện đại.",
-        consultantId: 3,
-        consultantName: "Dr. Le Van C",
-        ratings: 4.4,
-        feedback: "Thông tin quan trọng cho các cặp vợ chồng hiếm muộn",
-        createdDate: "2023-11-25",
         isActive: true
     }
         ];
