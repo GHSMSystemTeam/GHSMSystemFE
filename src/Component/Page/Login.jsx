@@ -80,6 +80,8 @@ export default function Login() {
                 navigate('/admin-profile');
             } else if (userData.role === 'consultant') {
                 navigate('/consultantdashboard');
+            } else if (userData.role === 'staff') {
+                navigate('/staff-management'); // Đường dẫn trang quản lý staff
             } else {
                 // Redirect về trang trước đó hoặc trang chủ
                 const from = location.state?.from || '/';

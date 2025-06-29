@@ -244,7 +244,7 @@ const TestBookingPage = () => {
       <Header />
 
       {/* Hero section */}
-      <div className="relative bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-16 mb-8">
+      <div className="relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-16 mb-8">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h1 className="text-4xl md:text-5xl font-bold mb-4">Dịch Vụ Xét Nghiệm Sức Khỏe</h1>
@@ -312,7 +312,7 @@ const TestBookingPage = () => {
             <div className="lg:col-span-2">
               {currentStep === 1 && (
                 <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 py-5 px-6">
+                  <div className="bg-gradient-to-r from-indigo-600 to-purple-600 py-5 px-6">
                     <h2 className="text-2xl font-bold text-white flex items-center">
                       <Package className="mr-3" size={24} />
                       Chọn Gói Xét Nghiệm

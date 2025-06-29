@@ -5,10 +5,8 @@ import ConsultantProfile from './ConsultantProfile';
 
 const navItems = [
   { id: 'questions', label: 'Câu hỏi', icon: MessageCircle },
-  { id: 'schedules', label: 'Dịch vụ xét nghiệm', icon: FileText },
-  { id: 'examinations', label: 'Lịch tư vấn', icon: Calendar }, 
+  { id: 'consulting', label: 'Lịch tư vấn', icon: Calendar }, 
   { id: 'blogs', label: 'Quản lý blog', icon: Edit },
-  { id: 'examinationResults', label: 'Kết quả xét nghiệm', icon: TestTube }
 ];
 
 export default function Sidebar({ activeTab, setActiveTab }) {
