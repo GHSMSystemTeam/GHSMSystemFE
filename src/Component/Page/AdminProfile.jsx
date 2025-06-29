@@ -639,7 +639,7 @@ const StaffManagementComponent = () => {
     const fetchStaffList = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/api/user'); // Đổi endpoint đúng với backend của bạn
+            const res = await api.get('/api/user/staff'); // Đổi endpoint đúng với backend của bạn
             setStaffList(res.data || []);
         } catch (err) {
             setStaffList([]);
@@ -686,6 +686,7 @@ const StaffManagementComponent = () => {
                 expYear: 0
             });
             // Gọi lại fetch staff list nếu có
+            fetchStaffList();
         } catch (err) {
             const msg = err.response?.data?.message || 'Tạo tài khoản staff thất bại!';
             setAddStaffError(msg);
@@ -2983,7 +2984,7 @@ export default function AdminProfile() {
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
                             activeView === 'staffAccounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
                             }`}>    
-                            <Users size={18} />
+                            <User size={18} />
                             <span>Staff</span>
                         </button>
                         <button onClick={() => setActiveView('services')} 
