@@ -626,6 +626,23 @@ export default function UserAppointments() {
                                 </span>
                             </div>
 
+                            {/* CẢM NGHĨ KHÁCH HÀNG */}
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Cảm nghĩ của bạn về bác sĩ/dịch vụ
+                                </label>
+                                <textarea
+                                    value={ratingContent}
+                                    onChange={e => setRatingContent(e.target.value)}
+                                    placeholder="Hãy chia sẻ cảm nghĩ, trải nghiệm hoặc lời nhắn của bạn..."
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                    rows={4}
+                                    required
+                                />
+                            </div>
+
+
+
                             {/* Action Buttons */}
                             <div className="flex justify-end space-x-3">
                                 <button
