@@ -625,6 +625,185 @@ const CustomerManagementComponent = () => {
     </div>
   );
 };
+const StaffManagementComponent = () => {
+    const [staffList, setStaffList] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const createStaff = async (staffData) => {
+        try {
+            const response = await api.post('/api/createStaff', staffData);
+            return response.data;
+        } catch (error) {
+            throw error;
+        }
+    };
+    const fetchStaffList = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/api/user'); // Đổi endpoint đúng với backend của bạn
+            setStaffList(res.data || []);
+        } catch (err) {
+            setStaffList([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchStaffList();
+    }, []);
+    // Thêm modal và form tạo staff mới
+    const [showAddStaffModal, setShowAddStaffModal] = useState(false);
+    const [newStaff, setNewStaff] = useState({
+        name: '',
+        email: '',
+        password: '',
+        gender: 0,
+        phone: '',
+        specialization: '',
+        expYear: ''
+    });
+    const [addStaffError, setAddStaffError] = useState('');
+    const { showToast } = useToast();
+
+    const handleAddStaff = async (e) => {
+        e.preventDefault();
+        setAddStaffError('');
+        // Validation
+        if (!newStaff.name || !newStaff.email || !newStaff.password) {
+            setAddStaffError('Vui lòng nhập đầy đủ thông tin bắt buộc.');
+            return;
+        }
+        try {
+            await createStaff(newStaff);
+            showToast('Tạo tài khoản staff thành công!', 'success');
+            setShowAddStaffModal(false);
+            setNewStaff({
+                name: '',
+                email: '',
+                password: '',
+                gender: 0,
+                phone: '',
+                specialization: null,
+                expYear: 0
+            });
+            // Gọi lại fetch staff list nếu có
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Tạo tài khoản staff thất bại!';
+            setAddStaffError(msg);
+            showToast(msg, 'error');
+        }
+    };
+    return (
+        <div className="bg-white rounded-xl shadow p-6 mb-8">
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-semibold text-gray-800">Staff Account Management</h2>
+                <button
+                    onClick={() => setShowAddStaffModal(true)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+                >
+                    Thêm Staff
+                </button>
+            </div>
+            <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-gray-500">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <tr>
+                            <th className="px-6 py-3">Name</th>
+                            <th className="px-6 py-3">Email</th>
+                            <th className="px-6 py-3">Phone</th>
+                            <th className="px-6 py-3">Gender</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="6" className="text-center py-4">Loading...</td>
+                            </tr>
+                        ) : staffList.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" className="text-center py-4">No staff found.</td>
+                            </tr>
+                        ) : (
+                            staffList.map(staff => (
+                                <tr key={staff.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-6 py-4">{staff.name}</td>
+                                    <td className="px-6 py-4">{staff.email}</td>
+                                    <td className="px-6 py-4">{staff.phone}</td>
+                                    <td className="px-6 py-4">{staff.gender === 0 ? 'Nam' : staff.gender === 2 ? 'Nữ' : 'Khác'}</td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {showAddStaffModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md">
+                        <h3 className="text-xl font-semibold mb-4">Tạo tài khoản Staff mới</h3>
+                        <form onSubmit={handleAddStaff}>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Tên *</label>
+                                <input
+                                    type="text"
+                                    value={newStaff.name}
+                                    onChange={e => setNewStaff({ ...newStaff, name: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Email *</label>
+                                <input
+                                    type="email"
+                                    value={newStaff.email}
+                                    onChange={e => setNewStaff({ ...newStaff, email: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Mật khẩu *</label>
+                                <input
+                                    type="password"
+                                    value={newStaff.password}
+                                    onChange={e => setNewStaff({ ...newStaff, password: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                    required
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Giới tính</label>
+                                <select
+                                    value={newStaff.gender}
+                                    onChange={e => setNewStaff({ ...newStaff, gender: parseInt(e.target.value) })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                >
+                                    <option value={0}>Nam</option>
+                                    <option value={2}>Nữ</option>
+                                    <option value={1}>Khác</option>
+                                </select>
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium mb-1">Số điện thoại</label>
+                                <input
+                                    type="tel"
+                                    value={newStaff.phone}
+                                    onChange={e => setNewStaff({ ...newStaff, phone: e.target.value })}
+                                    className="w-full p-2 border border-gray-300 rounded-md"
+                                />
+                            </div>
+                            {addStaffError && <div className="text-red-600 mb-2">{addStaffError}</div>}
+                            <div className="flex justify-end gap-4">
+                                <button type="button" onClick={() => setShowAddStaffModal(false)} className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">Hủy</button>
+                                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">Tạo Staff</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+    </div>
+    );
+};
 // Get all service types
 export const getServiceTypes = async () => {
     const response = await api.get('/api/servicetypes');
@@ -2716,6 +2895,8 @@ export default function AdminProfile() {
                 return <FilterInterface title="Account" />;
             case 'consultantAccounts':
                 return <ConsultantManagementComponent />;
+            case 'staffAccounts':
+                return <StaffManagementComponent />;
             case 'customerAccounts':
                 return <CustomerManagementComponent/>;
             case 'services':
@@ -2797,6 +2978,13 @@ export default function AdminProfile() {
                             }`}>
                             <User size={18} />
                             <span>Customers</span>
+                        </button>
+                        <button onClick={() => setActiveView('staffAccounts')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'staffAccounts' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                            }`}>    
+                            <Users size={18} />
+                            <span>Staff</span>
                         </button>
                         <button onClick={() => setActiveView('services')} 
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${

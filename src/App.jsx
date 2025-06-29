@@ -28,6 +28,7 @@ import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
 import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
 import Blog from './Component/Page/Blog'
 import AdminProtectedRoute from './Component/Page/AdminProtectRoute'
+
 import {
   NewsComponent1,
   NewsComponent2,
@@ -37,6 +38,7 @@ import {
   NewsComponent6,
 } from './Component/Page/ArticlePage';
 import ConsultantDashboard from './Component/Page/ConsultantDashboard'
+import StaffProfile from './Component/Page/StaffManagement/StaffProfile'
 import BlogsPanel from './Component/Page/ConsultantDashboard/BlogsPanel'
 function App() {
 
@@ -83,6 +85,14 @@ function App() {
                   <ConsultantDashboard />
                 </ProtectedRoute>
               }
+            />
+            <Route
+              path="/staff-management"
+              element={
+                <ProtectedRoute requiredRole="staff">
+                  <StaffProfile />
+                </ProtectedRoute>
+              }   
             />
           </Routes>
         </ToastProvider>
