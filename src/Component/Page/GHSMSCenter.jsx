@@ -225,7 +225,7 @@ export default function GHSMSCenter() {
                         <h1 className="text-5xl font-bold text-gray-800 mb-6 leading-tight">
                             Chào mừng đến với <br />
                             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                               Dịch vụ chăm sóc sức khỏe giới tính 
+                                Dịch vụ chăm sóc sức khỏe giới tính
                             </span>
                         </h1>
                         <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
@@ -404,15 +404,6 @@ export default function GHSMSCenter() {
                                                                         </div>
                                                                     </div>
                                                                 )}
-
-                                                                {/* Book Appointment Button */}
-                                                                <button
-                                                                    onClick={() => handleBookAppointment(doctor.id)}
-                                                                    className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-2 group active:scale-95"
-                                                                >
-                                                                    <span>Đặt lịch ngay</span>
-                                                                    <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform" />
-                                                                </button>
                                                             </div>
                                                         </div>
                                                     ))

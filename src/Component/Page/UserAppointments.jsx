@@ -3,7 +3,7 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check } from 'lucide-react';
+import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
@@ -17,12 +17,19 @@ export default function UserAppointments() {
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
 
-
     // Modal state
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [appointmentToDelete, setAppointmentToDelete] = useState(null);
+
+    // Rating modal state
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [appointmentToRate, setAppointmentToRate] = useState(null);
+    const [ratingValue, setRatingValue] = useState(5);
+    const [ratingTitle, setRatingTitle] = useState('');
+    const [ratingContent, setRatingContent] = useState('');
+    const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
     // Thêm hàm chuyển đổi slot thành khung giờ
     const getSlotTimeRange = (slot) => {
@@ -35,6 +42,7 @@ export default function UserAppointments() {
             default: return "Chưa xác định";
         }
     };
+
     // Lấy lịch xét nghiệm từ API backend
     useEffect(() => {
         if (!user) {
@@ -152,6 +160,7 @@ export default function UserAppointments() {
             default: return 'Không xác định';
         }
     };
+
     const getStatusColor = (status) => {
         switch (status) {
             case 0: return 'bg-yellow-100 text-yellow-800';
@@ -162,7 +171,83 @@ export default function UserAppointments() {
         }
     };
 
+    // THÊM: Kiểm tra liệu buổi hẹn đã hoàn thành chưa (status = 2) để cho phép đánh giá
+    const canRateAppointment = (appointment) => {
+        return appointment.status === 2; // Chỉ cho phép đánh giá khi đã hoàn thành
+    };
 
+    // THÊM: Mở modal đánh giá
+    const openRatingModal = (appointment) => {
+        setAppointmentToRate(appointment);
+        setShowRatingModal(true);
+    };
+
+    // THÊM: Đóng modal đánh giá và reset form
+    const closeRatingModal = () => {
+        setShowRatingModal(false);
+        setAppointmentToRate(null);
+        setRatingValue(5);
+        setRatingTitle('');
+        setRatingContent('');
+    };
+
+    // THÊM: Hàm xử lý đánh giá
+    const handleSubmitRating = async (e) => {
+        e.preventDefault();
+        if (!user || !appointmentToRate || !appointmentToRate.consultantId) {
+            showToast('Không thể đánh giá, thiếu thông tin cần thiết', 'error');
+            return;
+        }
+
+        setIsSubmittingRating(true);
+
+        try {
+            // Tạo đối tượng rating theo định dạng API
+            const ratingData = {
+                customerId: user.id,
+                consultantId: appointmentToRate.consultantId.id,
+                serviceBookingId: appointmentToRate.id,
+                title: ratingTitle,
+                rating: ratingValue,
+                content: ratingContent,
+                isPublic: true
+            };
+
+            // Gọi API tạo đánh giá
+            const response = await api.post('/api/rating', ratingData);
+
+            showToast('Đã gửi đánh giá thành công!', 'success');
+            closeRatingModal();
+
+            // Cập nhật trạng thái local để hiển thị lịch hẹn đã được đánh giá
+            // (tùy chọn: có thể thêm trường isRated vào state của booking)
+        } catch (error) {
+            console.error('Rating submission error:', error);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Không thể gửi đánh giá. Vui lòng thử lại!';
+            showToast(errorMessage, 'error');
+        } finally {
+            setIsSubmittingRating(false);
+        }
+    };
+
+    const renderStarRating = (rating) => {
+        const stars = [];
+        for (let i = 1; i <= 5; i++) {
+            stars.push(
+                <button
+                    key={i}
+                    type="button"
+                    onClick={() => setRatingValue(i)}
+                    className={`${i <= ratingValue ? 'text-yellow-400' : 'text-gray-300'} text-2xl focus:outline-none`}
+                >
+                    ★
+                </button>
+            );
+        }
+        return stars;
+    };
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-24 mt-10">
@@ -268,6 +353,18 @@ export default function UserAppointments() {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
+
+                                                    {/* THÊM: Nút đánh giá khi đã hoàn thành */}
+                                                    {canRateAppointment(booking) && (
+                                                        <button
+                                                            onClick={() => openRatingModal(booking)}
+                                                            className="p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition-colors"
+                                                            title="Đánh giá bác sĩ"
+                                                        >
+                                                            <Star size={16} />
+                                                        </button>
+                                                    )}
+
                                                     {/* Nút hủy lịch hẹn */}
                                                     {canCancelAppointment(booking.status) && (
                                                         <button
@@ -384,6 +481,18 @@ export default function UserAppointments() {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
+
+                                                    {/* THÊM: Nút đánh giá cho xét nghiệm khi đã hoàn thành và có consultantId */}
+                                                    {canRateAppointment(booking) && booking.consultantId && (
+                                                        <button
+                                                            onClick={() => openRatingModal(booking)}
+                                                            className="p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition-colors"
+                                                            title="Đánh giá bác sĩ"
+                                                        >
+                                                            <Star size={16} />
+                                                        </button>
+                                                    )}
+
                                                     {/* Nút hủy lịch hẹn */}
                                                     {canCancelAppointment(booking.status) && (
                                                         <button
@@ -462,6 +571,91 @@ export default function UserAppointments() {
                     </div>
                 </div>
             )}
+
+            {/* THÊM: Modal đánh giá */}
+            {showRatingModal && appointmentToRate && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full animate-scale-in">
+                        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-6 py-4 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold flex items-center">
+                                    <Star className="fill-current mr-2" size={20} /> Đánh giá bác sĩ
+                                </h3>
+                                <button
+                                    onClick={closeRatingModal}
+                                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleSubmitRating} className="p-6 space-y-6">
+                            <div className="text-center mb-4">
+                                <div className="w-16 h-16 bg-indigo-100 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                    <User className="text-indigo-600" size={28} />
+                                </div>
+                                <h4 className="font-semibold text-lg">
+                                    {appointmentToRate.consultantId?.name || 'Bác sĩ'}
+                                </h4>
+                                <p className="text-sm text-gray-500">
+                                    {appointmentToRate.serviceTypeId?.name || 'Dịch vụ'} •
+                                    {new Date(appointmentToRate.appointmentDate).toLocaleDateString('vi-VN')}
+                                </p>
+
+                                <div className="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                                    <p className="text-sm text-blue-800">
+                                        Đánh giá của bạn giúp chúng tôi nâng cao chất lượng dịch vụ và giúp người dùng khác
+                                        lựa chọn bác sĩ phù hợp.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Star Rating */}
+                            <div className="flex flex-col items-center space-y-2">
+                                <label className="text-gray-700 font-medium">Đánh giá của bạn</label>
+                                <div className="flex space-x-1">
+                                    {renderStarRating()}
+                                </div>
+                                <span className="text-sm text-gray-600 font-medium">
+                                    {ratingValue === 1 && "Rất không hài lòng"}
+                                    {ratingValue === 2 && "Không hài lòng"}
+                                    {ratingValue === 3 && "Bình thường"}
+                                    {ratingValue === 4 && "Hài lòng"}
+                                    {ratingValue === 5 && "Rất hài lòng"}
+                                </span>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={closeRatingModal}
+                                    className="px-4 py-2 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-100"
+                                    disabled={isSubmittingRating}
+                                >
+                                    Huỷ
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-70"
+                                    disabled={isSubmittingRating}
+                                >
+                                    {isSubmittingRating ? (
+                                        <div className="flex items-center">
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                                            <span>Đang gửi...</span>
+                                        </div>
+                                    ) : (
+                                        "Gửi đánh giá"
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {/* Modal chi tiết lịch hẹn */}
             {showDetailModal && selectedAppointment && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
@@ -489,20 +683,6 @@ export default function UserAppointments() {
 
                         {/* Content */}
                         <div className="p-6 space-y-6">
-                            {/* QR Code cho check-in
-                            <div className="flex flex-col items-center justify-center p-4 border border-gray-200 rounded-xl bg-white">
-                                <div className="text-center mb-3">
-                                    <p className="text-sm text-gray-500">Quét mã QR để check-in tại quầy</p>
-                                </div>
-                                <div className="bg-white p-2 rounded-lg border border-gray-200 w-40 h-40 flex items-center justify-center">
-                                    {/* Thay bằng thư viện QR code thật khi implement */}
-                            {/* <div className="border-2 border-gray-800 p-4 w-full h-full flex items-center justify-center">
-                                        <span className="text-xs">Mã QR: {selectedAppointment.id.substring(0, 8)}</span>
-                                    </div>
-                                </div>
-                                <p className="mt-3 text-sm font-semibold">Mã lịch hẹn: {selectedAppointment.id.substring(0, 8).toUpperCase()}</p>
-                            </div> */}
-
                             {/* Status Badge */}
                             <div className="flex justify-center">
                                 <div className={`px-4 py-2 rounded-full ${getStatusColor(selectedAppointment.status)} font-medium text-sm inline-flex items-center`}>
@@ -751,19 +931,35 @@ export default function UserAppointments() {
 
                         {/* Footer actions */}
                         <div className="mt-2 border-t border-gray-100 pt-4 flex justify-between p-6">
-                            {/* Nút hủy lịch hẹn */}
-                            {canCancelAppointment(selectedAppointment.status) && (
-                                <button
-                                    onClick={() => {
-                                        closeDetailModal();
-                                        openDeleteModal(selectedAppointment);
-                                    }}
-                                    className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 flex items-center"
-                                >
-                                    <Trash2 size={16} className="mr-1.5" />
-                                    Hủy lịch hẹn
-                                </button>
-                            )}
+                            <div className="space-x-2">
+                                {/* THÊM: Nút đánh giá khi đã hoàn thành */}
+                                {canRateAppointment(selectedAppointment) && selectedAppointment.consultantId && (
+                                    <button
+                                        onClick={() => {
+                                            closeDetailModal();
+                                            openRatingModal(selectedAppointment);
+                                        }}
+                                        className="px-4 py-2 bg-yellow-50 text-yellow-600 border border-yellow-200 rounded-lg hover:bg-yellow-100 flex items-center"
+                                    >
+                                        <Star size={16} className="mr-1.5" />
+                                        Đánh giá bác sĩ
+                                    </button>
+                                )}
+
+                                {/* Nút hủy lịch hẹn */}
+                                {canCancelAppointment(selectedAppointment.status) && (
+                                    <button
+                                        onClick={() => {
+                                            closeDetailModal();
+                                            openDeleteModal(selectedAppointment);
+                                        }}
+                                        className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 flex items-center"
+                                    >
+                                        <Trash2 size={16} className="mr-1.5" />
+                                        Hủy lịch hẹn
+                                    </button>
+                                )}
+                            </div>
 
                             {/* Các nút khác */}
                             <div className="flex space-x-3">

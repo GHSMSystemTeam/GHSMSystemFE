@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, UserCheck, X } from 'lucide-react';
+import { Calendar, Clock, User, Phone, Mail, FileText, CheckCircle, UserCheck, X, Info } from 'lucide-react';
 import Footer from '../Footer/Footer';
 import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
@@ -15,8 +15,10 @@ import {
     Heart,
     Shield,
     Users,
-    Star
+    Star,
+    Filter
 } from 'lucide-react';
+
 export default function DatLichKham() {
     const { showToast } = useToast()
     const { checkAuthAndShowPrompt } = useAuthCheck();
@@ -24,7 +26,10 @@ export default function DatLichKham() {
     const [currentStep, setCurrentStep] = useState(1);
     const [consultingService, setConsultingService] = useState(null);
     const [availableDoctors, setAvailableDoctors] = useState([]);
+    const [filteredDoctors, setFilteredDoctors] = useState([]);
     const [selectedSlot, setSelectedSlot] = useState(null);
+    const [loading, setLoading] = useState(false);
+
     const SPECIALTIES = {
         "Sexology_Andrology": "Y học Giới tính & Nam học",
         "Psychology": "Tư vấn tâm lý",
@@ -34,9 +39,11 @@ export default function DatLichKham() {
         "Obstetrics": "Sản khoa",
         "Urology": "Tiết niệu"
     };
+
     const getVietnameseSpecialization = (englishValue) => {
         return SPECIALTIES[englishValue] || englishValue;
     };
+
     // Thời gian tư vấn (mapping từ backend)
     const timeSlots = [
         { value: 1, label: "07:00 - 09:00", display: "07:00 - 09:00" },
@@ -45,6 +52,7 @@ export default function DatLichKham() {
         { value: 4, label: "13:00 - 15:00", display: "13:00 - 15:00" },
         { value: 5, label: "15:00 - 17:00", display: "15:00 - 17:00" },
     ];
+
     // Cập nhật formData khi có thông tin user
     useEffect(() => {
         if (user) {
@@ -63,13 +71,6 @@ export default function DatLichKham() {
             try {
                 const response = await api.get('/api/servicetypes/active');
                 if (response.data && response.data.length > 0) {
-                    console.log('All available services:', response.data.map(s => ({
-                        id: s.id,
-                        name: s.name,
-                        price: s.price,
-                        active: s.active,
-                        description: s.description
-                    })));
                     let service = response.data.find(s => s.name.toLowerCase().includes('consulting'));
                     if (!service) {
                         service = response.data.find(s => s.name && s.name.toLowerCase().includes('tư vấn'));
@@ -86,25 +87,6 @@ export default function DatLichKham() {
         };
         fetchAndSetConsultingService();
     }, [showToast]);
-    // Fetch active consultants
-    useEffect(() => {
-        const fetchConsultants = async () => {
-            try {
-                const response = await api.get('/api/activeconsultants');
-                // Filter active consultants and ensure unique IDs
-                const activeConsultants = response.data
-                    .filter(c => c.active)
-                    .filter((consultant, index, self) =>
-                        index === self.findIndex(c => c.id === consultant.id)
-                    );
-                setAvailableDoctors(activeConsultants);
-            } catch (error) {
-                console.error("Failed to fetch consultants:", error);
-                showToast('Không thể tải danh sách chuyên gia tư vấn.', 'error');
-            }
-        };
-        fetchConsultants();
-    }, [showToast]);
 
     const [formData, setFormData] = useState({
         name: '',
@@ -114,16 +96,9 @@ export default function DatLichKham() {
         doctor: '',
         notes: '',
     });
+
     const [submitting, setSubmitting] = useState(false);
     const [submitted, setSubmitted] = useState(false);
-
-    // Toast notification state - moved from Navigation
-    const [toast, setToast] = useState({
-        show: false,
-        message: '',
-        type: ''
-    });
-    const toastTimeoutRef = React.useRef(null);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -131,6 +106,46 @@ export default function DatLichKham() {
             ...prevState,
             [name]: value
         }));
+    };
+
+    // Fetch consultants based on selected date and time slot
+    const fetchAvailableConsultants = async () => {
+        if (!formData.date || !selectedSlot) {
+            showToast('Vui lòng chọn ngày và khung giờ trước', 'error');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Sử dụng API để lấy danh sách các bác sĩ còn trống lịch vào ngày và giờ đã chọn
+            const response = await api.get('/api/availableconsultants', {
+                params: {
+                    bookingDate: formData.date,
+                    slot: selectedSlot.value
+                }
+            });
+
+            // Lọc chỉ hiển thị các bác sĩ active và dữ liệu hợp lệ
+            const activeConsultants = response.data
+                .filter(c => c.active)
+                .filter((consultant, index, self) =>
+                    index === self.findIndex(c => c.id === consultant.id)
+                );
+
+            setAvailableDoctors(activeConsultants);
+            setFilteredDoctors(activeConsultants);
+
+            if (activeConsultants.length === 0) {
+                showToast('Không có bác sĩ nào rảnh vào thời gian này, vui lòng chọn thời gian khác', 'info');
+            } else {
+                setCurrentStep(2);
+            }
+        } catch (error) {
+            console.error("Failed to fetch available consultants:", error);
+            showToast('Không thể tải danh sách chuyên gia tư vấn.', 'error');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -161,7 +176,7 @@ export default function DatLichKham() {
             customerId: user?.id || null,
             serviceTypeId: consultingService?.id || null,
             appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
-            slot: selectedSlot.value,  
+            slot: selectedSlot.value,
             duration: 0,
             description: formData.notes || ""
         };
@@ -180,7 +195,6 @@ export default function DatLichKham() {
         }
 
         try {
-            // Chỉ gọi API một lần
             const response = await api.post('/api/servicebooking', bookingPayload);
             console.log('Booking Response:', response.data);
 
@@ -208,24 +222,33 @@ export default function DatLichKham() {
             doctor: '',
             notes: '',
         });
+        setSelectedSlot(null);
+        setFilteredDoctors([]);
     };
+
+    // Lọc bác sĩ theo chuyên khoa
+    const filterDoctorsBySpecialization = (specialization) => {
+        if (!specialization || specialization === 'all') {
+            setFilteredDoctors(availableDoctors);
+        } else {
+            const filtered = availableDoctors.filter(
+                doctor => doctor.specialization === specialization
+            );
+            setFilteredDoctors(filtered);
+        }
+    };
+
     const steps = [
-        { id: 1, title: "Chọn tư vấn viên", desc: "Tìm tư vấn viên chuyên khoa" },
-        { id: 2, title: "Thông tin", desc: "Hoàn tất thông tin" },
-        { id: 3, title: "Xác nhận", desc: "Xác nhận đặt lịch" }
+        { id: 1, title: "Chọn thời gian", desc: "Chọn ngày và giờ phù hợp" },
+        { id: 2, title: "Chọn tư vấn viên", desc: "Chọn tư vấn viên có sẵn" },
+        { id: 3, title: "Thông tin", desc: "Hoàn tất thông tin" },
     ];
 
-    const location = useLocation();
-    // Handle location state for pre-selected doctor
-    useEffect(() => {
-        if (location.state?.selectedDoctorId && location.state?.fromDoctorSelection) {
-            setFormData(prev => ({
-                ...prev,
-                doctor: location.state.selectedDoctorId.toString()
-            }));
-            setCurrentStep(2); // Chuyển đến bước 2 (nhập thông tin)
-        }
-    }, [location.state]);
+    // Tạo danh sách các chuyên khoa duy nhất từ danh sách bác sĩ
+    const specializations = ['all', ...new Set(availableDoctors
+        .map(doctor => doctor.specialization)
+        .filter(Boolean)
+    )];
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-r from-purple-100 to-blue-50 pt-24 mt-10">
@@ -311,14 +334,14 @@ export default function DatLichKham() {
                                             <div className="flex items-center justify-between">
                                                 <div>
                                                     <h2 className="text-2xl font-semibold text-gray-900">
-                                                        {currentStep === 1 && "Chọn tư vấn viên"}
-                                                        {currentStep === 2 && "Thông tin cá nhân"}
+                                                        {currentStep === 1 && "Chọn thời gian"}
+                                                        {currentStep === 2 && "Chọn tư vấn viên"}
                                                         {currentStep === 3 && "Xác nhận đặt lịch"}
                                                     </h2>
                                                     <p className="text-gray-600 mt-1">
-                                                        {currentStep === 1 && "Chọn tư vấn viên chuyên khoa phù hợp"}
-                                                        {currentStep === 2 && "Hoàn tất thông tin để đặt lịch"}
-                                                        {currentStep === 3 && "Kiểm tra và xác nhận thông tin"}
+                                                        {currentStep === 1 && "Chọn ngày và khung giờ phù hợp với bạn"}
+                                                        {currentStep === 2 && "Chọn tư vấn viên chuyên khoa phù hợp trong danh sách có sẵn"}
+                                                        {currentStep === 3 && "Hoàn tất thông tin và xác nhận đặt lịch"}
                                                     </p>
                                                 </div>
                                                 <div className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
@@ -329,75 +352,227 @@ export default function DatLichKham() {
 
                                         {/* Content Body */}
                                         <div className="p-8">
+                                            {/* Bước 1: Chọn thời gian */}
                                             {currentStep === 1 && (
-                                                <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
-                                                    {availableDoctors.map((doctor) => (
-                                                        <div
-                                                            key={doctor.id}
-                                                            onClick={() => {
-                                                                setFormData(prev => ({ ...prev, doctor: doctor.id.toString() }));
-                                                                setCurrentStep(2);
-                                                            }}
-                                                            className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.doctor === doctor.id.toString()
-                                                                ? 'border-indigo-500 bg-indigo-50'
-                                                                : 'border-gray-200 hover:border-indigo-300'
-                                                                }`}
-                                                        >
-                                                            <div className="flex items-start space-x-4">
-                                                                <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                                                                    {doctor.profilePicture && doctor.profilePicture[0] ? (
-                                                                        <img
-                                                                            src={doctor.profilePicture[0]}
-                                                                            alt={doctor.name}
-                                                                            className="w-full h-full object-cover"
-                                                                        />
-                                                                    ) : (
-                                                                        <User className="text-indigo-600" size={28} />
-                                                                    )}
+                                                <div className="space-y-6">
+                                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6">
+                                                        <p className="text-blue-800 text-sm flex items-center">
+                                                            <Info size={16} className="mr-2" />
+                                                            Vui lòng chọn ngày và khung giờ để hệ thống hiển thị danh sách bác sĩ còn trống lịch
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="grid md:grid-cols-2 gap-6">
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                Ngày tư vấn mong muốn <span className="text-red-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                                    <Calendar size={18} className="text-gray-400" />
                                                                 </div>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="flex items-start justify-between">
-                                                                        <div className="flex-1 pr-4"> {/* Added pr-4 for spacing */}
-                                                                            <h3 className="font-semibold text-gray-900 text-lg break-words whitespace-normal leading-tight">
-                                                                                {doctor.name || 'Tên tư vấn viên'}
-                                                                            </h3>
-                                                                            <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
-                                                                                 {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
-                                                                            </p>
-                                                                            <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
-                                                                                {doctor.description || 'Tư vấn viên có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
-                                                                            </p>
-                                                                        </div>
-                                                                        <div className="text-right ml-4 flex-shrink-0">
-                                                                            <div className="text-lg font-bold text-indigo-600">
-                                                                                {doctor.expYear || 0} năm
-                                                                            </div>
-                                                                            <div className="text-xs text-gray-500">Kinh nghiệm</div>
-                                                                        </div>
-                                                                    </div>
-                                                                    <div className="flex items-center space-x-4 mt-3">
-                                                                        <div className="flex items-center space-x-1">
-                                                                            <Star className="text-yellow-400 fill-current" size={16} />
-                                                                            <span className="text-sm font-medium text-gray-700">
-                                                                                {doctor.avgRating || 'N/A'}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div className="flex items-center space-x-1">
-                                                                            <Stethoscope className="text-gray-400" size={14} />
-                                                                            <span className="text-xs text-gray-600 break-words">
-                                                                                {doctor.licenseDetails || 'Chứng chỉ hành nghề'}
-                                                                            </span>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <ArrowRight className="text-gray-400 flex-shrink-0" size={20} />
+                                                                <input
+                                                                    type="date"
+                                                                    name="date"
+                                                                    value={formData.date}
+                                                                    onChange={handleChange}
+                                                                    min={new Date().toISOString().split('T')[0]}
+                                                                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                    required
+                                                                />
                                                             </div>
                                                         </div>
-                                                    ))}
+
+                                                        <div>
+                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                                Khung giờ tư vấn <span className="text-red-500">*</span>
+                                                            </label>
+                                                            <div className="relative">
+                                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                                                    <Clock size={18} className="text-gray-400" />
+                                                                </div>
+                                                                <select
+                                                                    value={selectedSlot?.value || ''}
+                                                                    onChange={(e) => {
+                                                                        const slot = timeSlots.find(s => s.value === parseInt(e.target.value));
+                                                                        setSelectedSlot(slot);
+                                                                    }}
+                                                                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                    required
+                                                                >
+                                                                    <option value="">Chọn khung giờ...</option>
+                                                                    {timeSlots.map(slot => (
+                                                                        <option key={slot.value} value={slot.value}>
+                                                                            {slot.display}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-end mt-6">
+                                                        <button
+                                                            type="button"
+                                                            disabled={!formData.date || !selectedSlot || loading}
+                                                            onClick={fetchAvailableConsultants}
+                                                            className={`px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center space-x-2 
+                                                                ${(!formData.date || !selectedSlot || loading) ? 'opacity-70 cursor-not-allowed' : ''}`}
+                                                        >
+                                                            {loading ? (
+                                                                <>
+                                                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                                    </svg>
+                                                                    <span>Đang tìm...</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <span>Tìm bác sĩ có sẵn</span>
+                                                                    <ArrowRight size={16} />
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             )}
 
+                                            {/* Bước 2: Chọn bác sĩ từ danh sách có sẵn */}
                                             {currentStep === 2 && (
+                                                <div>
+                                                    {/* Hiển thị thông tin đã chọn */}
+                                                    <div className="bg-indigo-50 p-4 rounded-lg mb-6">
+                                                        <h4 className="font-medium text-indigo-800 mb-2">Thời gian đã chọn</h4>
+                                                        <div className="flex items-center space-x-6">
+                                                            <div className="flex items-center text-gray-700">
+                                                                <Calendar className="mr-2 text-indigo-600" size={16} />
+                                                                <span>{formData.date}</span>
+                                                            </div>
+                                                            <div className="flex items-center text-gray-700">
+                                                                <Clock className="mr-2 text-indigo-600" size={16} />
+                                                                <span>{selectedSlot?.display}</span>
+                                                            </div>
+                                                            <button
+                                                                onClick={() => setCurrentStep(1)}
+                                                                className="text-indigo-600 hover:text-indigo-800 text-xs underline"
+                                                            >
+                                                                Thay đổi
+                                                            </button>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Filter by specialization */}
+                                                    {availableDoctors.length > 0 && (
+                                                        <div className="mb-6">
+                                                            <div className="flex items-center space-x-2 mb-3">
+                                                                <Filter size={16} className="text-gray-600" />
+                                                                <h4 className="font-medium text-gray-800">Lọc theo chuyên khoa:</h4>
+                                                            </div>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {specializations.map(spec => (
+                                                                    <button
+                                                                        key={spec}
+                                                                        onClick={() => filterDoctorsBySpecialization(spec)}
+                                                                        className="px-3 py-1.5 rounded-full text-sm transition-colors hover:bg-indigo-100 border
+                                                                            hover:border-indigo-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                                                                    >
+                                                                        {spec === 'all' ? 'Tất cả chuyên khoa' : getVietnameseSpecialization(spec)}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Danh sách bác sĩ có sẵn */}
+                                                    <div className="max-h-96 overflow-y-auto pr-2 space-y-4">
+                                                        {filteredDoctors.length === 0 ? (
+                                                            <div className="text-center py-8">
+                                                                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                                                    <User className="text-gray-400" size={24} />
+                                                                </div>
+                                                                <h4 className="text-gray-600 font-medium mb-2">Không có bác sĩ nào có sẵn</h4>
+                                                                <p className="text-gray-500 text-sm max-w-md mx-auto">
+                                                                    Không có bác sĩ nào rảnh vào thời gian bạn đã chọn. Vui lòng thử chọn thời gian khác.
+                                                                </p>
+                                                                <button
+                                                                    onClick={() => setCurrentStep(1)}
+                                                                    className="mt-4 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-lg hover:bg-indigo-200 transition-colors"
+                                                                >
+                                                                    Chọn thời gian khác
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            filteredDoctors.map((doctor) => (
+                                                                <div
+                                                                    key={doctor.id}
+                                                                    onClick={() => {
+                                                                        setFormData(prev => ({ ...prev, doctor: doctor.id.toString() }));
+                                                                        setCurrentStep(3);
+                                                                    }}
+                                                                    className={`p-6 border rounded-xl cursor-pointer transition-all hover:shadow-md ${formData.doctor === doctor.id.toString()
+                                                                        ? 'border-indigo-500 bg-indigo-50'
+                                                                        : 'border-gray-200 hover:border-indigo-300'
+                                                                        }`}
+                                                                >
+                                                                    <div className="flex items-start space-x-4">
+                                                                        <div className="w-20 h-20 bg-indigo-100 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                                                                            {doctor.profilePicture && doctor.profilePicture[0] ? (
+                                                                                <img
+                                                                                    src={doctor.profilePicture[0]}
+                                                                                    alt={doctor.name}
+                                                                                    className="w-full h-full object-cover"
+                                                                                />
+                                                                            ) : (
+                                                                                <User className="text-indigo-600" size={28} />
+                                                                            )}
+                                                                        </div>
+                                                                        <div className="flex-1 min-w-0">
+                                                                            <div className="flex items-start justify-between">
+                                                                                <div className="flex-1 pr-4">
+                                                                                    <h3 className="font-semibold text-gray-900 text-lg break-words whitespace-normal leading-tight">
+                                                                                        {doctor.name || 'Tên tư vấn viên'}
+                                                                                    </h3>
+                                                                                    <p className="text-indigo-600 font-medium text-sm mt-1 break-words">
+                                                                                        {getVietnameseSpecialization(doctor.specialization) || 'Chuyên khoa sức khỏe giới tính'}
+                                                                                    </p>
+                                                                                    <p className="text-gray-600 text-sm mt-2 break-words whitespace-normal">
+                                                                                        {doctor.description || 'Tư vấn viên có nhiều năm kinh nghiệm trong lĩnh vực chuyên môn'}
+                                                                                    </p>
+                                                                                </div>
+                                                                                <div className="text-right ml-4 flex-shrink-0">
+                                                                                    <div className="text-lg font-bold text-indigo-600">
+                                                                                        {doctor.expYear || 0} năm
+                                                                                    </div>
+                                                                                    <div className="text-xs text-gray-500">Kinh nghiệm</div>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex items-center space-x-4 mt-3">
+                                                                                <div className="flex items-center space-x-1">
+                                                                                    <Star className="text-yellow-400 fill-current" size={16} />
+                                                                                    <span className="text-sm font-medium text-gray-700">
+                                                                                        {doctor.avgRating || 'N/A'}
+                                                                                    </span>
+                                                                                </div>
+                                                                                <div className="flex items-center space-x-1">
+                                                                                    <Stethoscope className="text-gray-400" size={14} />
+                                                                                    <span className="text-xs text-gray-600 break-words">
+                                                                                        {doctor.licenseDetails || 'Chứng chỉ hành nghề'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <ArrowRight className="text-gray-400 flex-shrink-0" size={20} />
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Bước 3: Thông tin và xác nhận */}
+                                            {currentStep === 3 && (
                                                 <form onSubmit={handleSubmit} className="space-y-6">
                                                     <div className="grid md:grid-cols-2 gap-6">
                                                         <div>
@@ -459,59 +634,10 @@ export default function DatLichKham() {
                                                                 />
                                                             </div>
                                                         </div>
-                                                        <div className="md:col-span-2">
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Ngày tư vấn mong muốn <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <div className="relative">
-                                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                                    <Calendar size={18} className="text-gray-400" />
-                                                                </div>
-                                                                <input
-                                                                    type="date"
-                                                                    name="date"
-                                                                    value={formData.date}
-                                                                    onChange={handleChange}
-                                                                    min={new Date().toISOString().split('T')[0]}
-                                                                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                                    required
-                                                                />
-                                                            </div>
-                                                            <p className="text-xs text-gray-500 mt-1">
-                                                                Chúng tôi sẽ liên hệ để xác nhận giờ tư vấn cụ thể
-                                                            </p>
-                                                        </div>
 
-                                                        <div>
-                                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Khung giờ tư vấn <span className="text-red-500">*</span>
-                                                            </label>
-                                                            <div className="relative">
-                                                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                                    <Clock size={18} className="text-gray-400" />
-                                                                </div>
-                                                                <select
-                                                                    value={selectedSlot?.value || ''}
-                                                                    onChange={(e) => {
-                                                                        const slot = timeSlots.find(s => s.value === parseInt(e.target.value));
-                                                                        setSelectedSlot(slot);
-                                                                    }}
-                                                                    className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                                                    required
-                                                                >
-                                                                    <option value="">Chọn khung giờ...</option>
-                                                                    {timeSlots.map(slot => (
-                                                                        <option key={slot.value} value={slot.value}>
-                                                                            {slot.display}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        
                                                         <div className="md:col-span-2">
                                                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                                Lý do cần được tư vấn: 
+                                                                Lý do cần được tư vấn:
                                                             </label>
                                                             <textarea
                                                                 name="notes"
@@ -544,21 +670,25 @@ export default function DatLichKham() {
                                                                 <span className="text-gray-600">Ngày tư vấn:</span>
                                                                 <span className="text-gray-900 font-medium">{formData.date || 'Chưa chọn'}</span>
                                                             </div>
+                                                            <div className="flex justify-between">
+                                                                <span className="text-gray-600">Khung giờ:</span>
+                                                                <span className="text-gray-900 font-medium">{selectedSlot?.display || 'Chưa chọn'}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
 
                                                     <div className="flex justify-between pt-6">
                                                         <button
                                                             type="button"
-                                                            onClick={() => setCurrentStep(1)}
+                                                            onClick={() => setCurrentStep(2)}
                                                             className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
                                                         >
                                                             Quay lại
                                                         </button>
                                                         <button
                                                             type="submit"
-                                                            disabled={submitting || !formData.date}
-                                                            className={`px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center space-x-2 ${submitting || !formData.date ? 'opacity-70 cursor-not-allowed' : ''
+                                                            disabled={submitting}
+                                                            className={`px-8 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors flex items-center space-x-2 ${submitting ? 'opacity-70 cursor-not-allowed' : ''
                                                                 }`}
                                                         >
                                                             {submitting ? (
@@ -583,7 +713,7 @@ export default function DatLichKham() {
                                             <div className="px-8 py-6 bg-gray-50 border-t border-gray-200 rounded-b-xl">
                                                 <div className="flex justify-center">
                                                     <div className="text-sm text-gray-500 self-center">
-                                                        Chọn tư vấn viên để tiếp tục
+                                                        Chọn ngày và khung giờ để xem danh sách bác sĩ có sẵn
                                                     </div>
                                                 </div>
                                             </div>
@@ -615,6 +745,10 @@ export default function DatLichKham() {
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Ngày khám:</span>
                                                 <span className="text-gray-900 font-medium">{formData.date}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Khung giờ:</span>
+                                                <span className="text-gray-900 font-medium">{selectedSlot?.display}</span>
                                             </div>
                                             <div className="flex justify-between">
                                                 <span className="text-gray-600">Dịch vụ:</span>
@@ -679,60 +813,6 @@ export default function DatLichKham() {
                     </div>
                 </div>
             </main>
-
-            {/* Toast Notification - moved from Navigation
-            {toast.show && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-                    <div className={`
-                        max-w-md w-full mx-4 p-4 rounded-lg shadow-lg pointer-events-auto
-                        ${toast.type === 'success' ? 'bg-green-100 border-l-4 border-green-500' :
-                            toast.type === 'error' ? 'bg-red-100 border-l-4 border-red-500' :
-                                'bg-blue-100 border-l-4 border-blue-500'}
-                    `}>
-                        <div className="flex items-start">
-                            {toast.type === 'success' && (
-                                <div className="flex-shrink-0 mr-3">
-                                    <svg className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                </div>
-                            )}
-                            {toast.type === 'error' && (
-                                <div className="flex-shrink-0 mr-3">
-                                    <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </div>
-                            )}
-                            {toast.type !== 'success' && toast.type !== 'error' && (
-                                <div className="flex-shrink-0 mr-3">
-                                    <svg className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                </div>
-                            )}
-                            <div className="flex-1">
-                                <p className={`text-sm font-medium ${toast.type === 'success' ? 'text-green-800' :
-                                    toast.type === 'error' ? 'text-red-800' :
-                                        'text-blue-800'
-                                    }`}>
-                                    {toast.message}
-                                </p>
-                            </div>
-                            <button
-                                className={`ml-4 flex-shrink-0 ${toast.type === 'success' ? 'text-green-500 hover:text-green-700' :
-                                    toast.type === 'error' ? 'text-red-500 hover:text-red-700' :
-                                        'text-blue-500 hover:text-blue-700'
-                                    }`}
-                                onClick={closeToast}
-                            >
-                                <X size={16} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )} */}
-
             <Footer />
         </div>
     );
