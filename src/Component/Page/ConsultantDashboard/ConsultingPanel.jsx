@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, CheckCircle, Clock, XCircle, Check } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
+import { useAuth } from '../../Auth/AuthContext';
 
-
-//đây là trang lịch tư vấn, do call 1 api 2 lần nên đã bị lộn và tạm thời chưa sửa, nội dung trong này liên quan đến lịch tư vấn
-
-// Mã trạng thái theo API
 const STATUS_OPTIONS = [
   { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
   { value: 3, label: 'Đã hủy', icon: <XCircle size={14} className="mr-1 text-red-600" /> },
 ];
+
+// Định nghĩa các khung giờ tư vấn
+const TIME_SLOTS = {
+  1: "07:00 - 09:00",
+  2: "09:00 - 11:00",
+  3: "11:00 - 13:00",
+  4: "13:00 - 15:00",
+  5: "15:00 - 17:00"
+};
 
 function getGenderText(gender) {
   if (gender === 0) return 'Nam';
@@ -30,31 +36,62 @@ function getStatusClass(status) {
   }
 }
 
-export default function ConsultingPanel({ examBookings, loading, error, updateExamBookingStatus, selectedAppointment, setSelectedAppointment }) {
+// Helper để hiển thị khung giờ từ slot
+function getTimeSlotText(slot) {
+  return TIME_SLOTS[slot] || 'Không xác định';
+}
+
+export default function ExaminationsPanel({ selectedAppointment, setSelectedAppointment }) {
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
   const { showToast } = useToast();
+  const { user } = useAuth();
 
-  const handleStatusChange = async (id, statusNumber) => {
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch xét nghiệm này?')) {
+  const fetchConsultBookings = async () => {
+    if (!user || !user.id) {
+      setError("Không thể xác thực người dùng.");
+      setLoading(false);
       return;
     }
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.get(`/api/servicebookings/consultant/${user.id}`);
+      // Lấy lịch tư vấn (typeCode === 0) và đúng consultantId
+      const consultBookings = (response.data || []).filter(
+        booking =>
+          booking.serviceTypeId &&
+          booking.serviceTypeId.typeCode === 0 &&
+          booking.consultantId &&
+          String(booking.consultantId.id) === String(user.id)
+      );
+      setBookings(consultBookings);
+    } catch (err) {
+      setError("Không thể tải danh sách lịch tư vấn.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
+    fetchConsultBookings();
+  }, [user]);
+
+  const handleStatusChange = async (id, statusNumber) => {
+    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
+      return;
+    }
     setUpdatingId(id);
     try {
-      // Gọi API cập nhật trạng thái theo endpoint mới
       await api.put(`/api/servicebooking/status/${id}/${statusNumber}`);
-
-      // Cập nhật UI thông qua prop function
-      if (typeof updateExamBookingStatus === 'function') {
-        await updateExamBookingStatus(id, statusNumber);
-      }
-
+      setBookings(prev =>
+        prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
+      );
       showToast('Cập nhật trạng thái thành công!', 'success');
     } catch (err) {
-      console.error('Error updating exam booking status:', err);
-      const errorMessage = err.response?.data?.message ||
-        err.response?.data?.error ||
-        'Cập nhật trạng thái thất bại!';
+      const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
       showToast(errorMessage, 'error');
     } finally {
       setUpdatingId(null);
@@ -65,47 +102,49 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
     setSelectedAppointment(booking);
   };
 
-  return (    <div>
+  return (
+    <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Lịch đặt tư vấn</h2>
       </div>
 
-      {loading.examBookings ? (
+      {loading ? (
         <div className="flex justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
         </div>
-      ) : error.examBookings ? (
+      ) : error ? (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error.examBookings}
+          {error}
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {examBookings.length === 0 ? (
+          {bookings.length === 0 ? (
             <div className="p-8 text-center text-gray-500">
-              Chưa có lịch xét nghiệm nào
+              Chưa có lịch tư vấn nào
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-6 font-semibold border-b p-4 bg-gray-50">
+              <div className="grid grid-cols-7 font-semibold border-b p-4 bg-gray-50">
                 <div>Họ tên</div>
                 <div>Giới tính</div>
                 <div>Ngày hẹn</div>
-                <div>Dịch vụ tư vấn</div>
+                <div>Khung giờ</div>
+                <div>Dịch vụ</div>
                 <div>Trạng thái</div>
                 <div className="text-right">Thao tác</div>
               </div>
-
-              {examBookings.map((booking) => (
-                <div key={booking.id} className="grid grid-cols-6 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
+              {bookings.map((booking) => (
+                <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
                   <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
                   <div>{getGenderText(booking.customerId?.gender)}</div>
                   <div>{new Date(booking.appointmentDate).toLocaleDateString('vi-VN', {
                     year: 'numeric',
                     month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    day: '2-digit'
                   })}</div>
+                  <div className="text-indigo-600 font-medium">
+                    {getTimeSlotText(booking.slot)}
+                  </div>
                   <div>{booking.serviceTypeId?.name}</div>
                   <div>
                     <div className="relative">
@@ -147,7 +186,7 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
         </div>
       )}
 
-      {/* Modal chi tiết lịch xét nghiệm */}
+      {/* Modal chi tiết lịch tư vấn */}
       {selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
           <div className="bg-white p-6 rounded-lg w-full max-w-md">
@@ -169,27 +208,21 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><span className="text-gray-500">Họ tên:</span></p>
                   <p className="font-medium">{selectedAppointment.customerId?.name}</p>
-
                   <p><span className="text-gray-500">Giới tính:</span></p>
                   <p className="font-medium">{getGenderText(selectedAppointment.customerId?.gender)}</p>
-
                   <p><span className="text-gray-500">Điện thoại:</span></p>
                   <p className="font-medium">{selectedAppointment.customerId?.phone || 'Không có'}</p>
-
                   <p><span className="text-gray-500">Email:</span></p>
                   <p className="font-medium">{selectedAppointment.customerId?.email || 'Không có'}</p>
                 </div>
               </div>
-
               <div className="bg-gray-50 p-3 rounded-lg">
                 <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch tư vấn</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <p><span className="text-gray-500">Dịch vụ:</span></p>
                   <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
-
                   <p><span className="text-gray-500">Giá:</span></p>
                   <p className="font-medium">{selectedAppointment.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ</p>
-
                   <p><span className="text-gray-500">Ngày hẹn:</span></p>
                   <p className="font-medium">
                     {new Date(selectedAppointment.appointmentDate).toLocaleDateString('vi-VN', {
@@ -199,7 +232,8 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
                       day: 'numeric',
                     })}
                   </p>
-
+                  <p><span className="text-gray-500">Khung giờ:</span></p>
+                  <p className="font-medium text-indigo-600">{getTimeSlotText(selectedAppointment.slot)}</p>
                   <p><span className="text-gray-500">Trạng thái:</span></p>
                   <p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(selectedAppointment.status)}`}>
@@ -209,7 +243,6 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
                   </p>
                 </div>
               </div>
-
               {selectedAppointment.description && (
                 <div className="bg-yellow-50 p-3 rounded-lg">
                   <h4 className="font-medium text-yellow-800 mb-2">Ghi chú</h4>
@@ -231,7 +264,6 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
                     Đánh dấu hoàn thành
                   </button>
                 )}
-
                 {selectedAppointment.status !== 3 && (
                   <button
                     onClick={() => {
@@ -244,7 +276,6 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
                   </button>
                 )}
               </div>
-
               <button
                 onClick={() => setSelectedAppointment(null)}
                 className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
@@ -257,5 +288,4 @@ export default function ConsultingPanel({ examBookings, loading, error, updateEx
       )}
     </div>
   );
-} 
- 
+}
