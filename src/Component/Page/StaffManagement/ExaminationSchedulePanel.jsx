@@ -21,7 +21,7 @@ const TIME_SLOTS = {
 
 function getGenderText(gender) {
   if (gender === 0) return 'Nam';
-  if (gender === 1) return 'Nữ';
+  if (gender === 2) return 'Nữ';
   return 'Khác';
 }
 
@@ -60,10 +60,10 @@ export default function ExaminationSchedulePanel() {
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(booking => 
-        booking.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        booking.phoneNumber?.includes(searchTerm) ||
-        booking.examinationTypeName?.toLowerCase().includes(searchTerm.toLowerCase())
+        (booking.fullName || booking.name || booking.customerName || '')?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (booking.email || booking.customerEmail || '')?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (booking.phoneNumber || booking.phone || booking.customerPhone || '')?.includes(searchTerm) ||
+        (booking.examinationTypeName || booking.serviceName || booking.service || '')?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -75,19 +75,19 @@ export default function ExaminationSchedulePanel() {
     // Date filter
     if (dateFilter) {
       filtered = filtered.filter(booking => {
-        const bookingDate = new Date(booking.appointmentDate).toISOString().split('T')[0];
+        const bookingDate = new Date(booking.appointmentDate || booking.bookingDate || booking.date).toISOString().split('T')[0];
         return bookingDate === dateFilter;
       });
     }
 
     // Sort by appointment date and time slot
     filtered.sort((a, b) => {
-      const dateA = new Date(a.appointmentDate);
-      const dateB = new Date(b.appointmentDate);
+      const dateA = new Date(a.appointmentDate || a.bookingDate || a.date);
+      const dateB = new Date(b.appointmentDate || b.bookingDate || b.date);
       if (dateA.getTime() !== dateB.getTime()) {
         return dateA - dateB;
       }
-      return a.timeSlot - b.timeSlot;
+      return (a.timeSlot || a.slot || 0) - (b.timeSlot || b.slot || 0);
     });
 
     setFilteredBookings(filtered);
@@ -96,11 +96,13 @@ export default function ExaminationSchedulePanel() {
   const fetchExamBookings = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/exam-bookings');
+      // Fetch STI examinations with service type ID 3
+      const response = await api.get('/api/servicebookings/servicetype/3');
+      console.log('API Response:', response.data); // Debug log to see the actual data structure
       setBookings(response.data || []);
     } catch (err) {
       console.error('Error fetching exam bookings:', err);
-      setError('Không thể tải dữ liệu lịch xét nghiệm');
+      setError('Không thể tải dữ liệu lịch xét nghiệm STI');
       showToast('Lỗi khi tải dữ liệu', 'error');
     } finally {
       setLoading(false);
@@ -108,9 +110,14 @@ export default function ExaminationSchedulePanel() {
   };
 
   const updateBookingStatus = async (bookingId, newStatus) => {
+    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch xét nghiệm này?')) {
+      return;
+    }
+
+    setUpdatingId(bookingId);
     try {
-      setUpdatingId(bookingId);
-      await api.put(`/api/exam-bookings/${bookingId}/status`, { status: newStatus });
+      // Update status for service bookings using the new API endpoint
+      await api.put(`/api/servicebooking/status/${bookingId}/${newStatus}`);
       
       setBookings(prev => 
         prev.map(booking => 
@@ -120,12 +127,12 @@ export default function ExaminationSchedulePanel() {
         )
       );
 
-      const statusLabel = STATUS_OPTIONS.find(opt => opt.value === newStatus)?.label;
-      showToast(`Đã cập nhật trạng thái thành "${statusLabel}"`, 'success');
+      showToast('Cập nhật trạng thái thành công!', 'success');
       
     } catch (err) {
       console.error('Error updating booking status:', err);
-      showToast('Lỗi khi cập nhật trạng thái', 'error');
+      const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
+      showToast(errorMessage, 'error');
     } finally {
       setUpdatingId(null);
     }
@@ -149,7 +156,7 @@ export default function ExaminationSchedulePanel() {
     today.setHours(0, 0, 0, 0);
     
     return bookings.filter(booking => {
-      const appointmentDate = new Date(booking.appointmentDate);
+      const appointmentDate = new Date(booking.appointmentDate || booking.bookingDate || booking.date);
       appointmentDate.setHours(0, 0, 0, 0);
       return appointmentDate >= today && booking.status !== 3;
     }).length;
@@ -158,15 +165,9 @@ export default function ExaminationSchedulePanel() {
   const getTodayBookingsCount = () => {
     const today = new Date().toISOString().split('T')[0];
     return bookings.filter(booking => {
-      const bookingDate = new Date(booking.appointmentDate).toISOString().split('T')[0];
+      const bookingDate = new Date(booking.appointmentDate || booking.bookingDate || booking.date).toISOString().split('T')[0];
       return bookingDate === today && booking.status !== 3;
     }).length;
-  };
-
-  const getGenderText = (gender) => {
-    if (gender === 0) return 'Nam';
-    if (gender === 1) return 'Nữ';
-    return 'Khác';
   };
 
   if (loading) {
@@ -315,10 +316,10 @@ export default function ExaminationSchedulePanel() {
                   <tr key={booking.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">
-                        {booking.fullName}
+                        {booking.fullName || booking.name || booking.customerName || 'Chưa có tên'}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {booking.phoneNumber}
+                        {booking.phoneNumber || booking.phone || booking.customerPhone || 'Chưa có SĐT'}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
@@ -326,14 +327,14 @@ export default function ExaminationSchedulePanel() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        {formatDate(booking.appointmentDate)}
+                        {formatDate(booking.appointmentDate || booking.bookingDate || booking.date)}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {getTimeSlotText(booking.timeSlot)}
+                        {getTimeSlotText(booking.timeSlot || booking.slot)}
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-900">
-                      {booking.examinationTypeName}
+                      {booking.examinationTypeName || booking.serviceName || booking.service || 'Xét nghiệm STI'}
                     </td>
                     <td className="px-6 py-4">
                       <select
