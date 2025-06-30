@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import QuestionsPanel from './QuestionsPanel';
 import SchedulesPanel from './SchedulesPanel';
-import ConsultingPanel from './ConsultingPanel';
+
 import BlogsPanel from './BlogsPanel';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
@@ -81,7 +81,7 @@ export default function ConsultantDashboard() {
     setError((prev) => ({ ...prev, examResults: null }));
     try {
       // Giả sử API endpoint để lấy kết quả xét nghiệm
-      const res = await api.get('/api/results');
+      const res = await api.get('/api/examination-results');
       setExamResults(res.data);
     } catch (err) {
       setError((prev) => ({ ...prev, examResults: 'Không thể tải danh sách kết quả xét nghiệm.' }));
@@ -174,9 +174,9 @@ export default function ConsultantDashboard() {
             setSelectedAppointment={setSelectedAppointment}
           />
         );      
-        case 'consulting':
+        case 'examinations':
         return (
-          <ConsultingPanel
+          <ExaminationsPanel
             examBookings={examBookings}
             loading={loading}
             error={error}
@@ -193,7 +193,33 @@ export default function ConsultantDashboard() {
             error={error.blogs}
           />
         );      
-
+        case 'examinationResults':
+        return (
+          <ExaminationResult
+            examinations={examResults}
+            loading={loading.examResults}
+            error={error.examResults}
+            onUpdateResult={async (examId, resultData) => {
+              try {
+                // Gọi API để cập nhật kết quả xét nghiệm
+                await api.put(`/api/examination-results/${examId}`, resultData);
+                
+                // Cập nhật state local
+                setExamResults((prev) =>
+                  prev.map((exam) =>
+                    exam.id === examId
+                      ? { ...exam, status: 'completed', ...resultData }
+                      : exam
+                  )
+                );
+                
+                console.log('Kết quả xét nghiệm đã được cập nhật thành công');
+              } catch (err) {
+                console.error('Lỗi khi cập nhật kết quả xét nghiệm:', err);
+              }
+            }}
+          />
+        );
       default:
         return <QuestionsPanel
           questions={questions}
