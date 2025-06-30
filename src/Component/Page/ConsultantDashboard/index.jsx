@@ -81,7 +81,7 @@ export default function ConsultantDashboard() {
     setError((prev) => ({ ...prev, examResults: null }));
     try {
       // Giả sử API endpoint để lấy kết quả xét nghiệm
-      const res = await api.get('/api/results');
+      const res = await api.get('/api/examination-results');
       setExamResults(res.data);
     } catch (err) {
       setError((prev) => ({ ...prev, examResults: 'Không thể tải danh sách kết quả xét nghiệm.' }));
@@ -174,7 +174,7 @@ export default function ConsultantDashboard() {
             setSelectedAppointment={setSelectedAppointment}
           />
         );      
-        case 'consulting':
+        case 'examinations':
         return (
           <ConsultingPanel
             examBookings={examBookings}
@@ -193,7 +193,16 @@ export default function ConsultantDashboard() {
             error={error.blogs}
           />
         );      
-
+        case 'examinationResults':
+        return (
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold mb-4">Kết quả xét nghiệm</h2>
+            <div className="text-center py-8 text-gray-500">
+              <p>Chức năng đang được phát triển.</p>
+              <p className="text-sm mt-2">Vui lòng sử dụng trang Staff Management để quản lý kết quả xét nghiệm.</p>
+            </div>
+          </div>
+        );
       default:
         return <QuestionsPanel
           questions={questions}
