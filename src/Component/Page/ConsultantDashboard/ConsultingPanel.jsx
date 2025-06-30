@@ -41,7 +41,7 @@ function getTimeSlotText(slot) {
   return TIME_SLOTS[slot] || 'Không xác định';
 }
 
-export default function ExaminationsPanel({ selectedAppointment, setSelectedAppointment }) {
+export default function ConsultingPanel({ selectedAppointment, setSelectedAppointment }) {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

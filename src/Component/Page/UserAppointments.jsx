@@ -3,7 +3,7 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check, Star } from 'lucide-react';
+import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check, Star, FileText } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
@@ -30,6 +30,13 @@ export default function UserAppointments() {
     const [ratingTitle, setRatingTitle] = useState('');
     const [ratingContent, setRatingContent] = useState('');
     const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+
+    const [testResults, setTestResults] = useState([]); // Lưu kết quả xét nghiệm
+    const [loadingResult, setLoadingResult] = useState(false);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [selectedResult, setSelectedResult] = useState(null);
+
+
 
     // Thêm hàm chuyển đổi slot thành khung giờ
     const getSlotTimeRange = (slot) => {
@@ -247,6 +254,28 @@ export default function UserAppointments() {
             );
         }
         return stars;
+    };
+
+    const fetchTestResults = async (customerId, bookingId) => {
+        setLoadingResult(true);
+        try {
+            const res = await api.get(`/api/result/customer/${customerId}`);
+            // Lọc đúng kết quả theo bookingId (serviceBookingId)
+            let result = null;
+            if (Array.isArray(res.data)) {
+                result = res.data.find(r => r.serviceBookingId?.id === bookingId);
+            }
+            if (result) {
+                setSelectedResult(result);
+                setShowResultModal(true);
+            } else {
+                showToast('Không tìm thấy kết quả xét nghiệm cho lịch này', 'warning');
+            }
+        } catch (err) {
+            showToast('Không thể tải kết quả xét nghiệm', 'error');
+        } finally {
+            setLoadingResult(false);
+        }
     };
 
     return (
@@ -980,6 +1009,22 @@ export default function UserAppointments() {
 
                             {/* Các nút khác */}
                             <div className="flex space-x-3">
+                                {/* Nút xem kết quả xét nghiệm cho lịch xét nghiệm đã hoàn thành */}
+                                {selectedAppointment.serviceTypeId?.typeCode === 1 && selectedAppointment.status === 2 && (
+                                    <button
+                                        onClick={() => fetchTestResults(selectedAppointment.customerId?.id, selectedAppointment.id)}
+                                        className="px-4 py-2 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-100 flex items-center"
+                                        disabled={loadingResult}
+                                    >
+                                        {loadingResult ? (
+                                            <div className="w-4 h-4 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                                        ) : (
+                                            <FileText size={16} className="mr-1.5" />
+                                        )}
+                                        Xem kết quả xét nghiệm
+                                    </button>
+                                )}
+
                                 <button
                                     onClick={() => {
                                         // Simulate download as PDF
@@ -1002,6 +1047,59 @@ export default function UserAppointments() {
                     </div>
                 </div>
             )}
+
+
+            {/* Modal xem kết quả xét nghiệm */}
+            {showResultModal && selectedResult && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 animate-fade-in">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-bold">Kết quả xét nghiệm</h3>
+                            <button
+                                onClick={() => setShowResultModal(false)}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="bg-blue-50 p-3 rounded-lg">
+                                <div className="flex items-center space-x-2 mb-2">
+                                    <FileText className="text-blue-600" size={18} />
+                                    <h4 className="font-medium text-blue-800">Thông tin xét nghiệm</h4>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-sm mb-2">
+                                    <p><span className="text-gray-500">Khách hàng:</span></p>
+                                    <p className="font-medium">{selectedResult.customerId?.name}</p>
+                                    <p><span className="text-gray-500">Dịch vụ:</span></p>
+                                    <p className="font-medium">{selectedResult.serviceBookingId?.serviceTypeId?.name}</p>
+                                    <p><span className="text-gray-500">Ngày xét nghiệm:</span></p>
+                                    <p className="font-medium">
+                                        {selectedResult.serviceBookingId?.appointmentDate
+                                            ? new Date(selectedResult.serviceBookingId.appointmentDate).toLocaleDateString('vi-VN')
+                                            : ''}
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="bg-gray-50 p-4 rounded-lg">
+                                <h4 className="font-medium text-gray-800 mb-3">Kết quả chi tiết</h4>
+                                <div className="border border-gray-200 rounded-md p-3 bg-white">
+                                    <p className="whitespace-pre-wrap">{selectedResult.content}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="mt-6 flex justify-end">
+                            <button
+                                onClick={() => setShowResultModal(false)}
+                                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+                            >
+                                Đóng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             <Footer />
         </div>

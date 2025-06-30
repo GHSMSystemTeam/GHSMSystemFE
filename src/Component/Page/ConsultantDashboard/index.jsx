@@ -37,7 +37,7 @@ export default function ConsultantDashboard() {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const { user } = useAuth();
-  const [openProfile, setOpenProfile] = useState(false);  useEffect(() => {
+  const [openProfile, setOpenProfile] = useState(false); useEffect(() => {
     if (user && user.id) {
       fetchConsultationBookings(); // Fetch consultation bookings for "Lịch tư vấn"
       fetchTestingBookings(); // Fetch testing bookings for "Dịch vụ xét nghiệm"
@@ -47,7 +47,7 @@ export default function ConsultantDashboard() {
 
   useEffect(() => {
     fetchQuestions(); // <-- Thêm dòng này để luôn lấy câu hỏi khi vào trang
-  }, []);const fetchConsultationBookings = async () => {
+  }, []); const fetchConsultationBookings = async () => {
     setLoading((prev) => ({ ...prev, bookings: true }));
     setError((prev) => ({ ...prev, bookings: null }));
     try {
@@ -163,24 +163,13 @@ export default function ConsultantDashboard() {
             fetchQuestions={fetchQuestions} // Đảm bảo truyền hàm này
           />
         );
-      case 'schedules':
+      case 'consulting':
         return (
-          <SchedulesPanel
+          <ConsultingPanel
             bookings={bookings}
             loading={loading.bookings}
             error={error.bookings}
             updateBookingStatus={updateBookingStatus}
-            selectedAppointment={selectedAppointment}
-            setSelectedAppointment={setSelectedAppointment}
-          />
-        );      
-        case 'examinations':
-        return (
-          <ConsultingPanel
-            examBookings={examBookings}
-            loading={loading}
-            error={error}
-            updateExamBookingStatus={updateExamBookingStatus}
             selectedAppointment={selectedAppointment}
             setSelectedAppointment={setSelectedAppointment}
           />
@@ -192,8 +181,8 @@ export default function ConsultantDashboard() {
             loading={loading.blogs}
             error={error.blogs}
           />
-        );      
-        case 'examinationResults':
+        );
+      case 'examinationResults':
         return (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-2xl font-bold mb-4">Kết quả xét nghiệm</h2>
