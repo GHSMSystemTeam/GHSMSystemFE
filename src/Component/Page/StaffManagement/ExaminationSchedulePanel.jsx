@@ -22,7 +22,7 @@ const TIME_SLOTS = {
 
 function getGenderText(gender) {
   if (gender === 0) return 'Nam';
-  if (gender === 2) return 'Nữ';
+  if (gender === 1) return 'Nữ';
   return 'Khác';
 }
 
@@ -44,11 +44,6 @@ function getTimeSlotText(slot) {
 export default function ExaminationSchedulePanel({ selectedAppointment, setSelectedAppointment }) {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
   const [serviceTypes, setServiceTypes] = useState([]);
@@ -179,7 +174,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     // Lọc theo ngày
     if (dateFilter) {
       filtered = filtered.filter(booking => {
-        const bookingDate = new Date(booking.appointmentDate || booking.bookingDate || booking.date).toISOString().split('T')[0];
+        const bookingDate = new Date(booking.appointmentDate).toISOString().split('T')[0];
         return bookingDate === dateFilter;
       });
     }
@@ -257,7 +252,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     today.setHours(0, 0, 0, 0);
 
     return bookings.filter(booking => {
-      const appointmentDate = new Date(booking.appointmentDate || booking.bookingDate || booking.date);
+      const appointmentDate = new Date(booking.appointmentDate);
       appointmentDate.setHours(0, 0, 0, 0);
       return appointmentDate >= today && booking.status !== 3;
     }).length;
@@ -683,5 +678,4 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
 
     </div>
   );
-}
 }
