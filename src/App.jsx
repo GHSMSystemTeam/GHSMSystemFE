@@ -53,7 +53,14 @@ function App() {
             <Route path="/dncm" element={<DNCM />} />
             <Route path="/news" element={<NewsPage />} />
             <Route path="/search" element={<SearchPage />} />
-            <Route path="/appointment" element={<DatLichKham />} />
+            <Route
+              path="/appointment" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <DatLichKham />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/benh-lay-truyen" element={<STDsPage />} />
             <Route path="/family-plan" element={<FamilyPlan />} />
             <Route path="/news/:slug" element={<NewsDetails />} />
@@ -67,7 +74,14 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="forgotpassword" element={<ForgotPassword />} />
             <Route path="signup" element={<SignUp />} />
-            <Route path="/test" element={<TestBookingPage />} />
+            <Route
+              path="/test" 
+              element={
+                <ProtectedRoute requiredRole="customer">
+                  <TestBookingPage />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/consultation" element={<Consulation />} />
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/appointments" element={<UserAppointments />} />

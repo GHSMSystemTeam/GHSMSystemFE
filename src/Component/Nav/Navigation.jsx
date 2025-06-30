@@ -3,14 +3,38 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import NavItem from './NavItem'
 import { Search, ChevronUp, Bell, X, LogOut, User } from 'lucide-react';
-{/*import { useAuth } from '../Auth/AuthContext';*/ }
-
+import { useAuth } from '../Auth/AuthContext';
+import { useToast } from '../Toast/ToastProvider';
+import api from '../config/axios';
 export default function Navigation() {
-
-    {/*
     const {user} = useAuth();
-    */}
+    const { showToast } = useToast();
+    const [isBlockedRole, setIsBlockedRole] = useState(false);
+    useEffect(() => {
+        const checkRole = async () => {
+            // Nếu đã có user.role?.name thì không cần gọi API nữa
+            if (user?.role?.name) {
+                setIsBlockedRole(['staff', 'consultant', 'admin'].includes(user.role.name));
+                return;
+            }
+            // Nếu cần fetch từ API
+            try {
+                const res = await api.get('/api/user');
+                const found = res.data.find(u => u.id === user.id);
+                setIsBlockedRole(['staff', 'consultant', 'admin'].includes(found?.role?.name));
+            } catch {
+                setIsBlockedRole(false);
+            }
+        };
+        if (user) checkRole();
+    }, [user]);
 
+    const handleServiceLinkClick = (e) => {
+        if (isBlockedRole) {
+            e.preventDefault();
+            showToast && showToast('Tài khoản này không có quyền sử dụng chức năng này!', 'error');
+        }
+    };
     // Tạo state riêng cho từng dropdown
     const [showAboutDropdown, setShowAboutDropdown] = useState(false);
     const [showServiceDropdown, setShowServiceDropdown] = useState(false);
@@ -151,9 +175,6 @@ export default function Navigation() {
         setUnreadCount(savedNotifications.filter(n => !n.read).length);
     }, []);
 
-
-
-
     // Add a notification
     {/*}
     const addNotification = (message, type = 'success') => {
@@ -292,25 +313,40 @@ export default function Navigation() {
 
                             {showServiceDropdown && (
                                 <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                    <Link to="/consultation"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
+                                    <Link 
+                                        to="/consultation"
+                                        className={`block px-4 py-2 transition-colors duration-200
+                                            ${isActive('/consultation') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                                        `}
+                                    >
                                         Tư vấn và trị liệu
                                     </Link>
-                                    <Link to="/test"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
+                                    <Link                                    
+                                        to="/test"
+                                        className={`block px-4 py-2 transition-colors duration-200
+                                            ${isActive('/test') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                                            ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
+                                        `}
+                                        onClick={handleServiceLinkClick}
+                                        tabIndex={isBlockedRole ? -1 : 0}
+                                    >
                                         Đặt lịch xét nghiệm
                                     </Link>
-                                    <Link to="/appointment"
-                                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
+                                    <Link                                    
+                                        to="/appointment"
+                                        className={`block px-4 py-2 transition-colors duration-200
+                                            ${isActive('/appointment') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                                            ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
+                                        `}
+                                        onClick={handleServiceLinkClick}
+                                        tabIndex={isBlockedRole ? -1 : 0}
+                                    >
                                         Đặt lịch tư vấn
                                     </Link>
-                                    <Link to="/family-plan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
+                                    {/* <Link to="/family-plan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                         Quản lý kế hoạch hóa gia đình, tránh thai
-                                    </Link>
+                                    </Link> */}
                                     {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
                                             transition-colors duration-200">
                                     Hỗ trợ quản lý bệnh nhân

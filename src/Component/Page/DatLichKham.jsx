@@ -23,6 +23,7 @@ export default function DatLichKham() {
     const { showToast } = useToast()
     const { checkAuthAndShowPrompt } = useAuthCheck();
     const { user } = useAuth()
+    const isBlockedRole = user && ['staff', 'consultant', 'admin'].includes(user.role?.name);
     const [currentStep, setCurrentStep] = useState(1);
     const [consultingService, setConsultingService] = useState(null);
     const [availableDoctors, setAvailableDoctors] = useState([]);
@@ -150,6 +151,10 @@ export default function DatLichKham() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (isBlockedRole) {
+            showToast('Tài khoản của bạn không có quyền thực hiện chức năng này.', 'error');
+            return;
+        }
         if (!checkAuthAndShowPrompt('đặt lịch tư vấn')) return;
 
         if (!consultingService) {
