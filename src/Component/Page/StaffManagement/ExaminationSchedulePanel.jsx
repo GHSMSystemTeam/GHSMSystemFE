@@ -34,258 +34,19 @@ function getTimeSlotText(slot) {
   return TIME_SLOTS[slot] || 'Không xác định';
 }
 
-export default function ExaminationSchedulePanel({ selectedAppointment, setSelectedAppointment }) {
-  const [bookings, setBookings] = useState([
-    {
-      id: 1,
-      customerId: { name: 'dang khoa', gender: 0 },
-      appointmentDate: '2025-08-08',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 0
-    },
-    {
-      id: 2,
-      customerId: { name: 'Du Thuc Lan', gender: 1 },
-      appointmentDate: '2025-12-12',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 2
-    },
-    {
-      id: 3,
-      customerId: { name: 'Dang Minh Chau', gender: 1 },
-      appointmentDate: '2025-08-09',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 1
-    },
-    {
-      id: 4,
-      customerId: { name: 'Tran Huu Dang Quan', gender: 0 },
-      appointmentDate: '2025-06-27',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 2
-    },
-    {
-      id: 5,
-      customerId: { name: 'Vu Ha Anh', gender: 1 },
-      appointmentDate: '2025-06-28',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 2
-    },
-    {
-      id: 6,
-      customerId: { name: 'Tran Huu Dang Quan', gender: 0 },
-      appointmentDate: '2025-06-27',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 2
-    },
-    {
-      id: 7,
-      customerId: { name: 'dang khoa', gender: 0 },
-      appointmentDate: '2025-07-01',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 0
-    },
-    {
-      id: 8,
-      customerId: { name: 'Dinh Duy Hoang', gender: 0 },
-      appointmentDate: '2025-10-15',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 0
-    },
-    {
-      id: 9,
-      customerId: { name: 'Tran Duc Hai', gender: 1 },
-      appointmentDate: '2026-02-03',
-      slot: 1,
-      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
-      status: 1
-    }
-  ]);
-  const [loading, setLoading] = useState(false);
+export default function ExaminationSchedulePanel() {
+  const [bookings, setBookings] = useState([]);
+  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [updatingId, setUpdatingId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
-
-  const handleStatusChange = async (id, statusNumber) => {
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
-      return;
-    }
-    setUpdatingId(id);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setBookings(prev =>
-        prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
-      );
-      showToast('Cập nhật trạng thái thành công!', 'success');
-    } catch (err) {
-      showToast('Cập nhật trạng thái thất bại!', 'error');
-    } finally {
-      setUpdatingId(null);
-    }
-  };
-
-  const handleViewDetail = (booking) => {
-    setSelectedAppointment(booking);
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  };
-
-  return (
-    <div className="bg-white rounded-lg shadow-sm">
-      {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead className="bg-gray-50 border-b">
-            <tr>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Họ tên
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Giới tính
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Ngày hẹn
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Dịch vụ tư vấn
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Trạng thái
-              </th>
-              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
-                Thao tác
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {bookings.map((booking) => (
-              <tr key={booking.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {booking.customerId?.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getGenderText(booking.customerId?.gender)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {getTimeSlotText(booking.slot)} {formatDate(booking.appointmentDate)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {booking.serviceTypeId?.name}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="relative">
-                    <select
-                      className={`appearance-none border rounded px-3 py-2 pr-8 text-sm font-medium ${getStatusClass(booking.status)} cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                      value={booking.status}
-                      disabled={updatingId === booking.id}
-                      onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
-                    >
-                      {STATUS_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    {updatingId === booking.id && (
-                      <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
-                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    onClick={() => handleViewDetail(booking)}
-                    className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50"
-                    title="Xem chi tiết"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Modal chi tiết lịch tư vấn */}
-      {selectedAppointment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Chi tiết lịch tư vấn</h3>
-              <button
-                onClick={() => setSelectedAppointment(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <h4 className="font-medium text-blue-800 mb-2">Thông tin khách hàng</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p><span className="text-gray-500">Họ tên:</span></p>
-                  <p className="font-medium">{selectedAppointment.customerId?.name}</p>
-                  <p><span className="text-gray-500">Giới tính:</span></p>
-                  <p className="font-medium">{getGenderText(selectedAppointment.customerId?.gender)}</p>
-                </div>
-              </div>
-              
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch tư vấn</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <p><span className="text-gray-500">Dịch vụ:</span></p>
-                  <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
-                  <p><span className="text-gray-500">Ngày hẹn:</span></p>
-                  <p className="font-medium">{formatDate(selectedAppointment.appointmentDate)}</p>
-                  <p><span className="text-gray-500">Khung giờ:</span></p>
-                  <p className="font-medium">{getTimeSlotText(selectedAppointment.slot)}</p>
-                  <p><span className="text-gray-500">Trạng thái:</span></p>
-                  <p>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(selectedAppointment.status)}`}>
-                      {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setSelectedAppointment(null)}
-                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-              >
-                Đóng
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
   // Fetch exam bookings
   useEffect(() => {
@@ -400,6 +161,12 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       const bookingDate = new Date(booking.appointmentDate).toISOString().split('T')[0];
       return bookingDate === today && booking.status !== 3;
     }).length;
+  };
+
+  const getGenderText = (gender) => {
+    if (gender === 0) return 'Nam';
+    if (gender === 1) return 'Nữ';
+    return 'Khác';
   };
 
   if (loading) {
@@ -660,7 +427,6 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Trạng thái</label>
                   <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(selectedAppointment.status)}`}>
-                    {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.icon}
                     {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}
                   </span>
                 </div>
@@ -678,4 +444,4 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       )}
     </div>
   );
-
+}

@@ -58,11 +58,11 @@ GET    /api/exam-results/:id/download        # Tải xuống
 ### Import components:
 
 ```javascript
-import { 
+import {
   StaffProfile,
   ExaminationSchedulePanel,
-  ExaminationResultPanel
-} from './Component/Page/StaffManagement';
+  ExaminationResultPanel,
+} from "./Component/Page/StaffManagement";
 ```
 
 ### Sử dụng component chính:
