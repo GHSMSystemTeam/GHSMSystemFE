@@ -10,8 +10,6 @@ StaffManagement/
 ├── StaffSidebar.jsx             # Thanh điều hướng
 ├── ExaminationSchedulePanel.jsx  # Quản lý lịch xét nghiệm
 ├── ExaminationResultPanel.jsx    # Quản lý kết quả xét nghiệm
-├── ExaminationsPanel.jsx         # Component cũ (backward compatibility)
-├── ExaminationResult.jsx         # Component cũ (backward compatibility)
 └── index.jsx                     # Export tất cả components
 ```
 
@@ -33,13 +31,12 @@ StaffManagement/
 - Tải xuống báo cáo kết quả
 - Theo dõi trạng thái kết quả (chờ, có kết quả, đã gửi)
 
-### 3. Tạo lịch hẹn mới (CreateBookingPanel)
+### 3. Thống kê và báo cáo
 
-- Tạo lịch hẹn cho bệnh nhân chưa đăng ký trước
-- Nhập đầy đủ thông tin bệnh nhân
-- Chọn loại xét nghiệm và khung giờ
-- Validation form đầy đủ
-- Tự động tính giá tiền
+- Thống kê số lượng xét nghiệm theo trạng thái
+- Báo cáo hiệu suất công việc
+- Xuất báo cáo chi tiết theo thời gian
+- Theo dõi tiến độ xử lý
 
 ## API Endpoints cần thiết
 
@@ -47,7 +44,6 @@ StaffManagement/
 // Lịch hẹn xét nghiệm
 GET    /api/exam-bookings                    # Lấy danh sách lịch hẹn
 PUT    /api/exam-bookings/:id/status         # Cập nhật trạng thái
-POST   /api/exam-bookings/staff-create       # Tạo lịch hẹn mới
 
 // Kết quả xét nghiệm
 GET    /api/exam-bookings/completed          # Lấy danh sách đã hoàn thành

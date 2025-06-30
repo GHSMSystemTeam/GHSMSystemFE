@@ -1,22 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, Filter, Eye, CheckCircle, Clock, XCircle, Check, User, Phone } from 'lucide-react';
+import { Eye, CheckCircle, Clock, XCircle, Check, User, Phone, Search, Filter, Calendar } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 
 const STATUS_OPTIONS = [
-  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
-  { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
-  { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
-  { value: 3, label: 'Đã hủy', icon: <XCircle size={14} className="mr-1 text-red-600" /> },
+  { value: 0, label: 'Chờ xác nhận', color: 'bg-yellow-100 text-yellow-800' },
+  { value: 1, label: 'Đã xác nhận', color: 'bg-green-100 text-green-800' },
+  { value: 2, label: 'Hoàn thành', color: 'bg-blue-100 text-blue-800' },
+  { value: 3, label: 'Đã hủy', color: 'bg-red-100 text-red-800' },
 ];
 
 const TIME_SLOTS = {
-  1: "07:00 - 09:00",
-  2: "09:00 - 11:00",
-  3: "11:00 - 13:00",
-  4: "13:00 - 15:00",
-  5: "15:00 - 17:00"
+  1: "07:00",
+  2: "09:00", 
+  3: "11:00",
+  4: "13:00",
+  5: "15:00"
 };
 
 function getGenderText(gender) {
@@ -26,13 +26,8 @@ function getGenderText(gender) {
 }
 
 function getStatusClass(status) {
-  switch (status) {
-    case 0: return 'bg-yellow-100 text-yellow-800';
-    case 1: return 'bg-green-100 text-green-800';
-    case 2: return 'bg-blue-100 text-blue-800';
-    case 3: return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
+  const statusOption = STATUS_OPTIONS.find(opt => opt.value === status);
+  return statusOption ? statusOption.color : 'bg-gray-100 text-gray-800';
 }
 
 function getTimeSlotText(slot) {
@@ -40,17 +35,257 @@ function getTimeSlotText(slot) {
 }
 
 export default function ExaminationSchedulePanel({ selectedAppointment, setSelectedAppointment }) {
-  const [bookings, setBookings] = useState([]);
-  const [filteredBookings, setFilteredBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [bookings, setBookings] = useState([
+    {
+      id: 1,
+      customerId: { name: 'dang khoa', gender: 0 },
+      appointmentDate: '2025-08-08',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 0
+    },
+    {
+      id: 2,
+      customerId: { name: 'Du Thuc Lan', gender: 1 },
+      appointmentDate: '2025-12-12',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 2
+    },
+    {
+      id: 3,
+      customerId: { name: 'Dang Minh Chau', gender: 1 },
+      appointmentDate: '2025-08-09',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 1
+    },
+    {
+      id: 4,
+      customerId: { name: 'Tran Huu Dang Quan', gender: 0 },
+      appointmentDate: '2025-06-27',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 2
+    },
+    {
+      id: 5,
+      customerId: { name: 'Vu Ha Anh', gender: 1 },
+      appointmentDate: '2025-06-28',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 2
+    },
+    {
+      id: 6,
+      customerId: { name: 'Tran Huu Dang Quan', gender: 0 },
+      appointmentDate: '2025-06-27',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 2
+    },
+    {
+      id: 7,
+      customerId: { name: 'dang khoa', gender: 0 },
+      appointmentDate: '2025-07-01',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 0
+    },
+    {
+      id: 8,
+      customerId: { name: 'Dinh Duy Hoang', gender: 0 },
+      appointmentDate: '2025-10-15',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 0
+    },
+    {
+      id: 9,
+      customerId: { name: 'Tran Duc Hai', gender: 1 },
+      appointmentDate: '2026-02-03',
+      slot: 1,
+      serviceTypeId: { name: 'Tư vấn sinh lý nam' },
+      status: 1
+    }
+  ]);
+  const [loading, setLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateFilter, setDateFilter] = useState('');
-  const [showDetailModal, setShowDetailModal] = useState(false);
   const { showToast } = useToast();
   const { user } = useAuth();
+
+  const handleStatusChange = async (id, statusNumber) => {
+    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
+      return;
+    }
+    setUpdatingId(id);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setBookings(prev =>
+        prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
+      );
+      showToast('Cập nhật trạng thái thành công!', 'success');
+    } catch (err) {
+      showToast('Cập nhật trạng thái thất bại!', 'error');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const handleViewDetail = (booking) => {
+    setSelectedAppointment(booking);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-sm">
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="min-w-full">
+          <thead className="bg-gray-50 border-b">
+            <tr>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Họ tên
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Giới tính
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Ngày hẹn
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Dịch vụ tư vấn
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Trạng thái
+              </th>
+              <th className="px-6 py-4 text-left text-sm font-medium text-gray-500 uppercase tracking-wider">
+                Thao tác
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {bookings.map((booking) => (
+              <tr key={booking.id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {booking.customerId?.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {getGenderText(booking.customerId?.gender)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {getTimeSlotText(booking.slot)} {formatDate(booking.appointmentDate)}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {booking.serviceTypeId?.name}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="relative">
+                    <select
+                      className={`appearance-none border rounded px-3 py-2 pr-8 text-sm font-medium ${getStatusClass(booking.status)} cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                      value={booking.status}
+                      disabled={updatingId === booking.id}
+                      onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
+                    >
+                      {STATUS_OPTIONS.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                      <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    {updatingId === booking.id && (
+                      <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center rounded">
+                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <button
+                    onClick={() => handleViewDetail(booking)}
+                    className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-50"
+                    title="Xem chi tiết"
+                  >
+                    <Eye size={16} />
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal chi tiết lịch tư vấn */}
+      {selectedAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Chi tiết lịch tư vấn</h3>
+              <button
+                onClick={() => setSelectedAppointment(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <h4 className="font-medium text-blue-800 mb-2">Thông tin khách hàng</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <p><span className="text-gray-500">Họ tên:</span></p>
+                  <p className="font-medium">{selectedAppointment.customerId?.name}</p>
+                  <p><span className="text-gray-500">Giới tính:</span></p>
+                  <p className="font-medium">{getGenderText(selectedAppointment.customerId?.gender)}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-50 p-3 rounded-lg">
+                <h4 className="font-medium text-gray-800 mb-2">Thông tin lịch tư vấn</h4>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <p><span className="text-gray-500">Dịch vụ:</span></p>
+                  <p className="font-medium">{selectedAppointment.serviceTypeId?.name}</p>
+                  <p><span className="text-gray-500">Ngày hẹn:</span></p>
+                  <p className="font-medium">{formatDate(selectedAppointment.appointmentDate)}</p>
+                  <p><span className="text-gray-500">Khung giờ:</span></p>
+                  <p className="font-medium">{getTimeSlotText(selectedAppointment.slot)}</p>
+                  <p><span className="text-gray-500">Trạng thái:</span></p>
+                  <p>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(selectedAppointment.status)}`}>
+                      {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={() => setSelectedAppointment(null)}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
   // Fetch exam bookings
   useEffect(() => {
@@ -289,61 +524,40 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
         </div>
       </div>
 
-      {/* Bookings Table */}
+      {/* Bookings Table - Style like the template image */}
       <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thông tin bệnh nhân
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Ngày & Giờ
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Loại xét nghiệm
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Trạng thái
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Thao tác
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredBookings.length === 0 ? (
+          {filteredBookings.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              Không có lịch hẹn nào
+            </div>
+          ) : (
+            <table className="min-w-full">
+              <thead className="bg-gray-50 border-b">
                 <tr>
-                  <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
-                    Không có lịch hẹn nào
-                  </td>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Họ tên</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Giới tính</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Ngày hẹn</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Dịch vụ xét nghiệm</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Trạng thái</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Thao tác</th>
                 </tr>
-              ) : (
-                filteredBookings.map((booking) => (
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredBookings.map((booking) => (
                   <tr key={booking.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <User className="h-5 w-5 text-blue-600" />
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {booking.fullName}
-                          </div>
-                          <div className="text-sm text-gray-500 flex items-center">
-                            <Phone className="h-3 w-3 mr-1" />
-                            {booking.phoneNumber}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            {getGenderText(booking.gender)}
-                          </div>
-                        </div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {booking.fullName}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {booking.phoneNumber}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {getGenderText(booking.gender)}
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
                         {formatDate(booking.appointmentDate)}
                       </div>
@@ -351,69 +565,37 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                         {getTimeSlotText(booking.timeSlot)}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {booking.examinationTypeName}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {booking.price?.toLocaleString('vi-VN')}đ
-                      </div>
+                    <td className="px-6 py-4 text-sm text-gray-900">
+                      {booking.examinationTypeName}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(booking.status)}`}>
-                        {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.icon}
-                        {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.label}
-                      </span>
+                    <td className="px-6 py-4">
+                      <select
+                        value={booking.status}
+                        onChange={(e) => updateBookingStatus(booking.id, parseInt(e.target.value))}
+                        disabled={updatingId === booking.id}
+                        className={`px-3 py-1 rounded-full text-xs font-medium border-0 focus:ring-2 focus:ring-blue-500 ${getStatusClass(booking.status)}`}
+                      >
+                        {STATUS_OPTIONS.map(option => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex items-center space-x-2">
-                        <button
-                          onClick={() => handleViewDetails(booking)}
-                          className="text-blue-600 hover:text-blue-900 p-1 rounded"
-                          title="Xem chi tiết"
-                        >
-                          <Eye size={16} />
-                        </button>
-
-                        {booking.status === 0 && (
-                          <button
-                            onClick={() => updateBookingStatus(booking.id, 1)}
-                            disabled={updatingId === booking.id}
-                            className="text-green-600 hover:text-green-900 p-1 rounded disabled:opacity-50"
-                            title="Xác nhận"
-                          >
-                            <CheckCircle size={16} />
-                          </button>
-                        )}
-
-                        {booking.status === 1 && (
-                          <button
-                            onClick={() => updateBookingStatus(booking.id, 2)}
-                            disabled={updatingId === booking.id}
-                            className="text-blue-600 hover:text-blue-900 p-1 rounded disabled:opacity-50"
-                            title="Hoàn thành"
-                          >
-                            <Check size={16} />
-                          </button>
-                        )}
-
-                        {booking.status !== 3 && booking.status !== 2 && (
-                          <button
-                            onClick={() => updateBookingStatus(booking.id, 3)}
-                            disabled={updatingId === booking.id}
-                            className="text-red-600 hover:text-red-900 p-1 rounded disabled:opacity-50"
-                            title="Hủy"
-                          >
-                            <XCircle size={16} />
-                          </button>
-                        )}
-                      </div>
+                    <td className="px-6 py-4">
+                      <button
+                        onClick={() => handleViewDetails(booking)}
+                        className="text-blue-600 hover:text-blue-900 text-sm font-medium"
+                      >
+                        <Eye size={16} className="inline mr-1" />
+                        Xem
+                      </button>
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
 
@@ -496,4 +678,4 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       )}
     </div>
   );
-}
+
