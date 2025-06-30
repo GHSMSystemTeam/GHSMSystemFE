@@ -36,7 +36,6 @@ const TestBookingPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { checkAuthAndShowPrompt } = useAuthCheck();
-
   const [selectedKit, setSelectedKit] = useState(null);
   const [appointmentDate, setAppointmentDate] = useState('');
   const [selectedSlot, setSelectedSlot] = useState(null);
@@ -321,9 +320,6 @@ const TestBookingPage = () => {
                       Lựa chọn gói xét nghiệm phù hợp với nhu cầu của bạn
                     </p>
                   </div>
-
-
-
                   <div className="p-6">
                     {loadingKits ? (
                       <div className="text-center text-blue-600 py-10">Đang tải danh sách gói xét nghiệm...</div>
@@ -338,10 +334,10 @@ const TestBookingPage = () => {
                           <div
                             key={`${kit.id || kit.name}-${idx}`}
                             className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative cursor-pointer
-                ${selectedKit?.id === kit.id
-                                ? 'border-blue-500 bg-blue-50 shadow-md'
-                                : 'border-gray-200 hover:border-blue-300'
-                              }`}
+                              ${selectedKit?.id === kit.id
+                                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                                  : 'border-gray-200 hover:border-blue-300'}
+                            `}
                             onClick={() => setSelectedKit(kit)}
                           >
                             {/* Badge */}
@@ -357,13 +353,15 @@ const TestBookingPage = () => {
                                 <Beaker size={48} />
                               </div>
                               <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
-                  ${selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
+                                ${selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
                                 <button
                                   className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setSelectedKit(kit);
-                                    handleNextStep();
+                                    if (!isBlockedRole) {
+                                      setSelectedKit(kit);
+                                      handleNextStep();
+                                    }
                                   }}
                                 >
                                   Đặt ngay <ArrowRight size={16} className="ml-1" />

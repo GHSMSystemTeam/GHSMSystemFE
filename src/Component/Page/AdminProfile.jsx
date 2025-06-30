@@ -2209,9 +2209,26 @@ const TestResultManagementComponent = () => {
 };
 
 const FeedbackManagementComponent = () => {
-    const [feedbackItems, setFeedbackItems] = useState(sampleFeedback);
+    const [feedbackItems, setFeedbackItems] =  useState([]);
+    const [loading, setLoading] = useState(true);
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [selectedFeedback, setSelectedFeedback] = useState(null);
+
+    useEffect(() => {
+        fetchFeedback();
+    }, []);    
+
+    const fetchFeedback = async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/api/feedback');
+            setFeedbackItems(res.data || []);
+        } catch (err) {
+            setFeedbackItems([]);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
@@ -2219,14 +2236,15 @@ const FeedbackManagementComponent = () => {
         return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
     };
 
-    const getCustomerName = (customerId) => {
-        const customer = customersData.find(c => c.id === customerId);
-        return customer ? customer.name : 'Unknown Customer';
+    const getCustomerName = (customerObj) => {
+        return customerObj?.name || 'Unknown Customer';
     };
 
-    const getAppointmentService = (orderId) => {
-        const booking = updatedSampleBookings.find(b => b.id === orderId);
-        return booking ? `${booking.serviceName} (${booking.type})` : 'N/A';
+    const getAppointmentService = (serviceBookingObj) => {
+        if (!serviceBookingObj) return 'N/A';
+        const serviceName = serviceBookingObj.serviceTypeId?.name || '';
+        const type = serviceBookingObj.serviceTypeId?.typeCode === 0 ? 'Consulting' : 'Test';
+        return `${serviceName} (${type})`;
     };
 
     const openViewFeedbackModal = (feedback) => {
@@ -2263,43 +2281,49 @@ const FeedbackManagementComponent = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {feedbackItems.length > 0 ? feedbackItems.sort((a,b) => new Date(b.createDate) - new Date(a.createDate)).map(fb => (
-                            <tr key={fb.id} className="bg-white border-b hover:bg-gray-50">
-                                <td className="px-6 py-4 whitespace-nowrap">{formatDate(fb.createDate)}</td>
-                                <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                    {getCustomerName(fb.customerId)}
-                                </td>
-                                <td className="px-6 py-4">{getAppointmentService(fb.serviceAppointmentOrderId)}</td>
-                                <td className="px-6 py-4">{fb.title}</td>
-                                <td className="px-6 py-4">
-                                    <button
-                                        onClick={() => toggleFeedbackStatus(fb.id, 'isPublic')}
-                                        className={`px-2 py-1 text-xs rounded-full ${
-                                            fb.isPublic ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                                        }`}
-                                    >
-                                        {fb.isPublic ? 'Yes' : 'No'}
-                                    </button>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <button
-                                        onClick={() => toggleFeedbackStatus(fb.id, 'isActive')}
-                                        className={`px-2 py-1 text-xs rounded-full ${
-                                            fb.isActive ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300'
-                                        }`}
-                                    >
-                                        {fb.isActive ? 'Active' : 'Inactive'}
-                                    </button>
-                                </td>
-                                <td className="px-6 py-4">
-                                    <button
-                                        onClick={() => openViewFeedbackModal(fb)}
-                                        className="text-sm text-indigo-600 hover:underline"
-                                    >
-                                        View Details
-                                    </button>
-                                </td>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="7" className="text-center py-4">Loading...</td>
                             </tr>
+                        ) :feedbackItems.length > 0 ? feedbackItems
+                            .sort((a,b) => new Date(b.createDate) - new Date(a.createDate))
+                            .map(fb => (
+                                <tr key={fb.id} className="bg-white border-b hover:bg-gray-50">
+                                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(fb.createDate)}</td>
+                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                        {getCustomerName(fb.customerId)}
+                                    </td>
+                                    <td className="px-6 py-4">{getAppointmentService(fb.serviceAppointmentOrderId)}</td>
+                                    <td className="px-6 py-4">{fb.title}</td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => toggleFeedbackStatus(fb.id, 'isPublic')}
+                                            className={`px-2 py-1 text-xs rounded-full ${
+                                                fb.isPublic ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                                            }`}
+                                        >
+                                            {fb.isPublic ? 'Yes' : 'No'}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => toggleFeedbackStatus(fb.id, 'isActive')}
+                                            className={`px-2 py-1 text-xs rounded-full ${
+                                                fb.isActive ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300'
+                                            }`}
+                                        >
+                                            {fb.isActive ? 'Active' : 'Inactive'}
+                                        </button>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <button
+                                            onClick={() => openViewFeedbackModal(fb)}
+                                            className="text-sm text-indigo-600 hover:underline"
+                                        >
+                                            View Details
+                                        </button>
+                                    </td>
+                                </tr>
                         )) : (
                             <tr>
                                 <td colSpan="7" className="px-6 py-4 text-center text-gray-500">No feedback found.</td>
