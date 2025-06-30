@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Calendar, FileText, User } from 'lucide-react';
+import { BarChart3, Calendar, FileText, User, LogOut, X } from 'lucide-react';
 import ExaminationSchedulePanel from './ExaminationSchedulePanel';
 import ExaminationResultPanel from './ExaminationResultPanel';
 import { useAuth } from '../../Auth/AuthContext';
@@ -10,8 +10,15 @@ export default function StaffProfile() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [staffInfo, setStaffInfo] = useState(null);
-  const { user } = useAuth();
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const { user, logout } = useAuth();
   const { showToast } = useToast();
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    showToast('Đăng xuất thành công', 'success');
+  };
 
   // Fetch staff info
   useEffect(() => {
@@ -19,6 +26,7 @@ export default function StaffProfile() {
       setStaffInfo({
         fullName: user.fullName || 'Nhân viên xét nghiệm',
         email: user.email,
+        phoneNumber: user.phoneNumber || 'Chưa cập nhật',
         role: 'Nhân viên xét nghiệm',
         department: 'Phòng xét nghiệm'
       });
@@ -81,7 +89,10 @@ export default function StaffProfile() {
 
         {/* User Info at Bottom */}
         <div className="p-4 border-t border-purple-500">
-          <div className="flex items-center">
+          <button
+            onClick={() => setShowProfileModal(true)}
+            className="flex items-center mb-4 w-full text-left hover:bg-purple-700 p-2 rounded-lg transition-colors"
+          >
             <div className="w-10 h-10 bg-purple-400 rounded-full flex items-center justify-center">
               <User size={20} />
             </div>
@@ -89,7 +100,10 @@ export default function StaffProfile() {
               <p className="font-medium">{staffInfo?.fullName}</p>
               <p className="text-purple-200 text-sm">{staffInfo?.role}</p>
             </div>
-          </div>
+          </button>
+          
+          
+          
         </div>
       </div>
 
@@ -196,6 +210,57 @@ export default function StaffProfile() {
           )}
         </div>
       </div>
+
+      {/* Profile Modal */}
+      {showProfileModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4 relative">
+            {/* Close button */}
+            <button
+              onClick={() => setShowProfileModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+
+            {/* Profile Content */}
+            <div className="p-6 text-center">
+              {/* Profile Avatar */}
+              <div className="w-20 h-20 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                <User className="text-gray-600" size={40} />
+              </div>
+
+              {/* Profile Information */}
+              <div className="space-y-3">
+                <h3 className="text-lg font-medium text-gray-800">
+                  {staffInfo?.role}
+                </h3>
+                
+                <p className="text-gray-700 font-medium">
+                  {staffInfo?.fullName}
+                </p>
+                
+                <p className="text-gray-600">
+                  {staffInfo?.email}
+                </p>
+                
+                <p className="text-gray-600">
+                  {staffInfo?.phoneNumber}
+                </p>
+              </div>
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="w-full mt-6 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors flex items-center justify-center font-medium"
+              >
+                <LogOut className="mr-2" size={18} />
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

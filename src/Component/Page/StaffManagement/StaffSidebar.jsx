@@ -76,13 +76,7 @@ export default function StaffSidebar({ activeTab, setActiveTab, onLogout }) {
           Cài đặt
         </button>
         
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-md hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
-        >
-          <LogOut className="mr-3 h-5 w-5" />
-          Đăng xuất
-        </button>
+        
       </div>
     </div>
   );
