@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import QuestionsPanel from './QuestionsPanel';
 import SchedulesPanel from './SchedulesPanel';
-
+import ConsultingPanel from './ConsultingPanel';
 import BlogsPanel from './BlogsPanel';
 import { useAuth } from '../../Auth/AuthContext';
 import ConsultantProfile from './ConsultantProfile';
@@ -176,7 +176,7 @@ export default function ConsultantDashboard() {
         );      
         case 'examinations':
         return (
-          <ExaminationsPanel
+          <ConsultingPanel
             examBookings={examBookings}
             loading={loading}
             error={error}
@@ -195,30 +195,13 @@ export default function ConsultantDashboard() {
         );      
         case 'examinationResults':
         return (
-          <ExaminationResult
-            examinations={examResults}
-            loading={loading.examResults}
-            error={error.examResults}
-            onUpdateResult={async (examId, resultData) => {
-              try {
-                // Gọi API để cập nhật kết quả xét nghiệm
-                await api.put(`/api/examination-results/${examId}`, resultData);
-                
-                // Cập nhật state local
-                setExamResults((prev) =>
-                  prev.map((exam) =>
-                    exam.id === examId
-                      ? { ...exam, status: 'completed', ...resultData }
-                      : exam
-                  )
-                );
-                
-                console.log('Kết quả xét nghiệm đã được cập nhật thành công');
-              } catch (err) {
-                console.error('Lỗi khi cập nhật kết quả xét nghiệm:', err);
-              }
-            }}
-          />
+          <div className="bg-white rounded-lg shadow p-6">
+            <h2 className="text-2xl font-bold mb-4">Kết quả xét nghiệm</h2>
+            <div className="text-center py-8 text-gray-500">
+              <p>Chức năng đang được phát triển.</p>
+              <p className="text-sm mt-2">Vui lòng sử dụng trang Staff Management để quản lý kết quả xét nghiệm.</p>
+            </div>
+          </div>
         );
       default:
         return <QuestionsPanel
