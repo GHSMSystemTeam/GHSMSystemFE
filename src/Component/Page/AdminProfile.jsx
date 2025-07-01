@@ -1221,9 +1221,16 @@ const BookingManagementComponent = () => {
                                                 <span className={`px-2 py-0.5 rounded-full text-xs ${
                                                     booking.status === 0 ? 'bg-yellow-200 text-yellow-800' :
                                                     booking.status === 1 ? 'bg-green-200 text-green-800' :
+                                                    booking.status === 2 ? 'bg-blue-200 text-blue-800' :
                                                     'bg-red-200 text-red-800'
                                                 }`}>
-                                                    {booking.status === 0 ? 'Scheduled' : booking.status === 1 ? 'Completed' : 'Cancelled'}
+                                                    {booking.status === 0
+                                                        ? 'Chờ xác nhận'
+                                                        : booking.status === 1
+                                                        ? 'Xác nhận'
+                                                        : booking.status === 2
+                                                        ? 'Hoàn thành'
+                                                        : 'Hủy'}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 flex items-center gap-2">
