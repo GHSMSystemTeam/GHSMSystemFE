@@ -8,12 +8,6 @@ const menuItems = [
     label: 'Quản lý lịch hẹn',
     icon: Calendar,
     description: 'Xem và quản lý lịch xét nghiệm'
-  },
-  {
-    id: 'results',
-    label: 'Kết quả xét nghiệm',
-    icon: FileText,
-    description: 'Nhập và quản lý kết quả'
   }
 ];
 
