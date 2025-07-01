@@ -7,7 +7,7 @@ import { useAuth } from '../Auth/AuthContext';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
 export default function Navigation() {
-    const {user} = useAuth();
+    const { user } = useAuth();
     const { showToast } = useToast();
     const [isBlockedRole, setIsBlockedRole] = useState(false);
     useEffect(() => {
@@ -313,44 +313,28 @@ export default function Navigation() {
 
                             {showServiceDropdown && (
                                 <div className="absolute top-full left-0 w-56 bg-white shadow-lg rounded-lg mt-1 z-50">
-                                    <Link 
-                                        to="/consultation"
-                                        className={`block px-4 py-2 transition-colors duration-200
-                                            ${isActive('/consultation') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
-                                        `}
-                                    >
-                                        Tư vấn và trị liệu
-                                    </Link>
-                                    <Link                                    
+                                    <Link
                                         to="/test"
                                         className={`block px-4 py-2 transition-colors duration-200
-                                            ${isActive('/test') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
-                                            ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
-                                        `}
+                    ${isActive('/test') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                    ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
+                `}
                                         onClick={handleServiceLinkClick}
                                         tabIndex={isBlockedRole ? -1 : 0}
                                     >
                                         Đặt lịch xét nghiệm
                                     </Link>
-                                    <Link                                    
+                                    <Link
                                         to="/appointment"
                                         className={`block px-4 py-2 transition-colors duration-200
-                                            ${isActive('/appointment') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
-                                            ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
-                                        `}
+                    ${isActive('/appointment') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                    ${isBlockedRole ? 'pointer-events-auto cursor-not-allowed opacity-60' : ''}
+                `}
                                         onClick={handleServiceLinkClick}
                                         tabIndex={isBlockedRole ? -1 : 0}
                                     >
                                         Đặt lịch tư vấn
                                     </Link>
-                                    {/* <Link to="/family-plan" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                        Quản lý kế hoạch hóa gia đình, tránh thai
-                                    </Link> */}
-                                    {/* <a href="#" className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600
-                                            transition-colors duration-200">
-                                    Hỗ trợ quản lý bệnh nhân
-                                </a> */}
                                 </div>
                             )}
                         </div>
@@ -364,18 +348,22 @@ export default function Navigation() {
                                 <NavItem
                                     label="Kiến thức"
                                     icon={<ChevronUp size={16} />}
-                                    active={isActive('/blog')}
+                                    active={isActive('/blog') || isActive('/consultation')}
                                 />
                             </div>
                             {showBlogDropdown && (
                                 <div className="absolute top-full left-0 w-64 bg-white shadow-lg rounded-lg mt-1 z-50">
+                                    <Link
+                                        to="/consultation"
+                                        className={`block px-4 py-2 transition-colors duration-200
+                    ${isActive('/consultation') ? 'text-blue-600 bg-blue-50 font-semibold' : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}
+                `}
+                                    >
+                                        Tư vấn và trị liệu
+                                    </Link>
                                     <Link to="/blog"
                                         className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
                                         Kiến thức y khoa
-                                    </Link>
-                                    <Link to="/news"
-                                        className="flex justify-between px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors duration-200">
-                                        Tin tức
                                     </Link>
                                 </div>
                             )}

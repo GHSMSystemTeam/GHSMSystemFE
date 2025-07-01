@@ -66,6 +66,8 @@ export default function Consulation() {
         content: '',
         tags: []
     });
+    const [consuls, setConsuls] = useState([]); // Danh sách bác sĩ tư vấn
+
 
 
     const tags = ["Sức khỏe sinh sản", "Nam khoa", "Phụ khoa", "Bệnh lây truyền", "Sức khỏe tình dục", "Tâm lý"];
@@ -138,6 +140,19 @@ export default function Consulation() {
         };
 
         fetchQuestions();
+    }, []);
+
+    // Lấy danh sách consul (bác sĩ) từ API khi load trang
+    useEffect(() => {
+        const fetchConsuls = async () => {
+            try {
+                const res = await api.get('/api/activeconsultants');
+                setConsuls(res.data || []);
+            } catch (err) {
+                setConsuls([]);
+            }
+        };
+        fetchConsuls();
     }, []);
 
     const handleShowEditForm = (question) => {
@@ -397,13 +412,16 @@ export default function Consulation() {
             return;
         }
 
-        // Giả sử đây là bác sĩ đang đăng nhập - trong thực tế cần kiểm tra vai trò
-        const doctorId = 1; // Mặc định dùng BS đầu tiên trong danh sách
-        const doctor = doctor.find(d => d.id === doctorId);
+        // Lấy thông tin bác sĩ đang đăng nhập từ consuls
+        const doctor = consuls.find(d => String(d.id) === String(user.id));
+        if (!doctor) {
+            showToast('Không tìm thấy thông tin bác sĩ.', 'error');
+            return;
+        }
 
         const newAnswer = {
             id: Date.now(),
-            doctorId: doctorId,
+            doctorId: doctor.id,
             doctorName: doctor.name,
             content: answerContent,
             date: new Date().toISOString(),
@@ -565,15 +583,14 @@ export default function Consulation() {
                                     {selectedQuestion.answers.length > 0 ? (
                                         <div className="space-y-6">
                                             {selectedQuestion.answers.map(answer => {
-                                                const doctor = doctor.find(d => d.id === answer.doctorId);
-
+                                                const doctor = consuls.find(d => String(d.id) === String(answer.doctorId));
                                                 return (
                                                     <div key={answer.id} className="border-b border-gray-100 pb-6 last:border-b-0">
                                                         <div className="flex items-start">
                                                             <div className="flex-shrink-0 mr-4">
                                                                 <div className="relative">
                                                                     <img
-                                                                        src={doctor?.avatar || "https://via.placeholder.com/64"}
+                                                                        src={doctor?.profilePicture?.[0] || "https://via.placeholder.com/64"}
                                                                         alt={answer.doctorName}
                                                                         className="w-12 h-12 rounded-full object-cover"
                                                                     />
@@ -582,26 +599,17 @@ export default function Consulation() {
                                                                     )}
                                                                 </div>
                                                             </div>
-
                                                             <div className="flex-grow">
                                                                 <div className="flex items-center mb-1">
                                                                     <h4 className="font-semibold text-blue-700">{answer.doctorName}</h4>
-                                                                    <svg className="w-4 h-4 text-blue-600 ml-1" fill="currentColor" viewBox="0 0 20 20">
-                                                                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                                    </svg>
                                                                 </div>
-
                                                                 <p className="text-xs text-gray-500 mb-2">
-                                                                    {doctor?.position}, {doctor?.hospital}
+                                                                    {doctor?.specialization || "Bác sĩ"}
                                                                 </p>
-
                                                                 <p className="text-sm text-gray-600 mb-3">{formatDate(answer.date)}</p>
-
                                                                 <div className="text-gray-800 mb-3 whitespace-pre-line">
                                                                     {answer.content}
                                                                 </div>
-
-
                                                             </div>
                                                         </div>
                                                     </div>

@@ -45,11 +45,10 @@ export default function StaffSidebar({ activeTab, setActiveTab, onLogout }) {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${
-                activeTab === item.id
-                  ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
+              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors duration-200 ${activeTab === item.id
+                ? 'bg-blue-100 text-blue-700 border-r-2 border-blue-500'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
             >
               <Icon className="mr-3 h-5 w-5" />
               <div className="text-left">
@@ -69,8 +68,8 @@ export default function StaffSidebar({ activeTab, setActiveTab, onLogout }) {
           <Settings className="mr-3 h-5 w-5" />
           Cài đặt
         </button>
-        
-        
+
+
       </div>
     </div>
   );
