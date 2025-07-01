@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { BarChart3, Calendar, FileText, User, LogOut, X } from 'lucide-react';
 import ExaminationSchedulePanel from './ExaminationSchedulePanel';
-import ExaminationResultPanel from './ExaminationResultPanel';
 import { useAuth } from '../../Auth/AuthContext';
 import { useToast } from '../../Toast/ToastProvider';
 import api from '../../config/axios';
@@ -72,17 +71,7 @@ export default function StaffProfile() {
               </button>
             </li>
             <li>
-              <button
-                onClick={() => setActiveTab('results')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                  activeTab === 'results' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-purple-100 hover:bg-purple-700'
-                }`}
-              >
-                <FileText className="mr-3" size={20} />
-                Kết quả xét nghiệm
-              </button>
+              
             </li>
           </ul>
         </nav>
@@ -118,7 +107,6 @@ export default function StaffProfile() {
           </h2>
           <p className="text-gray-600 mt-1">
             {activeTab === 'schedule' && 'Quản lý lịch hẹn xét nghiệm'}
-            {activeTab === 'results' && 'Nhập và gửi kết quả xét nghiệm'}
             {activeTab === 'dashboard' && 'Tổng quan hoạt động hệ thống'}
           </p>
         </div>
@@ -130,10 +118,6 @@ export default function StaffProfile() {
               selectedAppointment={selectedAppointment}
               setSelectedAppointment={setSelectedAppointment}
             />
-          )}
-
-          {activeTab === 'results' && (
-            <ExaminationResultPanel />
           )}
 
           {activeTab === 'dashboard' && (
