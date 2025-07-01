@@ -1993,224 +1993,170 @@ const PostManagementComponent = () => {
 };
 
 const TestResultManagementComponent = () => {
-    const [testResults, setTestResults] = useState(sampleTestResults);
+    const [allCustomers, setAllCustomers] = useState([]);
+    const [testResults, setTestResults] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedCustomerId, setSelectedCustomerId] = useState('');
+    const [customers, setCustomers] = useState([]);
     const [showResultModal, setShowResultModal] = useState(false);
     const [selectedResult, setSelectedResult] = useState(null);
-    const [currentFormData, setCurrentFormData] = useState({});
 
-    // Helper to format date (can be moved to a utility file)
+    // Lấy danh sách tất cả customer
+    useEffect(() => {
+        const fetchAllData = async () => {
+            setLoading(true);
+            try {
+                // Lấy tất cả customers
+                const customersRes = await api.get('/api/customers');
+                const customers = customersRes.data || [];
+                setAllCustomers(customers);
+
+                // Lấy tất cả kết quả xét nghiệm cho từng customer
+                const allResults = [];
+                for (const customer of customers) {
+                    try {
+                        const resultsRes = await api.get(`/api/result/customer/${customer.id}`);
+                        const customerResults = resultsRes.data || [];
+                        
+                        if (customerResults.length > 0) {
+                            // Customer có kết quả
+                            allResults.push(...customerResults);
+                        } else {
+                            // Customer chưa có kết quả - tạo entry giả để hiển thị
+                            allResults.push({
+                                id: `no-result-${customer.id}`,
+                                customerId: customer,
+                                serviceBookingId: null,
+                                content: null,
+                                active: false,
+                                hasResult: false // Flag để phân biệt
+                            });
+                        }
+                    } catch {
+                        // Nếu lỗi API, coi như customer chưa có kết quả
+                        allResults.push({
+                            id: `no-result-${customer.id}`,
+                            customerId: customer,
+                            serviceBookingId: null,
+                            content: null,
+                            active: false,
+                            hasResult: false
+                        });
+                    }
+                }
+                setTestResults(allResults);
+            } catch {
+                setAllCustomers([]);
+                setTestResults([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAllData();
+    }, []);
+
+
+    // Helper format date
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        return `${date.getDate()} ${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+        return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
     };
-
-    const getBookingDetails = (orderId) => {
-        // Use updatedSampleBookings which includes all bookings
-        return updatedSampleBookings.find(b => b.id === orderId);
-    };
-
-    const openAddResultModal = () => {
-        setSelectedResult(null);
-        setCurrentFormData({
-            serviceAppointmentOrderId: '',
-            content: '',
-            isActive: true,
-            resultDate: new Date().toISOString().split('T')[0],
-            recordedBy: 'Admin', // Default recorder
-        });
-        setShowResultModal(true);
-    };
-
-    const openEditResultModal = (result) => {
-        setSelectedResult(result);
-        setCurrentFormData({ ...result, resultDate: result.resultDate || new Date().toISOString().split('T')[0] });
-        setShowResultModal(true);
-    };
-
-    const handleFormChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setCurrentFormData(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-    const handleSaveResult = (e) => {
-        e.preventDefault();
-        if (selectedResult) {
-            // Update existing result
-            setTestResults(testResults.map(r => r.id === selectedResult.id ? { ...selectedResult, ...currentFormData } : r));
-        } else {
-            // Add new result
-            const newResult = { ...currentFormData, id: `res${Date.now()}` };
-            setTestResults([...testResults, newResult]);
-        }
-        setShowResultModal(false);
-    };
-
-    const handleDeleteResult = (resultId) => {
-        // Add confirmation logic here
-        if (window.confirm('Are you sure you want to delete this test result?')) {
-            setTestResults(testResults.filter(r => r.id !== resultId));
-        }
-    };
-    
-    // Filter bookings that are of type 'Test' for the dropdown
-    const testAppointments = updatedSampleBookings.filter(b => b.type === 'Test');
 
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-semibold text-gray-800">Test Result Management</h2>
-                <button
-                    onClick={openAddResultModal}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-                >
-                    Add New Result
-                </button>
             </div>
 
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left text-gray-500">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-6 py-3">Patient Name</th>
-                            <th scope="col" className="px-6 py-3">Service Name</th>
-                            <th scope="col" className="px-6 py-3">Appt. Date</th>
-                            <th scope="col" className="px-6 py-3">Result Date</th>
-                            <th scope="col" className="px-6 py-3">Content Summary</th>
-                            <th scope="col" className="px-6 py-3">Status</th>
-                            <th scope="col" className="px-6 py-3">Recorded By</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
+                            <th className="px-6 py-3">Tên khách hàng</th>
+                            <th className="px-6 py-3">Tên dịch vụ</th>
+                            <th className="px-6 py-3">Ngày hẹn</th>
+                            <th className="px-6 py-3">Nội dung kết quả</th>
+                            <th className="px-6 py-3">Trạng thái</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {testResults.length > 0 ? testResults.map(result => {
-                            const booking = getBookingDetails(result.serviceAppointmentOrderId);
-                            return (
-                                <tr key={result.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        {booking ? booking.patientName : 'N/A'}
-                                    </td>
-                                    <td className="px-6 py-4">{booking ? booking.serviceName : 'N/A'}</td>
-                                    <td className="px-6 py-4">{booking ? formatDate(booking.date) : 'N/A'}</td>
-                                    <td className="px-6 py-4">{formatDate(result.resultDate)}</td>
-                                    <td className="px-6 py-4 max-w-xs truncate" title={result.content}>
-                                        {result.content ? `${result.content.substring(0, 50)}...` : 'Pending'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <span className={`px-2 py-0.5 rounded-full text-xs ${
-                                            result.isActive ? 'bg-green-200 text-green-800' : 'bg-yellow-200 text-yellow-800'
-                                        }`}>
-                                            {result.isActive ? 'Available' : 'Pending/Draft'}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4">{result.recordedBy || 'N/A'}</td>
-                                    <td className="px-6 py-4 flex items-center gap-2">
-                                        <button onClick={() => openEditResultModal(result)} className="text-sm text-blue-600 hover:underline">Edit</button>
-                                        <button onClick={() => handleDeleteResult(result.id)} className="text-sm text-red-600 hover:underline">Delete</button>
-                                    </td>
-                                </tr>
-                            );
-                        }) : (
+                        {loading ? (
                             <tr>
-                                <td colSpan="8" className="px-6 py-4 text-center text-gray-500">No test results found.</td>
+                                <td colSpan="5" className="text-center py-4">Đang tải...</td>
                             </tr>
+                        ) : testResults.length === 0 ? (
+                            <tr>
+                                <td colSpan="5" className="text-center py-4">Không có kết quả xét nghiệm.</td>
+                            </tr>
+                        ) : (
+                            testResults
+                                .sort((a, b) => {
+                                    // Ưu tiên hiển thị customer có kết quả trước
+                                    if (a.hasResult === false && b.hasResult !== false) return 1;
+                                    if (a.hasResult !== false && b.hasResult === false) return -1;
+                                    
+                                    // Sắp xếp theo ngày hẹn nếu có
+                                    const dateA = a.serviceBookingId?.appointmentDate;
+                                    const dateB = b.serviceBookingId?.appointmentDate;
+                                    if (dateA && dateB) {
+                                        return new Date(dateB) - new Date(dateA);
+                                    }
+                                    
+                                    // Sắp xếp theo tên customer
+                                    return (a.customerId?.name || '').localeCompare(b.customerId?.name || '');
+                                })
+                                .map(result => (
+                                    <tr key={result.id} className={`border-b hover:bg-gray-50 ${
+                                        result.hasResult === false ? 'bg-yellow-50' : 'bg-white'
+                                    }`}>
+                                        <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                            {result.customerId?.name || 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-700">
+                                            {result.customerId?.email || 'N/A'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {result.hasResult === false 
+                                                ? 'Chưa đặt lịch' 
+                                                : result.serviceBookingId?.serviceTypeId?.name || 'N/A'
+                                            }
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {result.hasResult === false 
+                                                ? 'N/A'
+                                                : formatDate(result.serviceBookingId?.appointmentDate)
+                                            }
+                                        </td>
+                                        <td className="px-6 py-4 max-w-xs truncate" title={result.content}>
+                                            {result.hasResult === false 
+                                                ? 'Chưa có kết quả' 
+                                                : result.content || 'Đang xử lý'
+                                            }
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`px-2 py-0.5 rounded-full text-xs ${
+                                                result.hasResult === false 
+                                                    ? 'bg-gray-200 text-gray-800' 
+                                                    : result.active 
+                                                        ? 'bg-green-200 text-green-800' 
+                                                        : 'bg-yellow-200 text-yellow-800'
+                                            }`}>
+                                                {result.hasResult === false 
+                                                    ? 'Chưa có kết quả' 
+                                                    : result.active 
+                                                        ? 'Đã có kết quả' 
+                                                        : 'Chờ kết quả'
+                                                }
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
                         )}
                     </tbody>
                 </table>
             </div>
-
-            {showResultModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <h3 className="text-xl font-semibold mb-4">{selectedResult ? 'Edit Test Result' : 'Add New Test Result'}</h3>
-                        <form onSubmit={handleSaveResult}>
-                            <div className="mb-4">
-                                <label htmlFor="serviceAppointmentOrderId" className="block text-sm font-medium text-gray-700 mb-1">Test Appointment</label>
-                                <select
-                                    name="serviceAppointmentOrderId"
-                                    id="serviceAppointmentOrderId"
-                                    value={currentFormData.serviceAppointmentOrderId}
-                                    onChange={handleFormChange}
-                                    className="border p-2 rounded w-full"
-                                    required
-                                >
-                                    <option value="">Select Test Appointment</option>
-                                    {testAppointments.map(appt => {
-                                        // Check if a result already exists for this appointment to avoid duplicates if needed
-                                        // const resultExists = testResults.some(r => r.serviceAppointmentOrderId === appt.id && (!selectedResult || r.id !== selectedResult.id));
-                                        // if (resultExists && !selectedResult) return null; // Don't show if adding new and result exists
-
-                                        return (
-                                            <option key={appt.id} value={appt.id}>
-                                                {appt.patientName} - {appt.serviceName} ({formatDate(appt.date)})
-                                            </option>
-                                        );
-                                    })}
-                                </select>
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="resultDate" className="block text-sm font-medium text-gray-700 mb-1">Result Date</label>
-                                <input
-                                    type="date"
-                                    name="resultDate"
-                                    id="resultDate"
-                                    value={currentFormData.resultDate || ''}
-                                    onChange={handleFormChange}
-                                    className="border p-2 rounded w-full"
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">Result Content</label>
-                                <textarea
-                                    name="content"
-                                    id="content"
-                                    rows="5"
-                                    value={currentFormData.content}
-                                    onChange={handleFormChange}
-                                    placeholder="Enter full test result details here..."
-                                    className="border p-2 rounded w-full"
-                                    required
-                                ></textarea>
-                            </div>
-                             <div className="mb-4">
-                                <label htmlFor="recordedBy" className="block text-sm font-medium text-gray-700 mb-1">Recorded By</label>
-                                <input
-                                    type="text"
-                                    name="recordedBy"
-                                    id="recordedBy"
-                                    value={currentFormData.recordedBy}
-                                    onChange={handleFormChange}
-                                    placeholder="Name or ID of recorder"
-                                    className="border p-2 rounded w-full"
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label htmlFor="isActive" className="flex items-center text-sm font-medium text-gray-700">
-                                    <input
-                                        type="checkbox"
-                                        name="isActive"
-                                        id="isActive"
-                                        checked={currentFormData.isActive}
-                                        onChange={handleFormChange}
-                                        className="mr-2 h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                                    />
-                                    Result is Active/Published
-                                </label>
-                            </div>
-                            <div className="flex justify-end gap-3 mt-6">
-                                <button type="button" onClick={() => setShowResultModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Cancel</button>
-                                <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
-                                    {selectedResult ? 'Save Changes' : 'Add Result'}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

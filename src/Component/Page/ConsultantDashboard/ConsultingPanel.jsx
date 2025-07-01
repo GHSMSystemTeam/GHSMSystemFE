@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, CheckCircle, Clock, XCircle, Check } from 'lucide-react';
+import { Eye, CheckCircle, Clock, XCircle, Check, Video } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
-
+import VideoCallManager from './VideoCallManager';
 const STATUS_OPTIONS = [
   { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
@@ -48,7 +48,22 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   const [updatingId, setUpdatingId] = useState(null);
   const { showToast } = useToast();
   const { user } = useAuth();
+  const [showVideoCall, setShowVideoCall] = useState(false);
+  const [selectedForCall, setSelectedForCall] = useState(null);
 
+  const handleStartVideoCall = (booking) => {
+    setSelectedForCall(booking);
+    setShowVideoCall(true);
+  };
+
+  const canStartVideoCall = (booking) => {
+    if (booking.status !== 1) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const bookingDate = new Date(booking.appointmentDate);
+    bookingDate.setHours(0, 0, 0, 0);
+    return bookingDate <= today;
+  };
   const fetchConsultBookings = async () => {
     if (!user || !user.id) {
       setError("Không thể xác thực người dùng.");
@@ -170,7 +185,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-end">
+                  <div className="flex justify-end gap-2">                    
                     <button
                       onClick={() => handleViewDetail(booking)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -178,6 +193,15 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                     >
                       <Eye size={16} />
                     </button>
+                    {canStartVideoCall(booking) && (
+                    <button
+                      onClick={() => handleStartVideoCall(booking)}
+                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Bắt đầu tư vấn video"
+                    >
+                      <Video size={16} />
+                    </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -185,7 +209,16 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
           )}
         </div>
       )}
-
+      {/* Video Call Modal */}
+      {showVideoCall && selectedForCall && (
+        <VideoCallManager
+          appointment={selectedForCall}
+          onClose={() => {
+            setShowVideoCall(false);
+            setSelectedForCall(null);
+          }}
+        />
+      )}
       {/* Modal chi tiết lịch tư vấn */}
       {selectedAppointment && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
