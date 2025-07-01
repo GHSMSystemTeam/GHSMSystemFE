@@ -179,9 +179,9 @@ const TestBookingPage = () => {
       customerId: user.id,
       serviceTypeId: selectedKit.id,
       appointmentDate: new Date(appointmentDate).toISOString(),
-      slot: selectedSlot.value,     
+      slot: selectedSlot.value,
       duration: 0,
-      description: userInfo.address || `Địa chỉ: ${userInfo.address}` 
+      description: userInfo.address || `Địa chỉ: ${userInfo.address}`
     };
 
     try {
@@ -335,8 +335,8 @@ const TestBookingPage = () => {
                             key={`${kit.id || kit.name}-${idx}`}
                             className={`border-2 rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg relative cursor-pointer
                               ${selectedKit?.id === kit.id
-                                  ? 'border-blue-500 bg-blue-50 shadow-md'
-                                  : 'border-gray-200 hover:border-blue-300'}
+                                ? 'border-blue-500 bg-blue-50 shadow-md'
+                                : 'border-gray-200 hover:border-blue-300'}
                             `}
                             onClick={() => setSelectedKit(kit)}
                           >
@@ -531,13 +531,13 @@ const TestBookingPage = () => {
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Ghi chú</label>
                             <input
                               type="text"
                               value={userInfo.address}
                               onChange={(e) => setUserInfo({ ...userInfo, address: e.target.value })}
                               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                              placeholder="Nhập địa chỉ"
+                              placeholder="Nhập ghi chú"
                             />
                           </div>
                         </div>
