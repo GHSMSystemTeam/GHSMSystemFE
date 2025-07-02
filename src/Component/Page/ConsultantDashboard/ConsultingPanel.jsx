@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Eye, CheckCircle, Clock, XCircle, Check, Video } from 'lucide-react';
+import { Eye, CheckCircle, Clock, XCircle, Check, Video, Search } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
@@ -8,7 +8,6 @@ const STATUS_OPTIONS = [
   { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
-  { value: 3, label: 'Đã hủy', icon: <XCircle size={14} className="mr-1 text-red-600" /> },
 ];
 
 // Định nghĩa các khung giờ tư vấn
@@ -50,6 +49,17 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   const { user } = useAuth();
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [selectedForCall, setSelectedForCall] = useState(null);
+
+  // Thêm state cho modal xác nhận hoàn thành
+  const [showCompleteConfirmModal, setShowCompleteConfirmModal] = useState(false);
+  const [bookingToComplete, setBookingToComplete] = useState(null);
+
+  // Thêm state cho bộ lọc
+  const [filteredBookings, setFilteredBookings] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('');
+
 
   const handleStartVideoCall = (booking) => {
     setSelectedForCall(booking);
@@ -94,10 +104,77 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     fetchConsultBookings();
   }, [user]);
 
+  // Thêm hàm getSortPriorityByStatus
+  const getSortPriorityByStatus = (status) => {
+    switch (status) {
+      case 0: return 1; // Chờ xác nhận - ưu tiên cao nhất
+      case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
+      case 2: return 3; // Hoàn thành - ưu tiên thứ ba
+      default: return 5;
+    }
+  };
+
+
+  // Thêm useEffect để lọc kết quả dựa trên các bộ lọc
+  useEffect(() => {
+    let filtered = [...bookings];
+
+    // Lọc theo search
+    if (searchTerm) {
+      filtered = filtered.filter(booking =>
+        booking.customerId?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.customerId?.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        booking.customerId?.phone?.includes(searchTerm) ||
+        booking.serviceTypeId?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Lọc theo trạng thái
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter(booking => booking.status === parseInt(statusFilter));
+    }
+
+    // Lọc theo ngày
+    if (dateFilter) {
+      filtered = filtered.filter(booking => {
+        const bookingDate = new Date(booking.appointmentDate).toISOString().split('T')[0];
+        return bookingDate === dateFilter;
+      });
+    }
+
+    // Sắp xếp theo trạng thái ưu tiên
+    filtered.sort((a, b) => {
+      // Đầu tiên sắp xếp theo độ ưu tiên của trạng thái
+      const priorityDiff = getSortPriorityByStatus(a.status) - getSortPriorityByStatus(b.status);
+      if (priorityDiff !== 0) return priorityDiff;
+
+      // Nếu cùng trạng thái, sắp xếp theo ngày gần nhất
+      const dateA = new Date(a.appointmentDate);
+      const dateB = new Date(b.appointmentDate);
+      if (dateA > dateB) return 1;
+      if (dateA < dateB) return -1;
+
+      // Nếu cùng ngày, sắp xếp theo khung giờ
+      return a.slot - b.slot;
+    });
+
+    setFilteredBookings(filtered);
+  }, [bookings, searchTerm, statusFilter, dateFilter])
+
   const handleStatusChange = async (id, statusNumber) => {
+    // Nếu đang chuyển sang trạng thái "Hoàn thành" (status 2), hiển thị modal xác nhận
+    if (statusNumber === 2) {
+      const bookingToUpdate = bookings.find(b => b.id === id);
+      setBookingToComplete(bookingToUpdate);
+      setShowCompleteConfirmModal(true);
+      return; // Dừng lại và chờ xác nhận từ modal
+    }
+
+    // Xử lý các trạng thái khác như cũ
     if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
       return;
     }
+
     setUpdatingId(id);
     try {
       await api.put(`/api/servicebooking/status/${id}/${statusNumber}`);
@@ -113,6 +190,28 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     }
   };
 
+  const handleConfirmComplete = async () => {
+    if (!bookingToComplete) return;
+
+    const id = bookingToComplete.id;
+    setUpdatingId(id);
+
+    try {
+      await api.put(`/api/servicebooking/status/${id}/2`);
+      setBookings(prev =>
+        prev.map(b => (b.id === id ? { ...b, status: 2 } : b))
+      );
+      showToast('Đã chuyển trạng thái thành "Hoàn thành"!', 'success');
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
+      showToast(errorMessage, 'error');
+    } finally {
+      setUpdatingId(null);
+      setShowCompleteConfirmModal(false);
+      setBookingToComplete(null);
+    }
+  };
+
   const handleViewDetail = (booking) => {
     setSelectedAppointment(booking);
   };
@@ -121,6 +220,70 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Lịch đặt tư vấn</h2>
+      </div>
+
+      {/* Thêm bộ lọc tìm kiếm */}
+      <div className="bg-white p-4 rounded-lg shadow-sm border mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tìm kiếm
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                placeholder="Tên, email, số điện thoại..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Trạng thái
+            </label>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">Tất cả</option>
+              {STATUS_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Ngày hẹn
+            </label>
+            <input
+              type="date"
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex items-end">
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setDateFilter('');
+              }}
+              className="w-full px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Xóa bộ lọc
+            </button>
+          </div>
+        </div>
       </div>
 
       {loading ? (
@@ -133,9 +296,9 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
         </div>
       ) : (
         <div className="bg-white rounded-lg shadow overflow-hidden">
-          {bookings.length === 0 ? (
+          {filteredBookings.length === 0 ? ( // Thay đổi bookings thành filteredBookings
             <div className="p-8 text-center text-gray-500">
-              Chưa có lịch tư vấn nào
+              {bookings.length > 0 ? "Không tìm thấy lịch tư vấn phù hợp" : "Chưa có lịch tư vấn nào"}
             </div>
           ) : (
             <>
@@ -148,8 +311,9 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                 <div>Trạng thái</div>
                 <div className="text-right">Thao tác</div>
               </div>
-              {bookings.map((booking) => (
+              {filteredBookings.map((booking) => ( // Thay đổi bookings thành filteredBookings
                 <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
+                  {/* Existing row content */}
                   <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
                   <div>{getGenderText(booking.customerId?.gender)}</div>
                   <div>{new Date(booking.appointmentDate).toLocaleDateString('vi-VN', {
@@ -166,7 +330,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       <select
                         className={`border rounded px-3 py-1.5 pr-9 appearance-none ${getStatusClass(booking.status)} w-full`}
                         value={booking.status}
-                        disabled={updatingId === booking.id}
+                        disabled={updatingId === booking.id || booking.status === 2}
                         onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
                       >
                         {STATUS_OPTIONS.map(opt => (
@@ -185,7 +349,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2">                    
+                  <div className="flex justify-end gap-2">
                     <button
                       onClick={() => handleViewDetail(booking)}
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -194,13 +358,13 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       <Eye size={16} />
                     </button>
                     {canStartVideoCall(booking) && (
-                    <button
-                      onClick={() => handleStartVideoCall(booking)}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Bắt đầu tư vấn video"
-                    >
-                      <Video size={16} />
-                    </button>
+                      <button
+                        onClick={() => handleStartVideoCall(booking)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Bắt đầu tư vấn video"
+                      >
+                        <Video size={16} />
+                      </button>
                     )}
                   </div>
                 </div>
@@ -289,7 +453,9 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                 {selectedAppointment.status !== 2 && selectedAppointment.status !== 3 && (
                   <button
                     onClick={() => {
-                      handleStatusChange(selectedAppointment.id, 2);
+                      // Thay đổi để hiển thị modal xác nhận
+                      setBookingToComplete(selectedAppointment);
+                      setShowCompleteConfirmModal(true);
                       setSelectedAppointment(null);
                     }}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
@@ -319,6 +485,65 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
           </div>
         </div>
       )}
+      {/* Thêm modal xác nhận hoàn thành */}
+      {showCompleteConfirmModal && bookingToComplete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Xác nhận hoàn thành</h3>
+              <button
+                onClick={() => setShowCompleteConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="py-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <CheckCircle size={30} className="text-blue-600" />
+                </div>
+              </div>
+
+              <p className="text-center text-gray-700 mb-2">
+                Bạn có chắc chắn muốn đánh dấu hoàn thành lịch tư vấn này?
+              </p>
+
+              <p className="text-center text-gray-500 text-sm">
+                Sau khi hoàn thành, bạn sẽ không thể thay đổi trạng thái này.
+              </p>
+
+              <div className="mt-6 flex items-center space-x-3 justify-between">
+                <p className="text-sm">
+                  <span className="font-medium">{bookingToComplete.customerId?.name}</span>
+                  <span className="text-gray-500"> - {bookingToComplete.serviceTypeId?.name}</span>
+                </p>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  <Check size={14} className="mr-1" />
+                  Hoàn thành
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-4 pt-4 border-t">
+              <button
+                onClick={() => setShowCompleteConfirmModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmComplete}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Xác nhận hoàn thành
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

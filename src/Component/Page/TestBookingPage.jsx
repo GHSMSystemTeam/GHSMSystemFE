@@ -175,18 +175,18 @@ const TestBookingPage = () => {
     }
 
     const bookingPayload = {
-      consultantId: String(selectedDoctor.id),
-      customerId: String(user.id),
-      serviceTypeId: Number(selectedKit.id), // ép kiểu về số
-      appointmentDate: new Date(appointmentDate).toISOString(),
-      slot: Number(selectedSlot.value),      // ép kiểu về số
+      consultantId: selectedDoctor.id,         // string
+      customerId: user.id,                     // string
+      serviceTypeId: Number(selectedKit.id),   // number
+      appointmentDate: appointmentDate,        // "YYYY-MM-DD" (nên để đúng format, không cần ISO)
+      slot: Number(selectedSlot.value),
       duration: 0,
-      description: userInfo.address || `Ghi chú: ${userInfo.address}`
+      description: userInfo.address || ''
     };
 
     try {
       // Gọi API đặt lịch xét nghiệm
-      const response = await api.post('/api/servicebooking', bookingPayload);
+      const response = await api.post('/api/servicetesting', bookingPayload);
       console.log('Booking response:', response.data);
 
       showToast('Đặt lịch thành công!', 'success');

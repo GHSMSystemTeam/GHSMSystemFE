@@ -62,6 +62,9 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
   const [loadingResult, setLoadingResult] = useState(false);
   const [showViewResultModal, setShowViewResultModal] = useState(false);
 
+  const [showCompleteConfirmModal, setShowCompleteConfirmModal] = useState(false);
+  const [bookingToComplete, setBookingToComplete] = useState(null);
+
   // Lấy danh sách dịch vụ xét nghiệm có typeCode = 1
   useEffect(() => {
     const fetchServiceTypes = async () => {
@@ -106,6 +109,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       return;
     }
 
+
     try {
       setSubmittingResult(true);
 
@@ -148,6 +152,16 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     }
   };
 
+  const getSortPriorityByStatus = (status) => {
+    switch (status) {
+      case 0: return 1; // Chờ xác nhận - ưu tiên cao nhất
+      case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
+      case 2: return 3; // Hoàn thành - ưu tiên thứ ba
+      case 3: return 4; // Đã hủy - ưu tiên thấp nhất
+      default: return 5;
+    }
+  };
+
   useEffect(() => {
     fetchExamBookings();
   }, []);
@@ -179,13 +193,39 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       });
     }
 
+    // Sắp xếp theo trạng thái ưu tiên (chờ xác nhận > đã xác nhận > hoàn thành > đã hủy)
+    filtered.sort((a, b) => {
+      // Đầu tiên sắp xếp theo độ ưu tiên của trạng thái
+      const priorityDiff = getSortPriorityByStatus(a.status) - getSortPriorityByStatus(b.status);
+      if (priorityDiff !== 0) return priorityDiff;
+
+      // Nếu cùng trạng thái, sắp xếp theo ngày gần nhất
+      const dateA = new Date(a.appointmentDate);
+      const dateB = new Date(b.appointmentDate);
+      if (dateA > dateB) return 1;
+      if (dateA < dateB) return -1;
+
+      // Nếu cùng ngày, sắp xếp theo khung giờ
+      return a.slot - b.slot;
+    });
+
     setFilteredBookings(filtered);
   }, [bookings, searchTerm, statusFilter, dateFilter]);
 
   const handleStatusChange = async (id, statusNumber) => {
+    // Nếu đang chuyển sang trạng thái "Hoàn thành" (status 2), hiển thị modal xác nhận
+    if (statusNumber === 2) {
+      const bookingToUpdate = bookings.find(b => b.id === id);
+      setBookingToComplete(bookingToUpdate);
+      setShowCompleteConfirmModal(true);
+      return; // Dừng lại và chờ xác nhận từ modal
+    }
+
+    // Các trạng thái khác xử lý như cũ
     if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch xét nghiệm này?')) {
       return;
     }
+
     setUpdatingId(id);
     try {
       await api.put(`/api/servicebooking/status/${id}/${statusNumber}`);
@@ -198,6 +238,28 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       showToast(errorMessage, 'error');
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!bookingToComplete) return;
+
+    const id = bookingToComplete.id;
+    setUpdatingId(id);
+
+    try {
+      await api.put(`/api/servicebooking/status/${id}/2`);
+      setBookings(prev =>
+        prev.map(b => (b.id === id ? { ...b, status: 2 } : b))
+      );
+      showToast('Đã chuyển trạng thái thành "Hoàn thành"!', 'success');
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
+      showToast(errorMessage, 'error');
+    } finally {
+      setUpdatingId(null);
+      setShowCompleteConfirmModal(false);
+      setBookingToComplete(null);
     }
   };
 
@@ -247,25 +309,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     }).length;
   };
 
-  const getUpcomingBookingsCount = () => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
 
-    return bookings.filter(booking => {
-      const appointmentDate = new Date(booking.appointmentDate);
-      appointmentDate.setHours(0, 0, 0, 0);
-      return appointmentDate >= today && booking.status !== 3;
-    }).length;
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-        <span className="ml-2 text-gray-600">Đang tải dữ liệu...</span>
-      </div>
-    );
-  }
 
   if (error) {
     return (
@@ -380,7 +424,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                     <select
                       className={`border rounded px-3 py-1.5 pr-9 appearance-none ${getStatusClass(booking.status)} w-full`}
                       value={booking.status}
-                      disabled={updatingId === booking.id}
+                      disabled={updatingId === booking.id || booking.status === 2 || booking.status === 3} // Vô hiệu hóa nếu đã hoàn thành hoặc đã hủy
                       onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
                     >
                       {STATUS_OPTIONS.map(opt => (
@@ -521,24 +565,8 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                     Đánh dấu hoàn thành
                   </button>
                 )}
-                {selectedAppointment.status !== 3 && (
-                  <button
-                    onClick={() => {
-                      handleStatusChange(selectedAppointment.id, 3);
-                      setShowDetailModal(false);
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    Hủy lịch xét nghiệm
-                  </button>
-                )}
+
               </div>
-              <button
-                onClick={() => setShowDetailModal(false)}
-                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
-              >
-                Đóng
-              </button>
             </div>
           </div>
         </div>
@@ -675,6 +703,66 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
           </div>
         </div>
       )}
+
+      {/* Modal xác nhận hoàn thành */}
+      {showCompleteConfirmModal && bookingToComplete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-bold">Xác nhận hoàn thành</h3>
+              <button
+                onClick={() => setShowCompleteConfirmModal(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <div className="py-4">
+              <div className="flex items-center justify-center mb-4">
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <CheckCircle size={30} className="text-blue-600" />
+                </div>
+              </div>
+
+              <p className="text-center text-gray-700 mb-2">
+                Bạn có chắc chắn muốn đánh dấu hoàn thành lịch xét nghiệm này?
+              </p>
+
+              <p className="text-center text-gray-500 text-sm">
+                Sau khi hoàn thành, bạn sẽ không thể thay đổi trạng thái này.
+              </p>
+
+              <div className="mt-6 flex items-center space-x-3 justify-between">
+                <p className="text-sm">
+                  <span className="font-medium">{bookingToComplete.customerId?.name}</span>
+                  <span className="text-gray-500"> - {bookingToComplete.serviceTypeId?.name}</span>
+                </p>
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800`}>
+                  <Check size={14} className="mr-1" />
+                  Hoàn thành
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-4 pt-4 border-t">
+              <button
+                onClick={() => setShowCompleteConfirmModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
+              >
+                Hủy
+              </button>
+              <button
+                onClick={handleConfirmComplete}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+              >
+                Xác nhận hoàn thành
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
     </div>
   );
