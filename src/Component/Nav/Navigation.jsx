@@ -307,7 +307,7 @@ export default function Navigation() {
                                 <NavItem
                                     label="Dịch vụ"
                                     icon={<ChevronUp size={16} />}
-                                    active={isActive('/consultation') || isActive('/test') || isActive('/appointment') || isActive('/family-plan')}
+                                    active={isActive('/test') || isActive('/appointment') || isActive('/family-plan')}
                                 />
                             </div>
 

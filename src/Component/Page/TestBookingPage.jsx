@@ -176,12 +176,12 @@ const TestBookingPage = () => {
 
     const bookingPayload = {
       consultantId: String(selectedDoctor.id),
-      customerId: user.id,
-      serviceTypeId: selectedKit.id,
+      customerId: String(user.id),
+      serviceTypeId: Number(selectedKit.id), // ép kiểu về số
       appointmentDate: new Date(appointmentDate).toISOString(),
-      slot: selectedSlot.value,
+      slot: Number(selectedSlot.value),      // ép kiểu về số
       duration: 0,
-      description: userInfo.address || `Địa chỉ: ${userInfo.address}`
+      description: userInfo.address || `Ghi chú: ${userInfo.address}`
     };
 
     try {
