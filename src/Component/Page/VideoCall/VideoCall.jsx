@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Monitor, Users } from 'lucide-react';
 import api from '../../config/axios';
 import { getDatabase, ref, set, onValue, push, remove, off } from "firebase/database";
@@ -24,8 +24,8 @@ const VideoCall = ({
     const localStreamRef = useRef(null);
     const isUnmounted = useRef(false);
     // Firebase setup
-    const db = getDatabase(getApp("videoCallApp"));
-    const signalingRef = ref(db, `webrtc/${appointment.id}`);
+    const db = useMemo(() => getDatabase(getApp("videoCallApp")), []);
+    const signalingRef  = useMemo(() => ref(db, `webrtc/${appointment.id}`), [db, appointment.id]);
 
     // Lấy thông tin đối phương
     useEffect(() => {
@@ -41,7 +41,7 @@ const VideoCall = ({
             }
         };
         fetchOpponent();
-    }, [isConsultant, appointment]);
+    }, [isConsultant, appointment.customerId, appointment.consultantId]);
 
     // WebRTC logic
     useEffect(() => {
@@ -49,103 +49,132 @@ const VideoCall = ({
         let pc;
         let localStream;
         let remoteStream = new MediaStream();
-    const setup = async () => {
-        pc = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-        });
-        pcRef.current = pc;
 
-        // Get local stream
-        localStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 15 } },
-            audio: true
-        });
-
-        if (isUnmounted.current) {
-            // Nếu đã unmount thì dừng stream và return
-            localStream.getTracks().forEach(track => track.stop());
-            return;
-        }
-        localStreamRef.current = localStream;
-        if (localVideoRef.current) {
-            localVideoRef.current.srcObject = localStream;
-        }
-        localStream.getTracks().forEach(track => {
-            if (pc.signalingState !== "closed") {
-                pc.addTrack(track, localStream);
-            }
-        });
-
-        // Handle remote stream
-        pc.ontrack = (event) => {
-            event.streams[0].getTracks().forEach(track => {
-                remoteStream.addTrack(track);
+        const setup = async () => {
+            pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
             });
-            if (remoteVideoRef.current) {
-                remoteVideoRef.current.srcObject = remoteStream;
-            }
-            setIsConnected(true);
-        };
+            pcRef.current = pc;
 
-        // ICE candidate
-        pc.onicecandidate = (event) => {
-            if (event.candidate) {
-                push(ref(db, `webrtc/${appointment.id}/candidates_${isConsultant ? 'consultant' : 'customer'}`), event.candidate.toJSON());
-            }
-        };
+            try {
+                // Handle remote stream
+                pc.ontrack = (event) => {
+                    event.streams[0].getTracks().forEach(track => {
+                        remoteStream.addTrack(track);
+                    });
+                    if (remoteVideoRef.current) {
+                        remoteVideoRef.current.srcObject = remoteStream;
+                    }
+                    setIsConnected(true);
+                };
 
-        // Signaling logic
-        if (isConsultant) {
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            await set(ref(db, `webrtc/${appointment.id}/offer`), offer);
+                // ICE candidate
+                pc.onicecandidate = (event) => {
+                    if (event.candidate) {
+                        push(ref(db, `webrtc/${appointment.id}/candidates_${isConsultant ? 'consultant' : 'customer'}`), event.candidate.toJSON());
+                    }
+                };
 
-            onValue(ref(db, `webrtc/${appointment.id}/answer`), async (snapshot) => {
-                const answer = snapshot.val();
-                if (answer && !pc.currentRemoteDescription) {
-                    await pc.setRemoteDescription(new RTCSessionDescription(answer));
-                }
-            });
-        } else {
-            onValue(ref(db, `webrtc/${appointment.id}/offer`), async (snapshot) => {
-                const offer = snapshot.val();
-                if (offer && !pc.currentRemoteDescription) {
-                    await pc.setRemoteDescription(new RTCSessionDescription(offer));
-                    const answer = await pc.createAnswer();
-                    await pc.setLocalDescription(answer);
-                    await set(ref(db, `webrtc/${appointment.id}/answer`), answer);
-                }
-            });
-        }
-
-        // Lắng nghe ICE candidate từ phía đối phương
-        const candidateRef = ref(db, `webrtc/${appointment.id}/candidates_${isConsultant ? 'customer' : 'consultant'}`);
-        onValue(candidateRef, (snapshot) => {
-            const candidates = snapshot.val();
-            if (candidates) {
-                Object.values(candidates).forEach(async (candidate) => {
-                    try {
-                        if (pc.signalingState !== "closed") {
-                            await pc.addIceCandidate(new RTCIceCandidate(candidate));
-                        }
-                    } catch (e) {}
+                // Get user media
+                localStream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 15 } },
+                    audio: true
                 });
+                
+                if (isUnmounted.current || pc.signalingState === 'closed') {
+                    localStream.getTracks().forEach(track => track.stop());
+                    return;
+                }
+
+                localStreamRef.current = localStream;
+                if (localVideoRef.current) {
+                    localVideoRef.current.srcObject = localStream;
+                }
+                localStream.getTracks().forEach(track => {
+                    if (pc.signalingState !== "closed") {
+                        pc.addTrack(track, localStream);
+                    }
+                });
+
+                // Signaling logic
+                if (isConsultant) {
+                    const offer = await pc.createOffer();
+                    if (isUnmounted.current || pc.signalingState === 'closed') return;
+
+                    await pc.setLocalDescription(offer);
+                    if (isUnmounted.current || pc.signalingState === 'closed') return;
+
+                    await set(ref(db, `webrtc/${appointment.id}/offer`), offer);
+
+                    onValue(ref(db, `webrtc/${appointment.id}/answer`), async (snapshot) => {
+                        const answer = snapshot.val();
+                        if (answer && !pc.currentRemoteDescription && pc.signalingState !== 'closed') {
+                            await pc.setRemoteDescription(new RTCSessionDescription(answer));
+                        }
+                    });
+                } else {
+                    onValue(ref(db, `webrtc/${appointment.id}/offer`), async (snapshot) => {
+                        const offer = snapshot.val();
+                        if (offer && !pc.currentRemoteDescription && pc.signalingState !== 'closed') {
+                            await pc.setRemoteDescription(new RTCSessionDescription(offer));
+                            if (isUnmounted.current || pc.signalingState === 'closed') return;
+
+                            const answer = await pc.createAnswer();
+                            if (isUnmounted.current || pc.signalingState === 'closed') return;
+
+                            await pc.setLocalDescription(answer);
+                            if (isUnmounted.current || pc.signalingState === 'closed') return;
+                            
+                            await set(ref(db, `webrtc/${appointment.id}/answer`), answer);
+                        }
+                    });
+                }
+
+                // Lắng nghe ICE candidate từ phía đối phương
+                const candidateRef = ref(db, `webrtc/${appointment.id}/candidates_${isConsultant ? 'customer' : 'consultant'}`);
+                onValue(candidateRef, (snapshot) => {
+                    const candidates = snapshot.val();
+                    if (candidates) {
+                        Object.values(candidates).forEach(async (candidate) => {
+                            try {
+                                if (pc.signalingState !== "closed") {
+                                    await pc.addIceCandidate(new RTCIceCandidate(candidate));
+                                }
+                            } catch (e) {}
+                        });
+                    }
+                });
+            } catch (error) {
+                if (!isUnmounted.current) {
+                    console.error('Error setting up WebRTC:', error);
+                }
             }
-        });
-    };
+        };
 
-    setup();
+        setup();
 
-    // Cleanup
-    return () => {
-        isUnmounted.current = true;
-        if (pcRef.current) {
-            pcRef.current.close();
-        }
-        off(signalingRef);
-        remove(ref(db, `webrtc/${appointment.id}`));
-    };
-}, [isConsultant, appointment, db, signalingRef]);
+        // Cleanup
+        return () => {
+            isUnmounted.current = true;
+            if (localStreamRef.current) {
+                localStreamRef.current.getTracks().forEach(track => track.stop());
+            }
+            if (pcRef.current) {
+                pcRef.current.close();
+            }
+            const offerRef = ref(db, `webrtc/${appointment.id}/offer`);
+            const answerRef = ref(db, `webrtc/${appointment.id}/answer`);
+            const consultantCandidatesRef = ref(db, `webrtc/${appointment.id}/candidates_consultant`);
+            const customerCandidatesRef = ref(db, `webrtc/${appointment.id}/candidates_customer`);
+            
+            off(offerRef);
+            off(answerRef);
+            off(consultantCandidatesRef);
+            off(customerCandidatesRef);
+
+            remove(ref(db, `webrtc/${appointment.id}`));
+        };
+    }, [isConsultant, appointment.id, db, signalingRef]);
 
     // Call timer
     useEffect(() => {

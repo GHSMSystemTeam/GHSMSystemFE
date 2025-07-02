@@ -3,8 +3,8 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import VideoCallManager from '../Page/ConsultantDashboard/VideoCallManager';
-import VideoCall from '../Page/ConsultantDashboard/VideoCall';
+import VideoCallManager from './VideoCall/VideoCallManager';
+
 import { Calendar,
     Package, Plus, Eye, X, XCircle, 
     Stethoscope, Trash2, Clock, User, UserRound, 
