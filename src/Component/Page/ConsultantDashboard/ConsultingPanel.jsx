@@ -463,17 +463,6 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                     Đánh dấu hoàn thành
                   </button>
                 )}
-                {selectedAppointment.status !== 3 && (
-                  <button
-                    onClick={() => {
-                      handleStatusChange(selectedAppointment.id, 3);
-                      setSelectedAppointment(null);
-                    }}
-                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
-                  >
-                    Hủy lịch tư vấn
-                  </button>
-                )}
               </div>
               <button
                 onClick={() => setSelectedAppointment(null)}
