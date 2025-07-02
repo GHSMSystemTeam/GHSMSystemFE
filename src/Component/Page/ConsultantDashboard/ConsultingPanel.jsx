@@ -3,7 +3,7 @@ import { Eye, CheckCircle, Clock, XCircle, Check, Video } from 'lucide-react';
 import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
-import VideoCallManager from './VideoCallManager';
+import VideoCallManager from '../VideoCall/VideoCallManager';
 const STATUS_OPTIONS = [
   { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
