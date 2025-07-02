@@ -81,7 +81,7 @@ export default function ConsultantDashboard() {
     setError((prev) => ({ ...prev, examResults: null }));
     try {
       // Giả sử API endpoint để lấy kết quả xét nghiệm
-      const res = await api.get('/api/examination-results');
+      const res = await api.get('/api/results');
       setExamResults(res.data);
     } catch (err) {
       setError((prev) => ({ ...prev, examResults: 'Không thể tải danh sách kết quả xét nghiệm.' }));

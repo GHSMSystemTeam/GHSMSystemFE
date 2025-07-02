@@ -3,7 +3,13 @@ import { useAuth } from '../Auth/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
-import { Calendar, Package, Plus, Eye, X, XCircle, Stethoscope, Trash2, Clock, User, UserRound, ClipboardList, Info, Download, CheckCircle, Check, Star, FileText } from 'lucide-react';
+import VideoCallManager from '../Page/ConsultantDashboard/VideoCallManager';
+import VideoCall from '../Page/ConsultantDashboard/VideoCall';
+import { Calendar,
+    Package, Plus, Eye, X, XCircle, 
+    Stethoscope, Trash2, Clock, User, UserRound, 
+    ClipboardList, Info, Download, CheckCircle, 
+    Check, Star, FileText, Video } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
@@ -36,7 +42,17 @@ export default function UserAppointments() {
     const [showResultModal, setShowResultModal] = useState(false);
     const [selectedResult, setSelectedResult] = useState(null);
 
+    const [showVideoCall, setShowVideoCall] = useState(false);
+    const [selectedForCall, setSelectedForCall] = useState(null);
 
+    const canJoinVideoCall = (booking) => {
+        if (booking.status !== 1) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const bookingDate = new Date(booking.appointmentDate);
+        bookingDate.setHours(0, 0, 0, 0);
+        return bookingDate <= today;
+    };
 
     // Thêm hàm chuyển đổi slot thành khung giờ
     const getSlotTimeRange = (slot) => {
@@ -49,7 +65,6 @@ export default function UserAppointments() {
             default: return "Chưa xác định";
         }
     };
-
     // Lấy lịch xét nghiệm từ API backend
     useEffect(() => {
         if (!user) {
@@ -284,14 +299,14 @@ export default function UserAppointments() {
 
             <div className="container mx-auto px-4 py-8 ">
                 <div className="max-w-4xl mx-auto">
-                    {/* Lịch khám bệnh */}
+                    {/* Lịch tư vấn  */}
                     <div className="mb-8">
                         <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center space-x-3">
                                 <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
                                     <Stethoscope className="text-blue-600" size={18} />
                                 </div>
-                                <h2 className="text-2xl font-bold text-gray-800">Lịch khám bệnh</h2>
+                                <h2 className="text-2xl font-bold text-gray-800">Lịch tư vấn</h2>
                                 <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
                                     {appointments.medical.length} lịch hẹn
                                 </span>
@@ -305,15 +320,15 @@ export default function UserAppointments() {
                                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                                     <Stethoscope className="text-gray-400" size={32} />
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có lịch khám bệnh</h3>
-                                <p className="text-gray-600 mb-6">Đặt lịch khám bệnh với các bác sĩ chuyên khoa</p>
+                                <h3 className="text-lg font-medium text-gray-800 mb-2">Chưa có lịch tư vấn</h3>
+                                <p className="text-gray-600 mb-6">Đặt lịch tư vấn với các tư vấn viên chuyên khoa</p>
 
                                 <Link
                                     to="/appointment"
                                     className="inline-flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:shadow-lg transition-all duration-300 font-medium"
                                 >
                                     <Plus size={18} />
-                                    <span>Đặt lịch khám</span>
+                                    <span>Đặt lịch tư vấn</span>
                                 </Link>
                             </div>
                         ) : (
@@ -382,7 +397,19 @@ export default function UserAppointments() {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
-
+                                                    {/* THÊM: Nút tham gia video call */}
+                                                    {canJoinVideoCall(booking) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedForCall(booking);
+                                                                setShowVideoCall(true);
+                                                            }}
+                                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                            title="Tham gia cuộc gọi video"
+                                                        >
+                                                            <Video size={16} />
+                                                        </button>
+                                                    )}
                                                     {/* THÊM: Nút đánh giá khi đã hoàn thành */}
                                                     {canRateAppointment(booking) && (
                                                         <button
@@ -514,11 +541,14 @@ export default function UserAppointments() {
                                                     {/* THÊM: Nút đánh giá cho xét nghiệm khi đã hoàn thành và có consultantId */}
                                                     {canRateAppointment(booking) && booking.consultantId && (
                                                         <button
-                                                            onClick={() => openRatingModal(booking)}
-                                                            className="p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition-colors"
-                                                            title="Đánh giá bác sĩ"
+                                                            onClick={() => {
+                                                                setSelectedForCall(booking);
+                                                                setShowVideoCall(true);
+                                                            }}
+                                                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                                                            title="Tham gia cuộc gọi video"
                                                         >
-                                                            <Star size={16} />
+                                                            <Video size={16} />
                                                         </button>
                                                     )}
 
@@ -1087,7 +1117,17 @@ export default function UserAppointments() {
                     </div>
                 </div>
             )}
-
+            
+            {showVideoCall && selectedForCall && (
+                <VideoCallManager
+                    appointment={selectedForCall}
+                    onClose={() => {
+                        setShowVideoCall(false);
+                        setSelectedForCall(null);
+                    }}
+                    isConsultant={false} // để phân biệt phía khách hàng
+                />
+            )}
 
             <Footer />
         </div>
