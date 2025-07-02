@@ -56,8 +56,12 @@ const VideoCall = ({
         pcRef.current = pc;
 
         // Get local stream
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (isUnmounted) {
+        localStream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 320 }, height: { ideal: 240 }, frameRate: { ideal: 15, max: 15 } },
+            audio: true
+        });
+
+        if (isUnmounted.current) {
             // Nếu đã unmount thì dừng stream và return
             localStream.getTracks().forEach(track => track.stop());
             return;
