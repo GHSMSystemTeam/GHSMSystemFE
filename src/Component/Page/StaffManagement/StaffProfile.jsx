@@ -33,9 +33,9 @@ export default function StaffProfile() {
   }, [user]);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gradient-to-r from-purple-100">
       {/* Sidebar - Purple theme like in the image */}
-      <div className="w-64 bg-gradient-to-b from-purple-600 to-purple-800 text-white flex flex-col">
+      <div className="w-64 bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-purple-500">
           <h1 className="text-xl font-bold">Bảng điều khiển</h1>

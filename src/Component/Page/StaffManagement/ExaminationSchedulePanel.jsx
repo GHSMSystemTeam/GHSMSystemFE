@@ -404,7 +404,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
               <div>Trạng thái</div>
               <div className="text-right">Thao tác</div>
             </div>
-
+          <div className="overflow-y-auto max-h-[600px]">
             {filteredBookings.map((booking) => (
               <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
                 <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
@@ -444,6 +444,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                 </div>
               </div>
             ))}
+            </div>
           </>
         )}
       </div>
