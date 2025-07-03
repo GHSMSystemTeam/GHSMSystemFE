@@ -44,34 +44,21 @@ export default function StaffProfile() {
         {/* Navigation Menu */}
         <nav className="flex-1 p-4">
           <ul className="space-y-2">
-            <li>
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-purple-100 hover:bg-purple-700'
-                }`}
-              >
-                <BarChart3 className="mr-3" size={20} />
-                Bảng điều khiển
-              </button>
-            </li>
+
             <li>
               <button
                 onClick={() => setActiveTab('schedule')}
-                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${
-                  activeTab === 'schedule' 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-purple-100 hover:bg-purple-700'
-                }`}
+                className={`w-full text-left px-4 py-3 rounded-lg transition-colors flex items-center ${activeTab === 'schedule'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-purple-100 hover:bg-purple-700'
+                  }`}
               >
                 <Calendar className="mr-3" size={20} />
                 Lịch xét nghiệm
               </button>
             </li>
             <li>
-              
+
             </li>
           </ul>
         </nav>
@@ -90,9 +77,9 @@ export default function StaffProfile() {
               <p className="text-purple-200 text-sm">{staffInfo?.role}</p>
             </div>
           </button>
-          
-          
-          
+
+
+
         </div>
       </div>
 
@@ -133,7 +120,7 @@ export default function StaffProfile() {
                     <Calendar className="text-blue-600" size={32} />
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -143,7 +130,7 @@ export default function StaffProfile() {
                     <Calendar className="text-green-600" size={32} />
                   </div>
                 </div>
-                
+
                 <div className="bg-white rounded-lg shadow-sm border p-6">
                   <div className="flex items-center justify-between">
                     <div>
@@ -219,15 +206,15 @@ export default function StaffProfile() {
                 <h3 className="text-lg font-medium text-gray-800">
                   {staffInfo?.role}
                 </h3>
-                
+
                 <p className="text-gray-700 font-medium">
                   {staffInfo?.fullName}
                 </p>
-                
+
                 <p className="text-gray-600">
                   {staffInfo?.email}
                 </p>
-                
+
                 <p className="text-gray-600">
                   {staffInfo?.phoneNumber}
                 </p>

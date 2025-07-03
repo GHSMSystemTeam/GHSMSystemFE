@@ -188,7 +188,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       });
     }
 
-    // Sắp xếp theo trạng thái ưu tiên (chờ xác nhận > đã xác nhận > hoàn thành )
+    // Sắp xếp theo trạng thái ưu tiên (đã xác nhận > hoàn thành )
     filtered.sort((a, b) => {
       // Đầu tiên sắp xếp theo độ ưu tiên của trạng thái
       const priorityDiff = getSortPriorityByStatus(a.status) - getSortPriorityByStatus(b.status);
@@ -415,30 +415,25 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                 </div>
                 <div>{booking.serviceTypeId?.name}</div>
                 <div>
-                  <div className="relative">
-                    <select
-                      className={`border rounded px-3 py-1.5 pr-9 appearance-none ${getStatusClass(booking.status)} w-full`}
-                      value={booking.status}
-                      disabled={updatingId === booking.id || booking.status === 2} // Vô hiệu hóa nếu đã hoàn thành
-                      onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
-                    >
-                      {STATUS_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                      <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                    {updatingId === booking.id && (
-                      <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-                        <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                  </div>
+                  {/* Hiển thị trạng thái dạng badge, không cho chọn */}
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(booking.status)}`}>
+                    {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.icon}
+                    {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.label}
+                  </span>
                 </div>
                 <div className="flex justify-end">
+                  {booking.status === 1 && (
+                    <button
+                      onClick={() => {
+                        setSelectedAppointment(booking);
+                        setShowResultModal(true);
+                      }}
+                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                      title="Gửi kết quả xét nghiệm"
+                    >
+                      <FileText size={16} />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleViewDetail(booking)}
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
@@ -547,17 +542,6 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                         Xem kết quả xét nghiệm
                       </>
                     )}
-                  </button>
-                )}
-                {selectedAppointment.status !== 2 && selectedAppointment.status !== 3 && (
-                  <button
-                    onClick={() => {
-                      handleStatusChange(selectedAppointment.id, 2);
-                      setShowDetailModal(false);
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-                  >
-                    Đánh dấu hoàn thành
                   </button>
                 )}
 

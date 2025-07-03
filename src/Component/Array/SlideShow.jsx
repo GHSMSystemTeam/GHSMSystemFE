@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 
 export default function SlideShow() {
     const images = [
-        "https://placehold.co/800x350/667eea/ffffff?text=Medical+Center+1",
-        "https://placehold.co/800x350/667eea/ffffff?text=Medical+Center+2",
-        "https://placehold.co/800x350/667eea/ffffff?text=Medical+Center+3",
-        "https://placehold.co/800x350/667eea/ffffff?text=Medical+Center+4"
+        "/image1.png",
+        "/image2.png",
+        "/image3.png",
+        "/image4.png",
     ];
     const [current, setCurrent] = useState(0);
 
