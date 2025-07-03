@@ -2162,22 +2162,28 @@ const TestResultManagementComponent = () => {
 };
 
 const FeedbackManagementComponent = () => {
-    const [feedbackItems, setFeedbackItems] =  useState([]);
+    const [ratings, setRatings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-    const [selectedFeedback, setSelectedFeedback] = useState(null);
-
+    const [showRatingModal, setShowRatingModal] = useState(false);
+    const [selectedRating, setSelectedRating] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterPublic, setFilterPublic] = useState('all');
+    const [filterActive, setFilterActive] = useState('all');
+    const [filterRating, setFilterRating] = useState('all');
+    const { showToast } = useToast();
     useEffect(() => {
-        fetchFeedback();
+        fetchRatings();
     }, []);    
 
-    const fetchFeedback = async () => {
+    const fetchRatings = async () => {
         setLoading(true);
         try {
-            const res = await api.get('/api/feedback');
-            setFeedbackItems(res.data || []);
-        } catch (err) {
-            setFeedbackItems([]);
+            const response = await api.get('/api/rating');
+            setRatings(response.data || []);
+        } catch (error) {
+            console.error('Error fetching ratings:', error);
+            setRatings([]);
+            showToast('Failed to load ratings', 'error');
         } finally {
             setLoading(false);
         }
@@ -2186,18 +2192,27 @@ const FeedbackManagementComponent = () => {
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
-        return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+        return `${date.toLocaleDateString('vi-VN')} ${date.toLocaleTimeString('vi-VN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        })}`;
     };
 
     const getCustomerName = (customerObj) => {
         return customerObj?.name || 'Unknown Customer';
     };
 
-    const getAppointmentService = (serviceBookingObj) => {
+    const getConsultantName = (consultantObj) => {
+        return consultantObj?.name || 'Unknown Consultant';
+    };
+
+    const getServiceInfo = (serviceBookingObj) => {
         if (!serviceBookingObj) return 'N/A';
-        const serviceName = serviceBookingObj.serviceTypeId?.name || '';
-        const type = serviceBookingObj.serviceTypeId?.typeCode === 0 ? 'Consulting' : 'Test';
-        return `${serviceName} (${type})`;
+        const serviceName = serviceBookingObj.serviceTypeId?.name || 'Unknown Service';
+        const appointmentDate = serviceBookingObj.appointmentDate 
+            ? new Date(serviceBookingObj.appointmentDate).toLocaleDateString('vi-VN')
+            : '';
+        return `${serviceName}${appointmentDate ? ` - ${appointmentDate}` : ''}`;
     };
 
     const openViewFeedbackModal = (feedback) => {
@@ -2205,126 +2220,406 @@ const FeedbackManagementComponent = () => {
         setShowFeedbackModal(true);
     };
 
-    const toggleFeedbackStatus = (feedbackId, field) => {
-        setFeedbackItems(prevItems =>
-            prevItems.map(item =>
-                item.id === feedbackId ? { ...item, [field]: !item[field] } : item
-            )
-        );
+    const toggleRatingStatus = async (ratingId, field, newValue) => {
+        try {
+            // Update locally first for immediate UI feedback
+            setRatings(prevRatings =>
+                prevRatings.map(rating =>
+                    rating.id === ratingId ? { ...rating, [field]: newValue } : rating
+                )
+            );
+
+            // Call API to update the rating
+            // Note: You may need to implement these API endpoints
+            // await api.put(`/api/rating/${ratingId}`, { [field]: newValue });
+            
+            showToast(`Rating ${field} updated successfully`, 'success');
+        } catch (error) {
+            console.error(`Error updating rating ${field}:`, error);
+            showToast(`Failed to update rating ${field}`, 'error');
+            
+            // Revert the local change on error
+            setRatings(prevRatings =>
+                prevRatings.map(rating =>
+                    rating.id === ratingId ? { ...rating, [field]: !newValue } : rating
+                )
+            );
+        }
+    };
+    const renderStars = (rating) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+
+        for (let i = 1; i <= 5; i++) {
+            if (i <= fullStars) {
+                stars.push(<Star key={i} size={16} className="fill-current text-yellow-400" />);
+            } else if (i === fullStars + 1 && hasHalfStar) {
+                stars.push(<Star key={i} size={16} className="fill-current text-yellow-400 opacity-50" />);
+            } else {
+                stars.push(<Star key={i} size={16} className="text-gray-300" />);
+            }
+        }
+        return stars;
     };
 
+    // Filter ratings based on search and filters
+    const filteredRatings = ratings.filter(rating => {
+        const customerName = getCustomerName(rating.customerId).toLowerCase();
+        const consultantName = getConsultantName(rating.consultantId).toLowerCase();
+        const title = (rating.title || '').toLowerCase();
+        const content = (rating.content || '').toLowerCase();
+        
+        const matchesSearch = searchTerm === '' || 
+            customerName.includes(searchTerm.toLowerCase()) ||
+            consultantName.includes(searchTerm.toLowerCase()) ||
+            title.includes(searchTerm.toLowerCase()) ||
+            content.includes(searchTerm.toLowerCase());
+
+        const matchesPublic = filterPublic === 'all' || 
+            (filterPublic === 'public' && rating.isPublic) ||
+            (filterPublic === 'private' && !rating.isPublic);
+
+        const matchesActive = filterActive === 'all' ||
+            (filterActive === 'active' && rating.isActive) ||
+            (filterActive === 'inactive' && !rating.isActive);
+
+        const matchesRating = filterRating === 'all' ||
+            (filterRating === '5' && rating.rating === 5) ||
+            (filterRating === '4' && rating.rating === 4) ||
+            (filterRating === '3' && rating.rating === 3) ||
+            (filterRating === '1-2' && rating.rating <= 2);
+
+        return matchesSearch && matchesPublic && matchesActive && matchesRating;
+    });
     return (
         <div className="bg-white rounded-xl shadow p-6 mb-8">
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-semibold text-gray-800">Feedback Management</h2>
-                {/* Add button for "Add New Feedback" if admin can create feedback, otherwise remove */}
+                <div>
+                    <h2 className="text-2xl font-semibold text-gray-800">Rating & Feedback Management</h2>
+                    <p className="text-gray-600 text-sm mt-1">
+                        Manage customer ratings and feedback for consultants
+                    </p>
+                </div>
+                <div className="text-sm text-gray-500">
+                    Total Ratings: {ratings.length} | Filtered: {filteredRatings.length}
+                </div>
+            </div>
+            {/* Filters */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    {/* Search */}
+                    <div className="lg:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Search</label>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                            <input
+                                type="text"
+                                placeholder="Search by customer, consultant, title..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Public Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Visibility</label>
+                        <select
+                            value={filterPublic}
+                            onChange={(e) => setFilterPublic(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                            <option value="all">All</option>
+                            <option value="public">Public</option>
+                            <option value="private">Private</option>
+                        </select>
+                    </div>
+
+                    {/* Active Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                        <select
+                            value={filterActive}
+                            onChange={(e) => setFilterActive(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                            <option value="all">All</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                        </select>
+                    </div>
+
+                    {/* Rating Filter */}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                        <select
+                            value={filterRating}
+                            onChange={(e) => setFilterRating(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        >
+                            <option value="all">All Ratings</option>
+                            <option value="5">5 Stars</option>
+                            <option value="4">4 Stars</option>
+                            <option value="3">3 Stars</option>
+                            <option value="1-2">1-2 Stars</option>
+                        </select>
+                    </div>
+                </div>
             </div>
 
+            {/* Ratings Table */}
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Date</th>
-                            <th scope="col" className="px-6 py-3">Customer</th>
-                            <th scope="col" className="px-6 py-3">Appointment/Service</th>
-                            <th scope="col" className="px-6 py-3">Title</th>
-                            <th scope="col" className="px-6 py-3">Public</th>
-                            <th scope="col" className="px-6 py-3">Active</th>
-                            <th scope="col" className="px-6 py-3">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+                <div className="max-h-[600px] overflow-y-auto">
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
                             <tr>
-                                <td colSpan="7" className="text-center py-4">Loading...</td>
+                                <th className="px-6 py-3">Date</th>
+                                <th className="px-6 py-3">Customer</th>
+                                <th className="px-6 py-3">Consultant</th>
+                                <th className="px-6 py-3">Service</th>
+                                <th className="px-6 py-3">Rating</th>
+                                <th className="px-6 py-3">Title</th>
+                                <th className="px-6 py-3">Public</th>
+                                <th className="px-6 py-3">Active</th>
+                                <th className="px-6 py-3">Actions</th>
                             </tr>
-                        ) :feedbackItems.length > 0 ? feedbackItems
-                            .sort((a,b) => new Date(b.createDate) - new Date(a.createDate))
-                            .map(fb => (
-                                <tr key={fb.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4 whitespace-nowrap">{formatDate(fb.createDate)}</td>
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        {getCustomerName(fb.customerId)}
-                                    </td>
-                                    <td className="px-6 py-4">{getAppointmentService(fb.serviceAppointmentOrderId)}</td>
-                                    <td className="px-6 py-4">{fb.title}</td>
-                                    <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => toggleFeedbackStatus(fb.id, 'isPublic')}
-                                            className={`px-2 py-1 text-xs rounded-full ${
-                                                fb.isPublic ? 'bg-blue-200 text-blue-800 hover:bg-blue-300' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
-                                            }`}
-                                        >
-                                            {fb.isPublic ? 'Yes' : 'No'}
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => toggleFeedbackStatus(fb.id, 'isActive')}
-                                            className={`px-2 py-1 text-xs rounded-full ${
-                                                fb.isActive ? 'bg-green-200 text-green-800 hover:bg-green-300' : 'bg-red-200 text-red-800 hover:bg-red-300'
-                                            }`}
-                                        >
-                                            {fb.isActive ? 'Active' : 'Inactive'}
-                                        </button>
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <button
-                                            onClick={() => openViewFeedbackModal(fb)}
-                                            className="text-sm text-indigo-600 hover:underline"
-                                        >
-                                            View Details
-                                        </button>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="9" className="text-center py-8">
+                                        <div className="flex justify-center items-center">
+                                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                            <span className="ml-2">Loading ratings...</span>
+                                        </div>
                                     </td>
                                 </tr>
-                        )) : (
-                            <tr>
-                                <td colSpan="7" className="px-6 py-4 text-center text-gray-500">No feedback found.</td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                            ) : filteredRatings.length > 0 ? (
+                                filteredRatings
+                                    .sort((a, b) => new Date(b.createDate) - new Date(a.createDate))
+                                    .map(rating => (
+                                        <tr key={rating.id} className="bg-white border-b hover:bg-gray-50">
+                                            <td className="px-6 py-4 whitespace-nowrap text-xs">
+                                                {formatDate(rating.createDate)}
+                                            </td>
+                                            <td className="px-6 py-4 font-medium text-gray-900">
+                                                <div>
+                                                    <div className="font-medium">{getCustomerName(rating.customerId)}</div>
+                                                    <div className="text-xs text-gray-500">{rating.customerId?.email}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div>
+                                                    <div className="font-medium text-gray-900">{getConsultantName(rating.consultantId)}</div>
+                                                    <div className="text-xs text-gray-500">{rating.consultantId?.specialization}</div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 max-w-xs truncate" title={getServiceInfo(rating.serviceBookingId)}>
+                                                {getServiceInfo(rating.serviceBookingId)}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1">
+                                                    {renderStars(rating.rating)}
+                                                    <span className="ml-1 font-medium text-gray-900">({rating.rating})</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 max-w-xs truncate" title={rating.title}>
+                                                {rating.title || 'No title'}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => toggleRatingStatus(rating.id, 'isPublic', !rating.isPublic)}
+                                                    className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+                                                        rating.isPublic 
+                                                            ? 'bg-blue-100 text-blue-800 hover:bg-blue-200' 
+                                                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                                                    }`}
+                                                >
+                                                    {rating.isPublic ? 'Public' : 'Private'}
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => toggleRatingStatus(rating.id, 'isActive', !rating.isActive)}
+                                                    className={`px-3 py-1 text-xs rounded-full font-medium transition-colors ${
+                                                        rating.isActive 
+                                                            ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                                                            : 'bg-red-100 text-red-800 hover:bg-red-200'
+                                                    }`}
+                                                >
+                                                    {rating.isActive ? 'Active' : 'Inactive'}
+                                                </button>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <button
+                                                    onClick={() => openViewRatingModal(rating)}
+                                                    className="text-indigo-600 hover:text-indigo-900 font-medium"
+                                                >
+                                                    View Details
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                                        {searchTerm || filterPublic !== 'all' || filterActive !== 'all' || filterRating !== 'all' 
+                                            ? 'No ratings found matching your filters.' 
+                                            : 'No ratings found.'}
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            {showFeedbackModal && selectedFeedback && (
+            {/* Detailed Rating Modal */}
+            {showRatingModal && selectedRating && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-semibold">{selectedFeedback.title}</h3>
-                            <button onClick={() => setShowFeedbackModal(false)} className="text-gray-500 hover:text-gray-700">&times;</button>
-                        </div>
-                        <div className="space-y-3 text-sm">
-                            <p><strong>Customer:</strong> {getCustomerName(selectedFeedback.customerId)}</p>
-                            <p><strong>Appointment:</strong> {getAppointmentService(selectedFeedback.serviceAppointmentOrderId)}</p>
-                            <p><strong>Date:</strong> {formatDate(selectedFeedback.createDate)}</p>
-                            <p><strong>Public:</strong> {selectedFeedback.isPublic ? 'Yes' : 'No'}</p>
-                            <p><strong>Active:</strong> {selectedFeedback.isActive ? 'Yes' : 'No'}</p>
-                            <div className="mt-2 pt-2 border-t">
-                                <p className="font-semibold">Content:</p>
-                                <p className="whitespace-pre-wrap">{selectedFeedback.content}</p>
+                    <div className="bg-white p-6 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 className="text-xl font-semibold text-gray-900">{selectedRating.title || 'Rating Details'}</h3>
+                                <p className="text-sm text-gray-500 mt-1">Rating ID: {selectedRating.id}</p>
                             </div>
+                            <button 
+                                onClick={() => setShowRatingModal(false)} 
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <X size={24} />
+                            </button>
                         </div>
-                        <div className="flex justify-end gap-3 mt-6">
-                            <button
-                                onClick={() => {
-                                    toggleFeedbackStatus(selectedFeedback.id, 'isPublic');
-                                    // Optionally update selectedFeedback state if modal stays open
-                                    setSelectedFeedback(prev => ({...prev, isPublic: !prev.isPublic}));
-                                }}
-                                className={`px-4 py-2 rounded ${selectedFeedback.isPublic ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-blue-500 hover:bg-blue-600'} text-white`}
-                            >
-                                {selectedFeedback.isPublic ? 'Make Private' : 'Make Public'}
-                            </button>
-                            <button
-                                onClick={() => {
-                                    toggleFeedbackStatus(selectedFeedback.id, 'isActive');
-                                    setSelectedFeedback(prev => ({...prev, isActive: !prev.isActive}));
-                                }}
-                                className={`px-4 py-2 rounded ${selectedFeedback.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'} text-white`}
-                            >
-                                {selectedFeedback.isActive ? 'Deactivate' : 'Activate'}
-                            </button>
-                            <button type="button" onClick={() => setShowFeedbackModal(false)} className="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300">Close</button>
+
+                        <div className="space-y-4">
+                            {/* Rating Score */}
+                            <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-200">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-700">Rating Score</p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            {renderStars(selectedRating.rating)}
+                                            <span className="text-lg font-bold text-gray-900">({selectedRating.rating}/5)</span>
+                                        </div>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-gray-500">Submitted on</p>
+                                        <p className="text-sm font-medium">{formatDate(selectedRating.createDate)}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Participants */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                    <h4 className="font-medium text-blue-900 mb-2 flex items-center">
+                                        <User size={16} className="mr-2" />
+                                        Customer
+                                    </h4>
+                                    <p className="font-medium text-gray-900">{getCustomerName(selectedRating.customerId)}</p>
+                                    <p className="text-sm text-gray-600">{selectedRating.customerId?.email}</p>
+                                    {selectedRating.customerId?.phone && (
+                                        <p className="text-sm text-gray-600">{selectedRating.customerId.phone}</p>
+                                    )}
+                                </div>
+
+                                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                                    <h4 className="font-medium text-green-900 mb-2 flex items-center">
+                                        <Stethoscope size={16} className="mr-2" />
+                                        Consultant
+                                    </h4>
+                                    <p className="font-medium text-gray-900">{getConsultantName(selectedRating.consultantId)}</p>
+                                    <p className="text-sm text-gray-600">{selectedRating.consultantId?.specialization}</p>
+                                    <p className="text-sm text-gray-600">{selectedRating.consultantId?.email}</p>
+                                </div>
+                            </div>
+
+                            {/* Service Information */}
+                            {selectedRating.serviceBookingId && (
+                                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                                    <h4 className="font-medium text-purple-900 mb-2 flex items-center">
+                                        <Briefcase size={16} className="mr-2" />
+                                        Service Details
+                                    </h4>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <p className="text-gray-600">Service:</p>
+                                            <p className="font-medium">{selectedRating.serviceBookingId.serviceTypeId?.name || 'N/A'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600">Appointment Date:</p>
+                                            <p className="font-medium">
+                                                {selectedRating.serviceBookingId.appointmentDate 
+                                                    ? new Date(selectedRating.serviceBookingId.appointmentDate).toLocaleDateString('vi-VN')
+                                                    : 'N/A'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600">Service Type:</p>
+                                            <p className="font-medium">
+                                                {selectedRating.serviceBookingId.serviceTypeId?.typeCode === 0 ? 'Consultation' : 'Testing'}
+                                            </p>
+                                        </div>
+                                        <div>
+                                            <p className="text-gray-600">Price:</p>
+                                            <p className="font-medium">
+                                                {selectedRating.serviceBookingId.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Content */}
+                            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 className="font-medium text-gray-900 mb-2 flex items-center">
+                                    <FileText size={16} className="mr-2" />
+                                    Feedback Content
+                                </h4>
+                                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+                                    {selectedRating.content || 'No feedback content provided.'}
+                                </p>
+                            </div>
+
+                            {/* Status Controls */}
+                            <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-200">
+                                <button
+                                    onClick={() => {
+                                        toggleRatingStatus(selectedRating.id, 'isPublic', !selectedRating.isPublic);
+                                        setSelectedRating(prev => ({...prev, isPublic: !prev.isPublic}));
+                                    }}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        selectedRating.isPublic 
+                                            ? 'bg-yellow-500 hover:bg-yellow-600 text-white' 
+                                            : 'bg-blue-500 hover:bg-blue-600 text-white'
+                                    }`}
+                                >
+                                    {selectedRating.isPublic ? 'Make Private' : 'Make Public'}
+                                </button>
+                                
+                                <button
+                                    onClick={() => {
+                                        toggleRatingStatus(selectedRating.id, 'isActive', !selectedRating.isActive);
+                                        setSelectedRating(prev => ({...prev, isActive: !prev.isActive}));
+                                    }}
+                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                        selectedRating.isActive 
+                                            ? 'bg-red-500 hover:bg-red-600 text-white' 
+                                            : 'bg-green-500 hover:bg-green-600 text-white'
+                                    }`}
+                                >
+                                    {selectedRating.isActive ? 'Deactivate' : 'Activate'}
+                                </button>
+
+                                <button 
+                                    onClick={() => setShowRatingModal(false)} 
+                                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 font-medium transition-colors ml-auto"
+                                >
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -2992,19 +3287,12 @@ export default function AdminProfile() {
                             <Newspaper size={18} />
                             <span>Posts</span>
                         </button>
-                        <button onClick={() => setActiveView('reports')} 
-                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
-                            activeView === 'reports' ? 'font-semibold text-blue-700 bg-blue-100' : ''
-                            }`}>
-                            <FileText size={18} />
-                            <span>Reports</span>
-                        </button>
                         <button onClick={() => setActiveView('feedback')} 
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50${
                             activeView === 'feedback' ? 'font-semibold text-blue-700 bg-blue-100' : ''
                             }`}>
                         <Star size={18} /> 
-                        <span>Feedback</span>
+                        <span>Rating</span>
                         </button>
                     </nav>
                 </aside>

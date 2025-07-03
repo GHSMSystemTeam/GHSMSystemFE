@@ -29,34 +29,125 @@ const AgoraVideoCall = ({
     const localTracksRef = useRef({ video: null, audio: null });
     const remoteUsersRef = useRef({});
     const isInitializedRef = useRef(false);
-
-    // Fetch opponent info using proper user API
+    // Fetch opponent info using video call details API
     useEffect(() => {
         const fetchOpponent = async () => {
             try {
-                if (isConsultant && appointment.customerEmail) {
-                    // Get customer info by email
-                    const response = await api.get(`/api/user/${appointment.customerEmail}`);
-                    setOpponentInfo(response.data);
-                } else if (!isConsultant && appointment.consultantEmail) {
-                    // Get consultant info by email
-                    const response = await api.get(`/api/user/${appointment.consultantEmail}`);
-                    setOpponentInfo(response.data);
+                console.log('🔍 Fetching opponent info from call details...');
+                console.log('🔍 Is Consultant:', isConsultant);
+                console.log('🔍 Call ID:', callId);
+                console.log('🔍 Appointment:', appointment);
+                
+                if (callId) {
+                    // Get call details which includes full consultant and customer objects
+                    console.log('🔍 Fetching call details from /api/video-calls/' + callId);
+                    const response = await api.get(`/api/video-calls/${callId}`);
+                    console.log('🔍 Call details API response:', response.data);
+                    
+                    const callDetails = response.data;
+                    
+                    if (isConsultant) {
+                        // Get customer info from call details
+                        const customer = callDetails.customerId;
+                        console.log('🔍 Customer from call details:', customer);
+                        
+                        if (customer) {
+                            const customerInfo = {
+                                name: customer.name || 'Khách hàng',
+                                email: customer.email,
+                                phone: customer.phone,
+                                role: customer.role?.name || 'customer'
+                            };
+                            console.log('✅ Setting customer info from call details:', customerInfo);
+                            setOpponentInfo(customerInfo);
+                        } else {
+                            console.log('⚠️ No customer in call details, using appointment fallback');
+                            setOpponentInfo({
+                                name: appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng',
+                                email: appointment.customerEmail,
+                                phone: appointment.phone || 'N/A'
+                            });
+                        }
+                    } else {
+                        // Get consultant info from call details
+                        const consultant = callDetails.consultantId;
+                        console.log('🔍 Consultant from call details:', consultant);
+                        
+                        if (consultant) {
+                            const consultantInfo = {
+                                name: consultant.name || 'Tư vấn viên',
+                                email: consultant.email,
+                                phone: consultant.phone,
+                                specialization: consultant.specialization,
+                                expYear: consultant.expYear,
+                                avgRating: consultant.avgRating,
+                                role: consultant.role?.name || 'consultant'
+                            };
+                            console.log('✅ Setting consultant info from call details:', consultantInfo);
+                            setOpponentInfo(consultantInfo);
+                        } else {
+                            console.log('⚠️ No consultant in call details, using appointment fallback');
+                            setOpponentInfo({
+                                name: appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên',
+                                email: appointment.consultantEmail,
+                                phone: appointment.phone || 'N/A'
+                            });
+                        }
+                    }
+                } else {
+                    console.log('⚠️ No call ID available, using appointment data directly');
+                    // Fallback to appointment data if no call ID
+                    if (isConsultant) {
+                        const customerInfo = {
+                            name: appointment.customerName || 
+                                appointment.customer?.name || 
+                                appointment.customer?.fullName || 
+                                'Khách hàng',
+                            email: appointment.customerEmail || appointment.customer?.email,
+                            phone: appointment.customer?.phone || appointment.phone || 'N/A',
+                            role: 'customer'
+                        };
+                        console.log('✅ Setting customer info from appointment:', customerInfo);
+                        setOpponentInfo(customerInfo);
+                    } else {
+                        const consultantInfo = {
+                            name: appointment.consultantName || 
+                                appointment.consultant?.name || 
+                                appointment.consultant?.fullName || 
+                                'Tư vấn viên',
+                            email: appointment.consultantEmail || appointment.consultant?.email,
+                            phone: appointment.consultant?.phone || appointment.phone || 'N/A',
+                            specialization: appointment.consultant?.specialization,
+                            expYear: appointment.consultant?.expYear,
+                            avgRating: appointment.consultant?.avgRating,
+                            role: 'consultant'
+                        };
+                        console.log('✅ Setting consultant info from appointment:', consultantInfo);
+                        setOpponentInfo(consultantInfo);
+                    }
                 }
             } catch (error) {
-                console.error('Error fetching opponent info:', error);
+                console.error('❌ Error fetching call details:', error);
                 // Set fallback info from appointment
-                setOpponentInfo({
-                    name: isConsultant ? appointment.customerName : appointment.consultantName,
-                    email: isConsultant ? appointment.customerEmail : appointment.consultantEmail
-                });
+                const fallbackInfo = {
+                    name: isConsultant 
+                        ? (appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
+                        : (appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
+                    email: isConsultant ? appointment.customerEmail : appointment.consultantEmail,
+                    phone: appointment.phone || 'N/A',
+                    role: isConsultant ? 'customer' : 'consultant'
+                };
+                console.log('✅ Setting error fallback info:', fallbackInfo);
+                setOpponentInfo(fallbackInfo);
             }
         };
         
-        if (appointment) {
+        // Only fetch when we have callId or appointment, and don't have opponentInfo yet
+        if ((callId || appointment) && !opponentInfo) {
             fetchOpponent();
         }
-    }, [isConsultant, appointment]);
+    }, [isConsultant, callId, appointment, opponentInfo]);
+
 
     // Initialize video call through API
     useEffect(() => {
@@ -279,7 +370,41 @@ const AgoraVideoCall = ({
         onCallEnd?.(callDuration);
     };
 
-    const displayName = opponentInfo?.name || (isConsultant ? 'Khách hàng' : 'Tư vấn viên');
+    // Get display name with better fallback logic and debug logging
+    const getDisplayName = () => {
+        console.log('🔍 Getting display name...');
+        console.log('🔍 opponentInfo:', opponentInfo);
+        console.log('🔍 appointment:', appointment);
+        
+        if (opponentInfo?.name) {
+            console.log('🔍 Using opponentInfo.name:', opponentInfo.name);
+            return opponentInfo.name;
+        }
+        
+        // Try to get name from appointment data
+        if (isConsultant) {
+            const fallbackName = appointment?.customerName || 
+                appointment?.customer?.name || 
+                appointment?.customer?.fullName || 
+                'Khách hàng';
+            console.log('🔍 Using fallback customer name:', fallbackName);
+            return fallbackName;
+        } else {
+            const fallbackName = appointment?.consultantName || 
+                appointment?.consultant?.name || 
+                appointment?.consultant?.fullName || 
+                'Tư vấn viên';
+            console.log('🔍 Using fallback consultant name:', fallbackName);
+            return fallbackName;
+        }
+    };
+    // Get current user name from local storage
+    const getCurrentUserName = () => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        return currentUser.name || currentUser.fullName || 'Bạn';
+    };
+
+    const displayName = getDisplayName();
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col z-50">
@@ -290,9 +415,12 @@ const AgoraVideoCall = ({
                         <Users size={20} />
                     </div>
                     <div>
-                        <h3 className="font-semibold">
-                            Tư vấn với {displayName}
-                        </h3>
+                    <h3 className="font-semibold">
+                        {isConsultant 
+                            ? `Tư vấn với ${displayName}` 
+                            : `Tư vấn với ${displayName}`
+                        }
+                    </h3>
                         <p className="text-sm text-gray-300">
                             {isConnected 
                                 ? `Thời gian: ${String(Math.floor(callDuration/60)).padStart(2,'0')}:${String(callDuration%60).padStart(2,'0')}` 
@@ -340,6 +468,11 @@ const AgoraVideoCall = ({
                                 </p>
                             </div>
                         )}
+                        {isConnected && (
+                            <div className="absolute bottom-4 left-4 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded">
+                                {displayName}
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -357,7 +490,7 @@ const AgoraVideoCall = ({
                         </div>
                     )}
                     <div className="absolute bottom-2 left-2 text-white text-xs bg-black bg-opacity-50 px-2 py-1 rounded">
-                        Bạn
+                        {getCurrentUserName()}
                     </div>
                 </div>
 
@@ -368,13 +501,26 @@ const AgoraVideoCall = ({
                             <User size={16} />
                             {isConsultant ? 'Thông tin khách hàng' : 'Thông tin tư vấn viên'}
                         </h4>
-                        <p className="text-sm">Tên: {opponentInfo.name}</p>
-                        {opponentInfo.phone && (
-                            <p className="text-sm">SĐT: {opponentInfo.phone}</p>
+                        <div className="space-y-1">
+                        <p className="text-sm font-medium">
+                            📝 Tên: {opponentInfo?.name || (isConsultant ? 'Khách hàng' : 'Tư vấn viên')}
+                        </p>
+                        {(opponentInfo?.phone && opponentInfo.phone !== 'N/A') && (
+                            <p className="text-sm">📞 SĐT: {opponentInfo.phone}</p>
                         )}
-                        {opponentInfo.email && (
-                            <p className="text-sm">Email: {opponentInfo.email}</p>
+                        {opponentInfo?.email && (
+                            <p className="text-sm">✉️ Email: {opponentInfo.email}</p>
                         )}
+                        {!isConsultant && opponentInfo?.specialization && (
+                            <p className="text-sm">🎯 Chuyên môn: {opponentInfo.specialization}</p>
+                        )}
+                        {!isConsultant && opponentInfo?.expYear && (
+                            <p className="text-sm">⏱️ Kinh nghiệm: {opponentInfo.expYear} năm</p>
+                        )}
+                        {!isConsultant && opponentInfo?.avgRating && (
+                            <p className="text-sm">⭐ Đánh giá: {opponentInfo.avgRating}/5</p>
+                        )}
+                        </div>
                     </div>
                 )}
             </div>
