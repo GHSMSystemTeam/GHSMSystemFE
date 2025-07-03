@@ -5,7 +5,6 @@ import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 import VideoCallManager from '../VideoCall/VideoCallManager';
 const STATUS_OPTIONS = [
-  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
 ];
@@ -27,7 +26,6 @@ function getGenderText(gender) {
 
 function getStatusClass(status) {
   switch (status) {
-    case 0: return 'bg-yellow-100 text-yellow-800';
     case 1: return 'bg-green-100 text-green-800';
     case 2: return 'bg-blue-100 text-blue-800';
     case 3: return 'bg-red-100 text-red-800';
@@ -85,13 +83,15 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     try {
       const response = await api.get(`/api/servicebookings/consultant/${user.id}`);
       // Lấy lịch tư vấn (typeCode === 0) và đúng consultantId
-      const consultBookings = (response.data || []).filter(
-        booking =>
-          booking.serviceTypeId &&
-          booking.serviceTypeId.typeCode === 0 &&
-          booking.consultantId &&
-          String(booking.consultantId.id) === String(user.id)
-      );
+      const consultBookings = (response.data || [])
+        .filter(
+          booking =>
+            booking.serviceTypeId &&
+            booking.serviceTypeId.typeCode === 0 &&
+            booking.consultantId &&
+            String(booking.consultantId.id) === String(user.id)
+        )
+        .map(b => ({ ...b, status: b.status === 0 ? 1 : b.status })); // Chuyển status 0 thành 1
       setBookings(consultBookings);
     } catch (err) {
       setError("Không thể tải danh sách lịch tư vấn.");
@@ -107,7 +107,6 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   // Thêm hàm getSortPriorityByStatus
   const getSortPriorityByStatus = (status) => {
     switch (status) {
-      case 0: return 1; // Chờ xác nhận - ưu tiên cao nhất
       case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
       case 2: return 3; // Hoàn thành - ưu tiên thứ ba
       default: return 5;

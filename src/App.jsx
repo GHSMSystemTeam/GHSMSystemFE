@@ -28,6 +28,8 @@ import TuVanTienHonNhan from './Component/Page/TuVanTienHonNhan'
 import SucKhoeTamLy from './Component/Page/SucKhoeTamLy'
 import Blog from './Component/Page/Blog'
 import AdminProtectedRoute from './Component/Page/AdminProtectRoute'
+import HistoryBookingConsul from './Component/Page/HistoryBookingConsul'
+import HistoryBookingServiceType from './Component/Page/HistoryBookingServiceType'
 
 import {
   NewsComponent1,
@@ -54,12 +56,12 @@ function App() {
             <Route path="/news" element={<NewsPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route
-              path="/appointment" 
+              path="/appointment"
               element={
                 <ProtectedRoute requiredRole="customer">
                   <DatLichKham />
                 </ProtectedRoute>
-              } 
+              }
             />
             <Route path="/benh-lay-truyen" element={<STDsPage />} />
             <Route path="/family-plan" element={<FamilyPlan />} />
@@ -74,8 +76,9 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="forgotpassword" element={<ForgotPassword />} />
             <Route path="signup" element={<SignUp />} />
+
             <Route
-              path="/test" 
+              path="/test"
               element={
                 <ProtectedRoute requiredRole="customer">
                   <TestBookingPage />
@@ -85,6 +88,8 @@ function App() {
             <Route path="/consultation" element={<Consulation />} />
             <Route path='/profile' element={<UserProfile />} />
             <Route path="/appointments" element={<UserAppointments />} />
+            <Route path="/history-consultation" element={<HistoryBookingConsul />} />
+            <Route path="/history-test" element={<HistoryBookingServiceType />} />
             <Route path="/suc-khoe-gioi-tinh" element={<SucKhoeGioiTinh />} />
             <Route path="/tu-van-tien-hon-nhan" element={<TuVanTienHonNhan />} />
             <Route path="/suc-khoe-tam-ly" element={<SucKhoeTamLy />} />
@@ -106,7 +111,7 @@ function App() {
                 <ProtectedRoute requiredRole="staff">
                   <StaffProfile />
                 </ProtectedRoute>
-              }   
+              }
             />
           </Routes>
         </ToastProvider>

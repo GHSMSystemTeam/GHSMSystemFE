@@ -183,7 +183,8 @@ export default function DatLichKham() {
             appointmentDate: formData.date ? new Date(formData.date).toISOString() : null,
             slot: selectedSlot.value,
             duration: 0,
-            description: formData.notes || ""
+            description: formData.notes || "",
+            status: 1
         };
 
         // Validation

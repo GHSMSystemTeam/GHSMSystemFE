@@ -295,7 +295,7 @@ export default function UserProfile() {
                                     {/* Email */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><Mail size={16} className="mr-2" />Email</label>
-                                        <input type="email" name="email" value={formData.email}  onChange={handleInputChange} disabled={!isEditing} className="w-full pl-3 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700" />
+                                        <input type="email" name="email" value={formData.email} onChange={handleInputChange} disabled={!isEditing} className="w-full pl-3 pr-3 py-2 border border-gray-200 bg-gray-50 rounded-lg text-gray-700" />
                                     </div>
                                     {/* Số điện thoại */}
                                     <div>
