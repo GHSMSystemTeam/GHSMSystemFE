@@ -5,10 +5,8 @@ import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 
 const STATUS_OPTIONS = [
-  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
-  { value: 3, label: 'Đã hủy', icon: <XCircle size={14} className="mr-1 text-red-600" /> },
 ];
 
 // Định nghĩa các khung giờ xét nghiệm
@@ -28,7 +26,6 @@ function getGenderText(gender) {
 
 function getStatusClass(status) {
   switch (status) {
-    case 0: return 'bg-yellow-100 text-yellow-800';
     case 1: return 'bg-green-100 text-green-800';
     case 2: return 'bg-blue-100 text-blue-800';
     case 3: return 'bg-red-100 text-red-800';
@@ -88,9 +85,9 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       const response = await api.get('/api/servicebookings');
 
       // Lọc ra các booking có serviceTypeId.typeCode === 1 (dịch vụ xét nghiệm)
-      const examBookings = (response.data || []).filter(
-        booking => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1
-      );
+      const examBookings = (response.data || [])
+        .filter(booking => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1)
+        .map(b => ({ ...b, status: b.status === 0 ? 1 : b.status }));
 
       setBookings(examBookings);
       setFilteredBookings(examBookings);
@@ -154,10 +151,8 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
 
   const getSortPriorityByStatus = (status) => {
     switch (status) {
-      case 0: return 1; // Chờ xác nhận - ưu tiên cao nhất
       case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
       case 2: return 3; // Hoàn thành - ưu tiên thứ ba
-      case 3: return 4; // Đã hủy - ưu tiên thấp nhất
       default: return 5;
     }
   };
@@ -193,7 +188,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       });
     }
 
-    // Sắp xếp theo trạng thái ưu tiên (chờ xác nhận > đã xác nhận > hoàn thành > đã hủy)
+    // Sắp xếp theo trạng thái ưu tiên (chờ xác nhận > đã xác nhận > hoàn thành )
     filtered.sort((a, b) => {
       // Đầu tiên sắp xếp theo độ ưu tiên của trạng thái
       const priorityDiff = getSortPriorityByStatus(a.status) - getSortPriorityByStatus(b.status);
@@ -424,7 +419,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                     <select
                       className={`border rounded px-3 py-1.5 pr-9 appearance-none ${getStatusClass(booking.status)} w-full`}
                       value={booking.status}
-                      disabled={updatingId === booking.id || booking.status === 2 || booking.status === 3} // Vô hiệu hóa nếu đã hoàn thành hoặc đã hủy
+                      disabled={updatingId === booking.id || booking.status === 2} // Vô hiệu hóa nếu đã hoàn thành
                       onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
                     >
                       {STATUS_OPTIONS.map(opt => (

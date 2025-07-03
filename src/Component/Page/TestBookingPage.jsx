@@ -181,7 +181,8 @@ const TestBookingPage = () => {
       appointmentDate: appointmentDate,        // "YYYY-MM-DD" (nên để đúng format, không cần ISO)
       slot: Number(selectedSlot.value),
       duration: 0,
-      description: userInfo.address || ''
+      description: userInfo.address || '',
+      status: 1
     };
 
     try {
@@ -354,18 +355,6 @@ const TestBookingPage = () => {
                               </div>
                               <div className={`absolute inset-0 bg-gradient-to-t from-blue-900/80 to-transparent flex items-end transition-opacity duration-300
                                 ${selectedKit?.id === kit.id ? 'opacity-100' : 'opacity-0'}`}>
-                                <button
-                                  className="m-4 bg-white text-blue-700 px-3 py-2 rounded-lg font-medium hover:bg-blue-50 transition-colors text-sm flex items-center"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!isBlockedRole) {
-                                      setSelectedKit(kit);
-                                      handleNextStep();
-                                    }
-                                  }}
-                                >
-                                  Đặt ngay <ArrowRight size={16} className="ml-1" />
-                                </button>
                               </div>
                             </div>
 

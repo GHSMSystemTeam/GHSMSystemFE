@@ -6,10 +6,8 @@ import { useAuth } from '../../Auth/AuthContext';
 
 // Mã trạng thái theo API
 const STATUS_OPTIONS = [
-  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
-  { value: 3, label: 'Đã hủy', icon: <XCircle size={14} className="mr-1 text-red-600" /> },
 ];
 
 function getGenderText(gender) {
@@ -20,7 +18,6 @@ function getGenderText(gender) {
 
 function getStatusClass(status) {
   switch (status) {
-    case 0: return 'bg-yellow-100 text-yellow-800';
     case 1: return 'bg-green-100 text-green-800';
     case 2: return 'bg-blue-100 text-blue-800';
     case 3: return 'bg-red-100 text-red-800';

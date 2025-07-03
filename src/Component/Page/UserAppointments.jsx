@@ -5,11 +5,13 @@ import Header from '../Header/Header';
 import Footer from '../Footer/Footer';
 import VideoCallManager from './VideoCall/VideoCallManager';
 
-import { Calendar,
-    Package, Plus, Eye, X, XCircle, 
-    Stethoscope, Trash2, Clock, User, UserRound, 
-    ClipboardList, Info, Download, CheckCircle, 
-    Check, Star, FileText, Video } from 'lucide-react';
+import {
+    Calendar,
+    Package, Plus, Eye, X, XCircle,
+    Stethoscope, Trash2, Clock, User, UserRound,
+    ClipboardList, Info, Download, CheckCircle,
+    Check, Star, FileText, Video
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
 import api from '../config/axios';
@@ -45,6 +47,10 @@ export default function UserAppointments() {
     const [showVideoCall, setShowVideoCall] = useState(false);
     const [selectedForCall, setSelectedForCall] = useState(null);
 
+    // State lưu danh sách các booking đã đánh giá
+    const [ratedBookingIds, setRatedBookingIds] = useState([]);
+
+
     const canJoinVideoCall = (booking) => {
         if (booking.status !== 1) return false;
         const today = new Date();
@@ -75,29 +81,29 @@ export default function UserAppointments() {
             setLoading(true);
             try {
                 const res = await api.get(`/api/servicebookings/customer/${user.id}`);
-                const allBookings = res.data || [];
+                const allBookings = (res.data || []).map(b => ({
+                    ...b,
+                    status: b.status === 0 ? 1 : b.status
+                }));
 
-                console.log('All bookings from API:', allBookings);
-
-                // Loại bỏ trùng lặp TRƯỚC KHI lọc
+                // ...lọc và setAppointments như cũ...
                 const uniqueBookings = allBookings.filter((booking, index, self) =>
                     index === self.findIndex(b => b.id === booking.id)
                 );
 
-                console.log('Unique bookings:', uniqueBookings);
-
-                // Lọc chính xác: Lịch xét nghiệm là những dịch vụ có tên chứa "testing"
                 const testBookings = uniqueBookings.filter(
-                    (booking) => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1
+                    (booking) =>
+                        booking.serviceTypeId &&
+                        booking.serviceTypeId.typeCode === 1 &&
+                        booking.status !== 2 // Ẩn lịch đã hoàn thành
                 );
 
-                // Lịch khám bệnh là những dịch vụ KHÔNG phải là "testing"
                 const medicalBookings = uniqueBookings.filter(
-                    (booking) => booking.serviceTypeId && booking.serviceTypeId.typeCode === 0
+                    (booking) =>
+                        booking.serviceTypeId &&
+                        booking.serviceTypeId.typeCode === 0 &&
+                        booking.status !== 2 // Ẩn lịch đã hoàn thành
                 );
-
-                console.log('Test bookings (filtered by name "Testing"):', testBookings);
-                console.log('Medical bookings:', medicalBookings);
 
                 setAppointments({
                     test: testBookings,
@@ -111,6 +117,29 @@ export default function UserAppointments() {
         };
         fetchAppointments();
     }, [user, navigate, showToast]);
+
+    // Lấy danh sách các booking đã đánh giá khi load component
+    useEffect(() => {
+        if (!user || !user.id) {
+            console.log('user hoặc user.id bị thiếu:', user);
+            return;
+        }
+        const fetchUserRatings = async () => {
+            try {
+                console.log('Gọi API rating với user.id:', user.id);
+                const res = await api.get(`/api/rating/userID/${user.id}`);
+                if (Array.isArray(res.data)) {
+                    setRatedBookingIds(res.data.map(r => r.serviceBookingId?.id));
+                }
+            } catch (err) {
+                console.error('Lỗi khi lấy rating:', err);
+            }
+        };
+        fetchUserRatings();
+    }, [user]);
+
+    // Kiểm tra đã đánh giá chưa
+    const isAlreadyRated = (bookingId) => ratedBookingIds.includes(bookingId);
 
     // Hàm xử lý xóa booking
     const handleDeleteBooking = async (bookingId) => {
@@ -169,13 +198,12 @@ export default function UserAppointments() {
 
     // Kiểm tra có thể hủy được không (chỉ cho phép hủy nếu chưa hoàn thành)
     const canCancelAppointment = (status) => {
-        return status === 0 || status === 1; // Chỉ cho phép hủy nếu đang chờ xác nhận hoặc đã xác nhận
+        return status === 1; // Chỉ cho phép hủy nếu đang chờ xác nhận hoặc đã xác nhận
     };
 
     // Status helpers (tuỳ chỉnh theo backend)
     const getStatusText = (status) => {
         switch (status) {
-            case 0: return 'Chờ xác nhận';
             case 1: return 'Đã xác nhận';
             case 2: return 'Hoàn thành';
             case 3: return 'Đã hủy';
@@ -185,7 +213,6 @@ export default function UserAppointments() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 0: return 'bg-yellow-100 text-yellow-800';
             case 1: return 'bg-green-100 text-green-800';
             case 2: return 'bg-blue-100 text-blue-800';
             case 3: return 'bg-red-100 text-red-800';
@@ -200,6 +227,10 @@ export default function UserAppointments() {
 
     // THÊM: Mở modal đánh giá
     const openRatingModal = (appointment) => {
+        if (isAlreadyRated(appointment.id)) {
+            showToast('Bạn đã đánh giá lịch hẹn này rồi!', 'info');
+            return;
+        }
         setAppointmentToRate(appointment);
         setShowRatingModal(true);
     };
@@ -224,7 +255,6 @@ export default function UserAppointments() {
         setIsSubmittingRating(true);
 
         try {
-            // Tạo đối tượng rating theo định dạng API
             const ratingData = {
                 customerId: user.id,
                 consultantId: appointmentToRate.consultantId.id,
@@ -235,16 +265,12 @@ export default function UserAppointments() {
                 isPublic: true
             };
 
-            // Gọi API tạo đánh giá
-            const response = await api.post('/api/rating', ratingData);
+            await api.post('/api/rating', ratingData);
 
             showToast('Đã gửi đánh giá thành công!', 'success');
+            setRatedBookingIds(prev => [...prev, appointmentToRate.id]);
             closeRatingModal();
-
-            // Cập nhật trạng thái local để hiển thị lịch hẹn đã được đánh giá
-            // (tùy chọn: có thể thêm trường isRated vào state của booking)
         } catch (error) {
-            console.error('Rating submission error:', error);
             const errorMessage = error.response?.data?.message ||
                 error.response?.data?.error ||
                 'Không thể gửi đánh giá. Vui lòng thử lại!';
@@ -311,6 +337,14 @@ export default function UserAppointments() {
                                     {appointments.medical.length} lịch hẹn
                                 </span>
                             </div>
+                            {/* Thêm link đến lịch sử tư vấn */}
+                            <Link
+                                to="/history-consultation"
+                                className="flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium"
+                            >
+                                <Clock size={16} className="mr-1.5" />
+                                Xem lịch sử tư vấn
+                            </Link>
                         </div>
 
                         {loading ? (
@@ -414,8 +448,8 @@ export default function UserAppointments() {
                                                     {canRateAppointment(booking) && (
                                                         <button
                                                             onClick={() => openRatingModal(booking)}
-                                                            className="p-2 text-yellow-500 hover:bg-yellow-50 rounded-lg transition-colors"
-                                                            title="Đánh giá bác sĩ"
+                                                            className={`p-2 ${isAlreadyRated(booking.id) ? 'text-gray-400' : 'text-yellow-500 hover:bg-yellow-50'} rounded-lg transition-colors`}
+                                                            title={isAlreadyRated(booking.id) ? "Bạn đã đánh giá" : "Đánh giá bác sĩ"}
                                                         >
                                                             <Star size={16} />
                                                         </button>
@@ -458,6 +492,15 @@ export default function UserAppointments() {
                                     {appointments.test.length} lịch hẹn
                                 </span>
                             </div>
+                            {/* Thêm link đến lịch sử xét nghiệm */}
+                            <Link
+                                to="/history-test"
+                                className="flex items-center text-green-600 hover:text-green-800 text-sm font-medium"
+                            >
+                                <Clock size={16} className="mr-1.5" />
+                                Xem lịch sử xét nghiệm
+                            </Link>
+
                         </div>
 
                         {loading ? (
@@ -1117,7 +1160,7 @@ export default function UserAppointments() {
                     </div>
                 </div>
             )}
-            
+
             {showVideoCall && selectedForCall && (
                 <VideoCallManager
                     appointment={selectedForCall}
