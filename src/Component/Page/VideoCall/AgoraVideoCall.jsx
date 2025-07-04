@@ -29,6 +29,7 @@ const AgoraVideoCall = ({
     const localTracksRef = useRef({ video: null, audio: null });
     const remoteUsersRef = useRef({});
     const isInitializedRef = useRef(false);
+
     // Fetch opponent info using video call details API
     useEffect(() => {
         const fetchOpponent = async () => {
@@ -62,11 +63,13 @@ const AgoraVideoCall = ({
                             setOpponentInfo(customerInfo);
                         } else {
                             console.log('⚠️ No customer in call details, using appointment fallback');
-                            setOpponentInfo({
-                                name: appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng',
-                                email: appointment.customerEmail,
-                                phone: appointment.phone || 'N/A'
-                            });
+                            const fallbackInfo = {
+                                name: appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng',
+                                email: appointment.customerId?.email || appointment.customerEmail,
+                                phone: appointment.customerId?.phone || appointment.phone || 'N/A'
+                            };
+                            console.log('✅ Setting fallback customer info:', fallbackInfo);
+                            setOpponentInfo(fallbackInfo);
                         }
                     } else {
                         // Get consultant info from call details
@@ -87,11 +90,13 @@ const AgoraVideoCall = ({
                             setOpponentInfo(consultantInfo);
                         } else {
                             console.log('⚠️ No consultant in call details, using appointment fallback');
-                            setOpponentInfo({
-                                name: appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên',
-                                email: appointment.consultantEmail,
-                                phone: appointment.phone || 'N/A'
-                            });
+                            const fallbackInfo = {
+                                name: appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên',
+                                email: appointment.consultantId?.email || appointment.consultantEmail,
+                                phone: appointment.consultantId?.phone || appointment.phone || 'N/A'
+                            };
+                            console.log('✅ Setting fallback consultant info:', fallbackInfo);
+                            setOpponentInfo(fallbackInfo);
                         }
                     }
                 } else {
@@ -99,27 +104,29 @@ const AgoraVideoCall = ({
                     // Fallback to appointment data if no call ID
                     if (isConsultant) {
                         const customerInfo = {
-                            name: appointment.customerName || 
+                            name: appointment.customerId?.name || 
+                                appointment.customerName || 
                                 appointment.customer?.name || 
                                 appointment.customer?.fullName || 
                                 'Khách hàng',
-                            email: appointment.customerEmail || appointment.customer?.email,
-                            phone: appointment.customer?.phone || appointment.phone || 'N/A',
+                            email: appointment.customerId?.email || appointment.customerEmail || appointment.customer?.email,
+                            phone: appointment.customerId?.phone || appointment.customer?.phone || appointment.phone || 'N/A',
                             role: 'customer'
                         };
                         console.log('✅ Setting customer info from appointment:', customerInfo);
                         setOpponentInfo(customerInfo);
                     } else {
                         const consultantInfo = {
-                            name: appointment.consultantName || 
+                            name: appointment.consultantId?.name || 
+                                appointment.consultantName || 
                                 appointment.consultant?.name || 
                                 appointment.consultant?.fullName || 
                                 'Tư vấn viên',
-                            email: appointment.consultantEmail || appointment.consultant?.email,
-                            phone: appointment.consultant?.phone || appointment.phone || 'N/A',
-                            specialization: appointment.consultant?.specialization,
-                            expYear: appointment.consultant?.expYear,
-                            avgRating: appointment.consultant?.avgRating,
+                            email: appointment.consultantId?.email || appointment.consultantEmail || appointment.consultant?.email,
+                            phone: appointment.consultantId?.phone || appointment.consultant?.phone || appointment.phone || 'N/A',
+                            specialization: appointment.consultantId?.specialization || appointment.consultant?.specialization,
+                            expYear: appointment.consultantId?.expYear || appointment.consultant?.expYear,
+                            avgRating: appointment.consultantId?.avgRating || appointment.consultant?.avgRating,
                             role: 'consultant'
                         };
                         console.log('✅ Setting consultant info from appointment:', consultantInfo);
@@ -131,9 +138,9 @@ const AgoraVideoCall = ({
                 // Set fallback info from appointment
                 const fallbackInfo = {
                     name: isConsultant 
-                        ? (appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
-                        : (appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
-                    email: isConsultant ? appointment.customerEmail : appointment.consultantEmail,
+                        ? (appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
+                        : (appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
+                    email: isConsultant ? (appointment.customerId?.email || appointment.customerEmail) : (appointment.consultantId?.email || appointment.consultantEmail),
                     phone: appointment.phone || 'N/A',
                     role: isConsultant ? 'customer' : 'consultant'
                 };
@@ -148,6 +155,25 @@ const AgoraVideoCall = ({
         }
     }, [isConsultant, callId, appointment, opponentInfo]);
 
+    // Thêm emergency fallback useEffect để đảm bảo opponentInfo được set ngay từ appointment data
+    useEffect(() => {
+        if (appointment && !opponentInfo) {
+            console.log('🔧 Emergency fallback: Setting opponentInfo from appointment');
+            console.log('🔧 Appointment data:', appointment);
+            console.log('🔧 isConsultant:', isConsultant);
+            
+            const emergencyInfo = {
+                name: isConsultant 
+                    ? (appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
+                    : (appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
+                email: isConsultant ? (appointment.customerId?.email || appointment.customerEmail) : (appointment.consultantId?.email || appointment.consultantEmail),
+                phone: isConsultant ? (appointment.customerId?.phone || appointment.phone) : (appointment.consultantId?.phone || appointment.phone) || 'N/A',
+                role: isConsultant ? 'customer' : 'consultant'
+            };
+            console.log('🔧 Emergency opponentInfo:', emergencyInfo);
+            setOpponentInfo(emergencyInfo);
+        }
+    }, [appointment, isConsultant, opponentInfo]);
 
     // Initialize video call through API
     useEffect(() => {
@@ -383,14 +409,16 @@ const AgoraVideoCall = ({
         
         // Try to get name from appointment data
         if (isConsultant) {
-            const fallbackName = appointment?.customerName || 
+            const fallbackName = appointment?.customerId?.name ||
+                appointment?.customerName || 
                 appointment?.customer?.name || 
                 appointment?.customer?.fullName || 
                 'Khách hàng';
             console.log('🔍 Using fallback customer name:', fallbackName);
             return fallbackName;
         } else {
-            const fallbackName = appointment?.consultantName || 
+            const fallbackName = appointment?.consultantId?.name ||
+                appointment?.consultantName || 
                 appointment?.consultant?.name || 
                 appointment?.consultant?.fullName || 
                 'Tư vấn viên';
@@ -398,6 +426,7 @@ const AgoraVideoCall = ({
             return fallbackName;
         }
     };
+
     // Get current user name from local storage
     const getCurrentUserName = () => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -415,12 +444,12 @@ const AgoraVideoCall = ({
                         <Users size={20} />
                     </div>
                     <div>
-                    <h3 className="font-semibold">
-                        {isConsultant 
-                            ? `Tư vấn với ${displayName}` 
-                            : `Tư vấn với ${displayName}`
-                        }
-                    </h3>
+                        <h3 className="font-semibold">
+                            {isConsultant 
+                                ? `Tư vấn với ${displayName}` 
+                                : `Tư vấn với ${displayName}`
+                            }
+                        </h3>
                         <p className="text-sm text-gray-300">
                             {isConnected 
                                 ? `Thời gian: ${String(Math.floor(callDuration/60)).padStart(2,'0')}:${String(callDuration%60).padStart(2,'0')}` 
@@ -470,7 +499,7 @@ const AgoraVideoCall = ({
                         )}
                         {isConnected && (
                             <div className="absolute bottom-4 left-4 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded">
-                                {displayName}
+                                {opponentInfo?.name || displayName}
                             </div>
                         )}
                     </div>
@@ -494,14 +523,13 @@ const AgoraVideoCall = ({
                     </div>
                 </div>
 
-                {/* Participant info */}
-                {opponentInfo && (
-                    <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-4 rounded-lg">
-                        <h4 className="font-semibold mb-2 flex items-center gap-2">
-                            <User size={16} />
-                            {isConsultant ? 'Thông tin khách hàng' : 'Thông tin tư vấn viên'}
-                        </h4>
-                        <div className="space-y-1">
+                {/* Participant info - Always show with fallback */}
+                <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <User size={16} />
+                        {isConsultant ? 'Thông tin khách hàng' : 'Thông tin tư vấn viên'}
+                    </h4>
+                    <div className="space-y-1">
                         <p className="text-sm font-medium">
                             📝 Tên: {opponentInfo?.name || (isConsultant ? 'Khách hàng' : 'Tư vấn viên')}
                         </p>
@@ -520,9 +548,8 @@ const AgoraVideoCall = ({
                         {!isConsultant && opponentInfo?.avgRating && (
                             <p className="text-sm">⭐ Đánh giá: {opponentInfo.avgRating}/5</p>
                         )}
-                        </div>
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Control Bar */}
