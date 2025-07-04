@@ -175,38 +175,63 @@ const AgoraVideoCall = ({
         }
     }, [appointment, isConsultant, opponentInfo]);
 
-    // Initialize video call through API
-    useEffect(() => {
-        const initiateCall = async () => {
-            if (isInitializedRef.current || !appointment?.id) return;
-            
-            try {
-                // Initiate call through API
-                const response = await api.post('/api/video-calls/initiate', {
-                    consultantId: appointment.consultantId || appointment.consultant?.id,
-                    customerId: appointment.customerId || appointment.customer?.id,
-                    callType: 'consultation'
-                });
-
-                const { callId: newCallId, channelName: apiChannelName, appId } = response.data;
-                setCallId(newCallId);
-                
-                // Use API provided channel name and app ID
-                await initAgora(apiChannelName || `${CHANNEL_PREFIX}${appointment.id}`, appId || APP_ID);
-                
-            } catch (error) {
-                console.error('❌ Error initiating call through API:', error);
-                // Fallback to direct Agora initialization
-                await initAgora(`${CHANNEL_PREFIX}${appointment.id}`, APP_ID);
-            }
-        };
-
-        initiateCall();
+// Initialize video call through API
+useEffect(() => {
+    const initiateCall = async () => {
+        if (isInitializedRef.current || !appointment?.id) return;
         
-        return () => {
-            cleanup();
-        };
-    }, [appointment?.id]);
+        try {
+            // Debug: In ra thông tin appointment để kiểm tra cấu trúc
+            console.log('📋 Appointment data for video call:', appointment);
+            
+            // Lấy đúng ID từ appointment data
+            const consultantId = appointment.consultantId?.id || 
+                                appointment.consultant?.id || 
+                                appointment.consultantId;
+            
+            const customerId = appointment.customerId?.id || 
+                              appointment.customer?.id || 
+                              appointment.customerId;
+            
+            console.log('🔍 Using consultantId:', consultantId);
+            console.log('🔍 Using customerId:', customerId);
+            
+            // Kiểm tra có đủ thông tin không
+            if (!consultantId || !customerId) {
+                console.error('❌ Missing consultant or customer ID:', { consultantId, customerId });
+                throw new Error('Missing required IDs for video call');
+            }
+            
+            // Initiate call through API với đúng format
+            const response = await api.post('/api/video-calls/initiate', {
+                consultantId: String(consultantId), // Đảm bảo là string
+                customerId: String(customerId),     // Đảm bảo là string
+                callType: 'consultation'
+            });
+
+            console.log('✅ Video call API response:', response.data);
+            
+            const { callId: newCallId, channelName: apiChannelName, appId } = response.data;
+            setCallId(newCallId);
+            
+            // Use API provided channel name and app ID
+            await initAgora(apiChannelName || `${CHANNEL_PREFIX}${appointment.id}`, appId || APP_ID);
+            
+        } catch (error) {
+            console.error('❌ Error initiating call through API:', error);
+            console.error('❌ Error details:', error.response?.data);
+            
+            // Fallback to direct Agora initialization
+            await initAgora(`${CHANNEL_PREFIX}${appointment.id}`, APP_ID);
+        }
+    };
+
+    initiateCall();
+    
+    return () => {
+        cleanup();
+    };
+}, [appointment?.id]);
 
     // Initialize Agora client
     const initAgora = async (channelName, appId) => {
