@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import AgoraRTC from 'agora-rtc-sdk-ng';
 import { PhoneOff, Mic, MicOff, Video, VideoOff, Users, User } from 'lucide-react';
 import api from '../../config/axios';
@@ -21,6 +21,7 @@ const AgoraVideoCall = ({
     const [opponentInfo, setOpponentInfo] = useState(null);
     const [connectionState, setConnectionState] = useState('DISCONNECTED');
     const [callId, setCallId] = useState(null);
+    const [callStartTime, setCallStartTime] = useState(null); // Thêm state để track thời gian bắt đầu
 
     const localVideoRef = useRef(null);
     const remoteVideoRef = useRef(null);
@@ -30,235 +31,187 @@ const AgoraVideoCall = ({
     const remoteUsersRef = useRef({});
     const isInitializedRef = useRef(false);
 
-    // Fetch opponent info using video call details API
+    // BƯỚC 1: Chuẩn hóa IDs một cách nhất quán bằng useMemo
+    const { consultantId, customerId, currentUserId } = useMemo(() => {
+        console.log('🔍 Parsing appointment data:', appointment);
+        
+        // Lấy consultant ID
+        const cstId = appointment?.consultantId?.id || 
+                     appointment?.consultant?.id || 
+                     appointment?.consultantId;
+        
+        // Lấy customer ID  
+        const csmId = appointment?.customerId?.id || 
+                     appointment?.customer?.id || 
+                     appointment?.customerId;
+        
+        // Current user ID dựa trên role
+        const currentId = isConsultant ? cstId : csmId;
+        
+        console.log('✅ IDs extracted:', {
+            consultantId: cstId,
+            customerId: csmId,
+            currentUserId: currentId,
+            isConsultant
+        });
+        
+        return {
+            consultantId: cstId,
+            customerId: csmId,
+            currentUserId: currentId
+        };
+    }, [appointment, isConsultant]);
+
+    // BƯỚC 2: Fetch thông tin đối phương từ API call details
     useEffect(() => {
-        const fetchOpponent = async () => {
+        const fetchOpponentFromCallDetails = async () => {
+            if (!callId) {
+                console.log('⚠️ No callId available for fetching opponent details');
+                return;
+            }
+            
             try {
-                console.log('🔍 Fetching opponent info from call details...');
-                console.log('🔍 Is Consultant:', isConsultant);
-                console.log('🔍 Call ID:', callId);
-                console.log('🔍 Appointment:', appointment);
+                console.log(`🔍 Fetching call details for callId: ${callId}`);
+                const response = await api.get(`/api/video-calls/${callId}`);
+                const callDetails = response.data;
                 
-                if (callId) {
-                    // Get call details which includes full consultant and customer objects
-                    console.log('🔍 Fetching call details from /api/video-calls/' + callId);
-                    const response = await api.get(`/api/video-calls/${callId}`);
-                    console.log('🔍 Call details API response:', response.data);
+                console.log('✅ Call details received:', callDetails);
+                
+                // Lấy thông tin đối phương dựa trên role
+                const opponent = isConsultant ? callDetails.customerId : callDetails.consultantId;
+                
+                if (opponent) {
+                    const opponentData = {
+                        name: opponent.name || 'Unknown',
+                        email: opponent.email,
+                        phone: opponent.phone,
+                        specialization: opponent.specialization,
+                        expYear: opponent.expYear,
+                        avgRating: opponent.avgRating,
+                        role: isConsultant ? 'customer' : 'consultant'
+                    };
                     
-                    const callDetails = response.data;
-                    
-                    if (isConsultant) {
-                        // Get customer info from call details
-                        const customer = callDetails.customerId;
-                        console.log('🔍 Customer from call details:', customer);
-                        
-                        if (customer) {
-                            const customerInfo = {
-                                name: customer.name || 'Khách hàng',
-                                email: customer.email,
-                                phone: customer.phone,
-                                role: customer.role?.name || 'customer'
-                            };
-                            console.log('✅ Setting customer info from call details:', customerInfo);
-                            setOpponentInfo(customerInfo);
-                        } else {
-                            console.log('⚠️ No customer in call details, using appointment fallback');
-                            const fallbackInfo = {
-                                name: appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng',
-                                email: appointment.customerId?.email || appointment.customerEmail,
-                                phone: appointment.customerId?.phone || appointment.phone || 'N/A'
-                            };
-                            console.log('✅ Setting fallback customer info:', fallbackInfo);
-                            setOpponentInfo(fallbackInfo);
-                        }
-                    } else {
-                        // Get consultant info from call details
-                        const consultant = callDetails.consultantId;
-                        console.log('🔍 Consultant from call details:', consultant);
-                        
-                        if (consultant) {
-                            const consultantInfo = {
-                                name: consultant.name || 'Tư vấn viên',
-                                email: consultant.email,
-                                phone: consultant.phone,
-                                specialization: consultant.specialization,
-                                expYear: consultant.expYear,
-                                avgRating: consultant.avgRating,
-                                role: consultant.role?.name || 'consultant'
-                            };
-                            console.log('✅ Setting consultant info from call details:', consultantInfo);
-                            setOpponentInfo(consultantInfo);
-                        } else {
-                            console.log('⚠️ No consultant in call details, using appointment fallback');
-                            const fallbackInfo = {
-                                name: appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên',
-                                email: appointment.consultantId?.email || appointment.consultantEmail,
-                                phone: appointment.consultantId?.phone || appointment.phone || 'N/A'
-                            };
-                            console.log('✅ Setting fallback consultant info:', fallbackInfo);
-                            setOpponentInfo(fallbackInfo);
-                        }
-                    }
+                    console.log('✅ Opponent info set from API:', opponentData);
+                    setOpponentInfo(opponentData);
                 } else {
-                    console.log('⚠️ No call ID available, using appointment data directly');
-                    // Fallback to appointment data if no call ID
-                    if (isConsultant) {
-                        const customerInfo = {
-                            name: appointment.customerId?.name || 
-                                appointment.customerName || 
-                                appointment.customer?.name || 
-                                appointment.customer?.fullName || 
-                                'Khách hàng',
-                            email: appointment.customerId?.email || appointment.customerEmail || appointment.customer?.email,
-                            phone: appointment.customerId?.phone || appointment.customer?.phone || appointment.phone || 'N/A',
-                            role: 'customer'
-                        };
-                        console.log('✅ Setting customer info from appointment:', customerInfo);
-                        setOpponentInfo(customerInfo);
-                    } else {
-                        const consultantInfo = {
-                            name: appointment.consultantId?.name || 
-                                appointment.consultantName || 
-                                appointment.consultant?.name || 
-                                appointment.consultant?.fullName || 
-                                'Tư vấn viên',
-                            email: appointment.consultantId?.email || appointment.consultantEmail || appointment.consultant?.email,
-                            phone: appointment.consultantId?.phone || appointment.consultant?.phone || appointment.phone || 'N/A',
-                            specialization: appointment.consultantId?.specialization || appointment.consultant?.specialization,
-                            expYear: appointment.consultantId?.expYear || appointment.consultant?.expYear,
-                            avgRating: appointment.consultantId?.avgRating || appointment.consultant?.avgRating,
-                            role: 'consultant'
-                        };
-                        console.log('✅ Setting consultant info from appointment:', consultantInfo);
-                        setOpponentInfo(consultantInfo);
-                    }
+                    console.warn('⚠️ No opponent data in call details');
                 }
+                
             } catch (error) {
                 console.error('❌ Error fetching call details:', error);
-                // Set fallback info from appointment
-                const fallbackInfo = {
-                    name: isConsultant 
-                        ? (appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
-                        : (appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
-                    email: isConsultant ? (appointment.customerId?.email || appointment.customerEmail) : (appointment.consultantId?.email || appointment.consultantEmail),
-                    phone: appointment.phone || 'N/A',
-                    role: isConsultant ? 'customer' : 'consultant'
-                };
-                console.log('✅ Setting error fallback info:', fallbackInfo);
-                setOpponentInfo(fallbackInfo);
+                console.error('❌ Error response:', error.response?.data);
             }
         };
-        
-        // Only fetch when we have callId or appointment, and don't have opponentInfo yet
-        if ((callId || appointment) && !opponentInfo) {
-            fetchOpponent();
-        }
-    }, [isConsultant, callId, appointment, opponentInfo]);
 
-    // Thêm emergency fallback useEffect để đảm bảo opponentInfo được set ngay từ appointment data
+        if (callId && !opponentInfo) {
+            fetchOpponentFromCallDetails();
+        }
+    }, [callId, isConsultant, opponentInfo]);
+
+    // BƯỚC 3: Fallback opponent info từ appointment nếu không có từ API
     useEffect(() => {
         if (appointment && !opponentInfo) {
-            console.log('🔧 Emergency fallback: Setting opponentInfo from appointment');
-            console.log('🔧 Appointment data:', appointment);
-            console.log('🔧 isConsultant:', isConsultant);
+            console.log('🔧 Setting fallback opponent info from appointment');
             
-            const emergencyInfo = {
+            const fallbackInfo = {
                 name: isConsultant 
-                    ? (appointment.customerId?.name || appointment.customerName || appointment.customer?.name || appointment.customer?.fullName || 'Khách hàng')
-                    : (appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || appointment.consultant?.fullName || 'Tư vấn viên'),
-                email: isConsultant ? (appointment.customerId?.email || appointment.customerEmail) : (appointment.consultantId?.email || appointment.consultantEmail),
-                phone: isConsultant ? (appointment.customerId?.phone || appointment.phone) : (appointment.consultantId?.phone || appointment.phone) || 'N/A',
+                    ? (appointment.customerId?.name || appointment.customerName || appointment.customer?.name || 'Khách hàng')
+                    : (appointment.consultantId?.name || appointment.consultantName || appointment.consultant?.name || 'Tư vấn viên'),
+                email: isConsultant 
+                    ? (appointment.customerId?.email || appointment.customerEmail || appointment.customer?.email)
+                    : (appointment.consultantId?.email || appointment.consultantEmail || appointment.consultant?.email),
+                phone: isConsultant 
+                    ? (appointment.customerId?.phone || appointment.customer?.phone || appointment.phone)
+                    : (appointment.consultantId?.phone || appointment.consultant?.phone || appointment.phone),
                 role: isConsultant ? 'customer' : 'consultant'
             };
-            console.log('🔧 Emergency opponentInfo:', emergencyInfo);
-            setOpponentInfo(emergencyInfo);
+            
+            console.log('🔧 Fallback opponent info:', fallbackInfo);
+            setOpponentInfo(fallbackInfo);
         }
     }, [appointment, isConsultant, opponentInfo]);
 
-    // Initialize video call through API
+    // BƯỚC 4: Khởi tạo cuộc gọi qua API và lưu callId
     useEffect(() => {
-        const initiateCall = async () => {
-            if (isInitializedRef.current || !appointment?.id) return;
+        const initiateVideoCall = async () => {
+            if (isInitializedRef.current || !consultantId || !customerId) {
+                console.log('⚠️ Cannot initiate call:', { 
+                    initialized: isInitializedRef.current, 
+                    consultantId, 
+                    customerId 
+                });
+                return;
+            }
             
             try {
-                // Debug: In ra thông tin appointment để kiểm tra cấu trúc
-                console.log('📋 Appointment data for video call:', appointment);
+                console.log('🚀 Initiating video call via API...');
+                console.log('📝 Request payload:', {
+                    consultantId: String(consultantId),
+                    customerId: String(customerId),
+                    callType: 'video'
+                });
                 
-                // Lấy đúng ID từ appointment data
-                const consultantId = appointment.consultantId?.id || 
-                                    appointment.consultant?.id || 
-                                    appointment.consultantId;
-                
-                const customerId = appointment.customerId?.id || 
-                                appointment.customer?.id || 
-                                appointment.customerId;
-                
-                console.log('🔍 Using consultantId:', consultantId);
-                console.log('🔍 Using customerId:', customerId);
-                
-                // Kiểm tra có đủ thông tin không
-                if (!consultantId || !customerId) {
-                    console.error('❌ Missing consultant or customer ID:', { consultantId, customerId });
-                    throw new Error('Missing required IDs for video call');
-                }
-                
-                // Initiate call through API với đúng format
                 const response = await api.post('/api/video-calls/initiate', {
-                    consultantId: String(consultantId), // Đảm bảo là string
-                    customerId: String(customerId),     // Đảm bảo là string
+                    consultantId: String(consultantId),
+                    customerId: String(customerId),
                     callType: 'video'
                 });
 
-                console.log('✅ Video call API response:', response.data);
+                console.log('✅ Video call initiated successfully');
+                console.log('📋 API Response:', response.data);
                 
                 const { callId: newCallId, channelName: apiChannelName, appId } = response.data;
-                setCallId(newCallId);
                 
-                // Use API provided channel name and app ID
-                await initAgora(apiChannelName || `${CHANNEL_PREFIX}${appointment.id}`, appId || APP_ID);
+                // LƯU CALLID VÀO STATE
+                setCallId(newCallId);
+                setCallStartTime(new Date()); // Lưu thời gian bắt đầu
+                
+                console.log(`✅ Call ID saved: ${newCallId}`);
+                console.log(`✅ Call started at: ${new Date()}`);
+                
+                // Khởi tạo Agora với thông tin từ API
+                await initAgora(
+                    apiChannelName || `${CHANNEL_PREFIX}${appointment.id}`, 
+                    appId || APP_ID,
+                    newCallId
+                );
                 
             } catch (error) {
-                console.error('❌ Error initiating call through API:', error);
+                console.error('❌ Error initiating video call:', error);
                 console.error('❌ Error details:', error.response?.data);
                 
-                // Fallback to direct Agora initialization
-                await initAgora(`${CHANNEL_PREFIX}${appointment.id}`, APP_ID);
+                // Fallback: khởi tạo Agora trực tiếp nếu API lỗi
+                console.log('🔄 Falling back to direct Agora initialization');
+                await initAgora(`${CHANNEL_PREFIX}${appointment.id}`, APP_ID, null);
             }
         };
 
-        initiateCall();
+        initiateVideoCall();
         
         return () => {
             cleanup();
         };
-    }, [appointment?.id]);
+    }, [consultantId, customerId, appointment?.id]);
 
-    // Initialize Agora client
-    const initAgora = async (channelName, appId) => {
+    // BƯỚC 5: Khởi tạo Agora và accept call nếu là customer
+    const initAgora = async (channelName, appId, currentCallId) => {
         if (isInitializedRef.current) return;
         isInitializedRef.current = true;
         
         try {
-            // Create Agora client
+            console.log('🎯 Initializing Agora...');
+            console.log('📝 Agora params:', { channelName, appId, currentCallId });
+            
             const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
             clientRef.current = client;
 
-            // Set up event handlers
             client.on('user-published', handleUserPublished);
             client.on('user-unpublished', handleUserUnpublished);
             client.on('connection-state-change', handleConnectionStateChange);
 
-            // Join channel
-            const uid = await client.join(
-                appId,
-                channelName,
-                token || null,
-                null
-            );
+            const uid = await client.join(appId, channelName, token || null, null);
+            console.log('✅ Joined Agora channel with UID:', uid);
 
-            console.log('🎯 Joined Agora channel with UID:', uid);
-
-            // Create local tracks
             const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
                 {
                     echoCancellation: true,
@@ -277,27 +230,27 @@ const AgoraVideoCall = ({
 
             localTracksRef.current = { audio: audioTrack, video: videoTrack };
 
-            // Play local video
             if (localVideoRef.current) {
                 videoTrack.play(localVideoRef.current);
             }
 
-            // Publish tracks
             await client.publish([audioTrack, videoTrack]);
-            console.log('✅ Successfully published local tracks');
+            console.log('✅ Published local tracks successfully');
 
-            // Accept call through API if customer
-            if (!isConsultant && callId) {
-                const userId = appointment.customerId?.id || 
-                            appointment.customer?.id || 
-                            appointment.customerId;
+            // ACCEPT CALL NẾU LÀ CUSTOMER VÀ CÓ CALLID
+            if (!isConsultant && currentCallId && currentUserId) {
+                console.log('🎯 Customer accepting call...');
+                console.log('📝 Accept params:', { callId: currentCallId, userId: currentUserId });
                 
-                console.log('🎯 Accepting call with callId:', callId, 'userId:', userId);
-                
-                await api.post(`/api/video-calls/${callId}/accept`, null, {
-                    params: { userId: String(userId) }
-                });
-                console.log('✅ Call accepted successfully');
+                try {
+                    await api.post(`/api/video-calls/${currentCallId}/accept`, null, {
+                        params: { userId: String(currentUserId) }
+                    });
+                    console.log('✅ Call accepted successfully by customer');
+                } catch (acceptError) {
+                    console.error('❌ Error accepting call:', acceptError);
+                    console.error('❌ Accept error details:', acceptError.response?.data);
+                }
             }
             
         } catch (error) {
@@ -306,6 +259,7 @@ const AgoraVideoCall = ({
         }
     };
 
+    // ... (Các hàm handle events không đổi)
     const handleUserPublished = async (user, mediaType) => {
         try {
             await clientRef.current.subscribe(user, mediaType);
@@ -347,7 +301,7 @@ const AgoraVideoCall = ({
         setConnectionState(curState);
     };
 
-    // Call timer
+    // Timer cho cuộc gọi
     useEffect(() => {
         if (isConnected) {
             timerRef.current = setInterval(() => {
@@ -408,62 +362,71 @@ const AgoraVideoCall = ({
         }
     };
 
+    // BƯỚC 6: Kết thúc cuộc gọi với callId và userId đúng + LOG THỜI GIAN
     const endCall = async () => {
+        const callEndTime = new Date();
+        const duration = callStartTime ? Math.floor((callEndTime - callStartTime) / 1000) : callDuration;
+        
+        console.log('🔚 Ending video call...');
+        console.log('📝 Call timing:', {
+            startTime: callStartTime,
+            endTime: callEndTime,
+            durationSeconds: duration,
+            callDurationState: callDuration
+        });
+        
         try {
-            // End call through API
-            if (callId) {
-                const userId = isConsultant 
-                    ? (appointment.consultantId?.id || appointment.consultant?.id || appointment.consultantId)
-                    : (appointment.customerId?.id || appointment.customer?.id || appointment.customerId);
-                
-                console.log('🔚 Ending call with callId:', callId, 'userId:', userId);
+            if (callId && currentUserId) {
+                console.log('📝 End call params:', { 
+                    callId, 
+                    userId: currentUserId,
+                    userIdString: String(currentUserId)
+                });
                 
                 await api.post(`/api/video-calls/${callId}/end`, null, {
-                    params: { userId: String(userId) }
+                    params: { userId: String(currentUserId) }
                 });
-                console.log('✅ Call ended successfully');
+                
+                console.log('✅ Call ended successfully via API');
+                console.log('📊 Final call stats:', {
+                    callId,
+                    userId: currentUserId,
+                    duration: duration,
+                    isConsultant
+                });
+                
+            } else {
+                console.warn('⚠️ Cannot end call via API: missing data');
+                console.warn('⚠️ Missing data:', { callId, currentUserId });
             }
         } catch (error) {
-            console.error('Error ending call through API:', error);
-            console.error('Error details:', error.response?.data);
+            console.error('❌ Error ending call via API:', error);
+            console.error('❌ End call error details:', error.response?.data);
         }
         
         await cleanup();
-        onCallEnd?.(callDuration);
+        onCallEnd?.(duration);
     };
 
-    // Get display name with better fallback logic and debug logging
+    // Get display name với fallback tốt hơn
     const getDisplayName = () => {
-        console.log('🔍 Getting display name...');
-        console.log('🔍 opponentInfo:', opponentInfo);
-        console.log('🔍 appointment:', appointment);
-        
         if (opponentInfo?.name) {
-            console.log('🔍 Using opponentInfo.name:', opponentInfo.name);
             return opponentInfo.name;
         }
         
-        // Try to get name from appointment data
         if (isConsultant) {
-            const fallbackName = appointment?.customerId?.name ||
-                appointment?.customerName || 
-                appointment?.customer?.name || 
-                appointment?.customer?.fullName || 
-                'Khách hàng';
-            console.log('🔍 Using fallback customer name:', fallbackName);
-            return fallbackName;
+            return appointment?.customerId?.name ||
+                   appointment?.customerName || 
+                   appointment?.customer?.name || 
+                   'Khách hàng';
         } else {
-            const fallbackName = appointment?.consultantId?.name ||
-                appointment?.consultantName || 
-                appointment?.consultant?.name || 
-                appointment?.consultant?.fullName || 
-                'Tư vấn viên';
-            console.log('🔍 Using fallback consultant name:', fallbackName);
-            return fallbackName;
+            return appointment?.consultantId?.name ||
+                   appointment?.consultantName || 
+                   appointment?.consultant?.name || 
+                   'Tư vấn viên';
         }
     };
 
-    // Get current user name from local storage
     const getCurrentUserName = () => {
         const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         return currentUser.name || currentUser.fullName || 'Bạn';
@@ -481,10 +444,7 @@ const AgoraVideoCall = ({
                     </div>
                     <div>
                         <h3 className="font-semibold">
-                            {isConsultant 
-                                ? `Tư vấn với ${displayName}` 
-                                : `Tư vấn với ${displayName}`
-                            }
+                            Tư vấn với {displayName}
                         </h3>
                         <p className="text-sm text-gray-300">
                             {isConnected 
@@ -531,11 +491,16 @@ const AgoraVideoCall = ({
                                 <p className="text-gray-300">
                                     {connectionState === 'CONNECTING' ? 'Đang kết nối...' : 'Chờ người dùng tham gia'}
                                 </p>
+                                {callStartTime && (
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        Bắt đầu: {callStartTime.toLocaleTimeString()}
+                                    </p>
+                                )}
                             </div>
                         )}
                         {isConnected && (
                             <div className="absolute bottom-4 left-4 text-white text-sm bg-black bg-opacity-50 px-3 py-1 rounded">
-                                {opponentInfo?.name || displayName}
+                                {displayName}
                             </div>
                         )}
                     </div>
@@ -544,10 +509,7 @@ const AgoraVideoCall = ({
                 {/* Local video (picture in picture) */}
                 <div className="absolute top-4 right-4 w-48 h-36 bg-gray-700 rounded-lg overflow-hidden border-2 border-white">
                     {cameraOn ? (
-                        <div
-                            ref={localVideoRef}
-                            className="w-full h-full"
-                        />
+                        <div ref={localVideoRef} className="w-full h-full" />
                     ) : (
                         <div className="w-full h-full bg-gray-600 flex flex-col items-center justify-center text-white">
                             <VideoOff size={24} className="mb-2" />
@@ -559,7 +521,7 @@ const AgoraVideoCall = ({
                     </div>
                 </div>
 
-                {/* Participant info - Always show with fallback */}
+                {/* Participant info */}
                 <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-4 rounded-lg">
                     <h4 className="font-semibold mb-2 flex items-center gap-2">
                         <User size={16} />
@@ -567,9 +529,9 @@ const AgoraVideoCall = ({
                     </h4>
                     <div className="space-y-1">
                         <p className="text-sm font-medium">
-                            📝 Tên: {opponentInfo?.name || (isConsultant ? 'Khách hàng' : 'Tư vấn viên')}
+                            📝 Tên: {displayName}
                         </p>
-                        {(opponentInfo?.phone && opponentInfo.phone !== 'N/A') && (
+                        {opponentInfo?.phone && opponentInfo.phone !== 'N/A' && (
                             <p className="text-sm">📞 SĐT: {opponentInfo.phone}</p>
                         )}
                         {opponentInfo?.email && (
@@ -583,6 +545,9 @@ const AgoraVideoCall = ({
                         )}
                         {!isConsultant && opponentInfo?.avgRating && (
                             <p className="text-sm">⭐ Đánh giá: {opponentInfo.avgRating}/5</p>
+                        )}
+                        {callId && (
+                            <p className="text-xs text-gray-300 mt-2">Call ID: {callId}</p>
                         )}
                     </div>
                 </div>

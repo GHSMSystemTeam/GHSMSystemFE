@@ -4,8 +4,15 @@ import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 import VideoCallManager from '../VideoCall/VideoCallManager';
-const STATUS_OPTIONS = [
+//Status hiển thị (consultant sẽ thấy)
+const STATUS_DISPLAY = [
+  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
+  { value: 2, label: 'Đã Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
+];
+// Actions trong dropdown (consultant chỉ có thể chọn)
+const STATUS_ACTIONS = [
+  { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
 ];
 
@@ -26,6 +33,7 @@ function getGenderText(gender) {
 
 function getStatusClass(status) {
   switch (status) {
+    case 0: return 'bg-yellow-100 text-yellow-800';
     case 1: return 'bg-green-100 text-green-800';
     case 2: return 'bg-blue-100 text-blue-800';
     case 3: return 'bg-red-100 text-red-800';
@@ -47,7 +55,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   const { user } = useAuth();
   const [showVideoCall, setShowVideoCall] = useState(false);
   const [selectedForCall, setSelectedForCall] = useState(null);
-
+  const [openDropdown, setOpenDropdown] = useState(null);
   // Thêm state cho modal xác nhận hoàn thành
   const [showCompleteConfirmModal, setShowCompleteConfirmModal] = useState(false);
   const [bookingToComplete, setBookingToComplete] = useState(null);
@@ -65,12 +73,8 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   };
 
   const canStartVideoCall = (booking) => {
-    if (booking.status !== 1) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const bookingDate = new Date(booking.appointmentDate);
-    bookingDate.setHours(0, 0, 0, 0);
-    return bookingDate <= today;
+    // Chỉ cho phép bắt đầu video call nếu trạng thái là "Đã xác nhận" (1) hoặc "Hoàn thành" (2)
+    return booking.status === 1;
   };
   const fetchConsultBookings = async () => {
     if (!user || !user.id) {
@@ -90,8 +94,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
             booking.serviceTypeId.typeCode === 0 &&
             booking.consultantId &&
             String(booking.consultantId.id) === String(user.id)
-        )
-        .map(b => ({ ...b, status: b.status === 0 ? 1 : b.status })); // Chuyển status 0 thành 1
+        );
       setBookings(consultBookings);
     } catch (err) {
       setError("Không thể tải danh sách lịch tư vấn.");
@@ -103,16 +106,45 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   useEffect(() => {
     fetchConsultBookings();
   }, [user]);
+    // Thêm useEffect để handle click outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.relative')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
 
   // Thêm hàm getSortPriorityByStatus
   const getSortPriorityByStatus = (status) => {
     switch (status) {
+      case 0: return 1; // Chưa xác nhận - ưu tiên hàng đầu
       case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
       case 2: return 3; // Hoàn thành - ưu tiên thứ ba
       default: return 5;
     }
   };
-
+  const getStatusActions = (currentStatus) => {
+      switch (currentStatus) {
+        case 0: // Chờ xác nhận - chỉ có thể "Xác nhận"
+          return [
+            { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> }
+          ];
+        case 1: // Đã xác nhận - chỉ có thể "Hoàn thành"
+          return [
+            { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> }
+          ];
+        case 2: // Đã hoàn thành - không có action nào
+          return [];
+        default:
+          return STATUS_ACTIONS;
+      }
+    };
 
   // Thêm useEffect để lọc kết quả dựa trên các bộ lọc
   useEffect(() => {
@@ -158,19 +190,29 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     });
 
     setFilteredBookings(filtered);
-  }, [bookings, searchTerm, statusFilter, dateFilter])
+  }, [bookings, searchTerm, statusFilter, dateFilter]);
+
+  const getStatusDisplay = (status) => {
+    return STATUS_DISPLAY.find(opt => opt.value === status) || STATUS_DISPLAY[0];
+  };
 
   const handleStatusChange = async (id, statusNumber) => {
-    // Nếu đang chuyển sang trạng thái "Hoàn thành" (status 2), hiển thị modal xác nhận
-    if (statusNumber === 2) {
-      const bookingToUpdate = bookings.find(b => b.id === id);
-      setBookingToComplete(bookingToUpdate);
+    const currentBooking = bookings.find(b => b.id === id);
+    
+    // Kiểm tra logic chuyển đổi status
+    if (currentBooking.status === 0 && statusNumber === 1) {
+      // Chờ xác nhận → Đã xác nhận
+      if (!window.confirm('Bạn có chắc chắn muốn xác nhận lịch tư vấn này?')) {
+        return;
+      }
+    } else if (currentBooking.status === 1 && statusNumber === 2) {
+      // Đã xác nhận → Hoàn thành
+      setBookingToComplete(currentBooking);
       setShowCompleteConfirmModal(true);
-      return; // Dừng lại và chờ xác nhận từ modal
-    }
-
-    // Xử lý các trạng thái khác như cũ
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch tư vấn này?')) {
+      return;
+    } else {
+      // Các thay đổi không hợp lệ
+      showToast('Không thể thay đổi trạng thái này!', 'error');
       return;
     }
 
@@ -180,7 +222,9 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
       setBookings(prev =>
         prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
       );
-      showToast('Cập nhật trạng thái thành công!', 'success');
+      
+      const statusText = getStatusDisplay(statusNumber)?.label;
+      showToast(`Đã cập nhật trạng thái thành "${statusText}"!`, 'success');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
       showToast(errorMessage, 'error');
@@ -250,7 +294,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">Tất cả</option>
-              {STATUS_OPTIONS.map(option => (
+              {STATUS_DISPLAY.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
@@ -294,7 +338,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
           {error}
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-lg shadow overflow-visible">
           {filteredBookings.length === 0 ? ( // Thay đổi bookings thành filteredBookings
             <div className="p-8 text-center text-gray-500">
               {bookings.length > 0 ? "Không tìm thấy lịch tư vấn phù hợp" : "Chưa có lịch tư vấn nào"}
@@ -324,26 +368,95 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                     {getTimeSlotText(booking.slot)}
                   </div>
                   <div>{booking.serviceTypeId?.name}</div>
-                  <div>
+                 <div>
+                    {/* Hiển thị status hiện tại + click dropdown action */}
                     <div className="relative">
-                      <select
-                        className={`border rounded px-3 py-1.5 pr-9 appearance-none ${getStatusClass(booking.status)} w-full`}
-                        value={booking.status}
-                        disabled={updatingId === booking.id || booking.status === 2}
-                        onChange={e => handleStatusChange(booking.id, Number(e.target.value))}
+                      {/* Status display với click effect */}
+                      <div 
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 ${getStatusClass(booking.status)} ${getStatusActions(booking.status).length > 0 ? 'hover:ring-2 hover:ring-blue-300 hover:shadow-md' : ''}`}
+                        onClick={() => {
+                          console.log('Status clicked!', booking.id);
+                          console.log('Current openDropdown:', openDropdown);
+                          console.log('getStatusActions:', getStatusActions(booking.status));
+                          if (getStatusActions(booking.status).length > 0) {
+                            const newDropdown = openDropdown === booking.id ? null : booking.id;
+                            console.log('Setting openDropdown to:', newDropdown);
+                            setOpenDropdown(newDropdown);
+                          }
+                        }}
                       >
-                        {STATUS_OPTIONS.map(opt => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
-                        ))}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                        <svg className="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        {getStatusDisplay(booking.status)?.icon}
+                        {getStatusDisplay(booking.status)?.label}
+                        {/* Icon dropdown chỉ hiện khi có actions */}
+                        {getStatusActions(booking.status).length > 0 && (
+                          <svg 
+                            className={`ml-1 h-3 w-3 text-gray-500 hover:text-gray-700 transition-all duration-200 ${
+                              openDropdown === booking.id ? 'rotate-180 text-blue-600' : ''
+                            }`} 
+                            fill="none" 
+                            viewBox="0 0 24 24" 
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        )}
                       </div>
-                      {updatingId === booking.id && (
-                        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-                          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      
+                      {/* Click dropdown với animation */}
+                      {getStatusActions(booking.status).length > 0 && openDropdown === booking.id && (
+                        <div 
+                          className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl"
+                          style={{ zIndex: 9999 }}
+                        >
+                          {/* Arrow pointer */}
+                          <div className="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-200"></div>
+                          <div className="absolute -top-1 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
+                          
+                          <div className="py-1">
+                            <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b rounded-t-lg flex items-center">
+                              <Clock size={12} className="mr-1" />
+                              Thao tác với lịch hẹn
+                            </div>
+                            {getStatusActions(booking.status).map(action => (
+                              <button
+                                key={action.value}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  console.log('Action clicked:', action.label);
+                                  handleStatusChange(booking.id, action.value);
+                                  setOpenDropdown(null); // Đóng dropdown
+                                }}
+                                disabled={updatingId === booking.id}
+                                className={`w-full px-3 py-3 text-left text-sm transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
+                                  action.value === 1 
+                                    ? 'hover:bg-green-50 hover:text-green-700 hover:pl-4' 
+                                    : 'hover:bg-blue-50 hover:text-blue-700 hover:pl-4'
+                                }`}
+                              >
+                                <div className="flex items-center flex-1">
+                                  <div className="mr-2">
+                                    {action.icon}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{action.label}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {action.value === 1 ? 'Xác nhận và cho phép video call' : 'Kết thúc cuộc tư vấn'}
+                                    </div>
+                                  </div>
+                                </div>
+                                {updatingId === booking.id && (
+                                  <div className={`w-4 h-4 border-2 ${action.value === 1 ? 'border-green-600' : 'border-blue-600'} border-t-transparent rounded-full animate-spin`}></div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Success badge cho trạng thái hoàn thành */}
+                      {booking.status === 2 && (
+                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center animate-pulse">
+                          <Check size={10} />
                         </div>
                       )}
                     </div>
@@ -433,8 +546,8 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                   <p><span className="text-gray-500">Trạng thái:</span></p>
                   <p>
                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(selectedAppointment.status)}`}>
-                      {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.icon}
-                      {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}
+                      {STATUS_DISPLAY.find(opt => opt.value === selectedAppointment.status)?.icon}
+                      {STATUS_DISPLAY.find(opt => opt.value === selectedAppointment.status)?.label}
                     </span>
                   </p>
                 </div>

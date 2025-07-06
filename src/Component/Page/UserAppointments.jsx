@@ -52,12 +52,14 @@ export default function UserAppointments() {
 
 
     const canJoinVideoCall = (booking) => {
-        if (booking.status !== 1) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const bookingDate = new Date(booking.appointmentDate);
-        bookingDate.setHours(0, 0, 0, 0);
-        return bookingDate <= today;
+        // Customer chỉ cần status = 1 (đã xác nhận) và có active call từ consultant
+        return booking.status === 1;
+        // if (booking.status !== 1) return false;
+        // const today = new Date();
+        // today.setHours(0, 0, 0, 0);
+        // const bookingDate = new Date(booking.appointmentDate);
+        // bookingDate.setHours(0, 0, 0, 0);
+        // return bookingDate <= today;
     };
 
     // Thêm hàm chuyển đổi slot thành khung giờ
@@ -81,11 +83,11 @@ export default function UserAppointments() {
             setLoading(true);
             try {
                 const res = await api.get(`/api/servicebookings/customer/${user.id}`);
-                const allBookings = (res.data || []).map(b => ({
-                    ...b,
-                    status: b.status === 0 ? 1 : b.status
-                }));
-
+                // const allBookings = (res.data || []).map(b => ({
+                //     ...b,
+                //     status: b.status === 0 ? 1 : b.status
+                // }));
+                const allBookings = (res.data || []);
                 // ...lọc và setAppointments như cũ...
                 const uniqueBookings = allBookings.filter((booking, index, self) =>
                     index === self.findIndex(b => b.id === booking.id)
@@ -198,12 +200,13 @@ export default function UserAppointments() {
 
     // Kiểm tra có thể hủy được không (chỉ cho phép hủy nếu chưa hoàn thành)
     const canCancelAppointment = (status) => {
-        return status === 1; // Chỉ cho phép hủy nếu đang chờ xác nhận hoặc đã xác nhận
+        return status === 0; // Chỉ cho phép hủy nếu đang chờ xác nhận hoặc đã xác nhận
     };
 
     // Status helpers (tuỳ chỉnh theo backend)
     const getStatusText = (status) => {
         switch (status) {
+            case 0: return 'Chờ xác nhận';
             case 1: return 'Đã xác nhận';
             case 2: return 'Hoàn thành';
             case 3: return 'Đã hủy';
@@ -213,6 +216,7 @@ export default function UserAppointments() {
 
     const getStatusColor = (status) => {
         switch (status) {
+            case 0: return 'bg-yellow-100 text-yellow-800';
             case 1: return 'bg-green-100 text-green-800';
             case 2: return 'bg-blue-100 text-blue-800';
             case 3: return 'bg-red-100 text-red-800';
@@ -582,7 +586,7 @@ export default function UserAppointments() {
                                                     </button>
 
                                                     {/* THÊM: Nút đánh giá cho xét nghiệm khi đã hoàn thành và có consultantId */}
-                                                    {canRateAppointment(booking) && booking.consultantId && (
+                                                    {canJoinVideoCall(booking) && booking.consultantId && (
                                                         <button
                                                             onClick={() => {
                                                                 setSelectedForCall(booking);
