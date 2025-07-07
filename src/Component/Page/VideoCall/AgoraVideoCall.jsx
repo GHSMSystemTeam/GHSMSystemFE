@@ -30,6 +30,7 @@ const AgoraVideoCall = ({
     const localTracksRef = useRef({ video: null, audio: null });
     const remoteUsersRef = useRef({});
     const isInitializedRef = useRef(false);
+    const initInProgressRef = useRef(false);
 
     // BƯỚC 1: Chuẩn hóa IDs một cách nhất quán bằng useMemo
     const { consultantId, customerId, currentUserId } = useMemo(() => {
@@ -61,6 +62,19 @@ const AgoraVideoCall = ({
             currentUserId: currentId
         };
     }, [appointment, isConsultant]);
+
+    const sanitizeChannelName = (name) => {
+        if (!name) return null;
+        
+        // Loại bỏ ký tự không hợp lệ và thay thế bằng underscore
+        let sanitized = name
+            .replace(/[^a-zA-Z0-9\s!#$%&()+\-:;<=>?@[\]^_{|}~,\.]/g, '_')
+            .replace(/\s+/g, '_') // Thay space bằng underscore
+            .substring(0, 60); // Giới hạn 60 ký tự để an toàn
+        
+        console.log('🔧 Channel name sanitized:', { original: name, sanitized });
+        return sanitized;
+    };
 
     // BƯỚC 2: Fetch thông tin đối phương từ API call details
     useEffect(() => {
@@ -134,16 +148,22 @@ const AgoraVideoCall = ({
     // BƯỚC 4: Khởi tạo cuộc gọi qua API và lưu callId
     useEffect(() => {
         const initiateVideoCall = async () => {
-            if (isInitializedRef.current || !consultantId || !customerId) {
+            if (isInitializedRef.current || initInProgressRef.current || !consultantId || !customerId) {
                 console.log('⚠️ Cannot initiate call:', { 
                     initialized: isInitializedRef.current, 
+                    inProgress: initInProgressRef.current,
                     consultantId, 
                     customerId 
                 });
                 return;
             }
+
+            initInProgressRef.current = true;
             
             try {
+                const callStartTimestamp = new Date();
+                setCallStartTime(callStartTimestamp);
+
                 console.log('🚀 Initiating video call via API...');
                 console.log('📝 Request payload:', {
                     consultantId: String(consultantId),
@@ -169,9 +189,16 @@ const AgoraVideoCall = ({
                 console.log(`✅ Call ID saved: ${newCallId}`);
                 console.log(`✅ Call started at: ${new Date()}`);
                 
+                // Chuẩn hóa channel name từ API
+                const sanitizedChannelName = sanitizeChannelName(apiChannelName);
+                const fallbackChannelName = `consultation_${appointment.id}`.substring(0, 60);
+                
+                const finalChannelName = sanitizedChannelName || fallbackChannelName;
+                console.log('🎯 Using channel name:', finalChannelName);
+                                
                 // Khởi tạo Agora với thông tin từ API
                 await initAgora(
-                    apiChannelName || `${CHANNEL_PREFIX}${appointment.id}`, 
+                    finalChannelName, 
                     appId || APP_ID,
                     newCallId
                 );
@@ -182,7 +209,10 @@ const AgoraVideoCall = ({
                 
                 // Fallback: khởi tạo Agora trực tiếp nếu API lỗi
                 console.log('🔄 Falling back to direct Agora initialization');
-                await initAgora(`${CHANNEL_PREFIX}${appointment.id}`, APP_ID, null);
+                const fallbackChannelName = `consultation_${appointment.id}`.substring(0, 50);
+                await initAgora(fallbackChannelName, APP_ID, null);
+            } finally {
+                initInProgressRef.current = false;
             }
         };
 
@@ -195,13 +225,27 @@ const AgoraVideoCall = ({
 
     // BƯỚC 5: Khởi tạo Agora và accept call nếu là customer
     const initAgora = async (channelName, appId, currentCallId) => {
-        if (isInitializedRef.current) return;
-        isInitializedRef.current = true;
+        if (isInitializedRef.current) {
+            console.log('⚠️ Agora already initialized, skipping...');
+            return;
+        }
         
         try {
             console.log('🎯 Initializing Agora...');
             console.log('📝 Agora params:', { channelName, appId, currentCallId });
-            
+
+            // Kiểm tra channel name trước khi khởi tạo
+            if (!channelName || channelName.length > 64) {
+                throw new Error(`Invalid channel name: "${channelName}" (length: ${channelName?.length})`);
+            }        
+            // Kiểm tra ký tự hợp lệ
+            const validChannelRegex = /^[a-zA-Z0-9\-_]+$/;
+            if (!validChannelRegex.test(channelName)) {
+                throw new Error(`Channel name contains invalid characters: "${channelName}"`);
+            }
+
+            isInitializedRef.current = true;
+
             const client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
             clientRef.current = client;
 
@@ -243,19 +287,29 @@ const AgoraVideoCall = ({
                 console.log('📝 Accept params:', { callId: currentCallId, userId: currentUserId });
                 
                 try {
-                    await api.post(`/api/video-calls/${currentCallId}/accept`, null, {
+                    // CUSTOMER ACCEPT VỚI STARTED_AT
+                    const acceptTime = new Date();
+                    await api.post(`/api/video-calls/${currentCallId}/accept`, {
+                        startedAt: acceptTime.toISOString() // Set started_at khi accept
+                    }, {
                         params: { userId: String(currentUserId) }
                     });
-                    console.log('✅ Call accepted successfully by customer');
+                    console.log('✅ Call accepted successfully by customer at:', acceptTime.toISOString());
+                    
+                    // Update local start time nếu chưa có
+                    if (!callStartTime) {
+                        setCallStartTime(acceptTime);
+                    }
                 } catch (acceptError) {
                     console.error('❌ Error accepting call:', acceptError);
-                    console.error('❌ Accept error details:', acceptError.response?.data);
                 }
             }
             
         } catch (error) {
             console.error('❌ Error initializing Agora:', error);
             isInitializedRef.current = false;
+            initInProgressRef.current = false;
+            throw error;
         }
     };
 
@@ -365,13 +419,30 @@ const AgoraVideoCall = ({
     // BƯỚC 6: Kết thúc cuộc gọi với callId và userId đúng + LOG THỜI GIAN
     const endCall = async () => {
         const callEndTime = new Date();
-        const duration = callStartTime ? Math.floor((callEndTime - callStartTime) / 1000) : callDuration;
-        
+
+        let finalDuration = callDuration;
+
+        if (callStartTime) {
+            // Tính duration từ thời gian thực tế
+            const actualDuration = Math.floor((callEndTime - callStartTime) / 1000);
+            finalDuration = actualDuration;
+            
+            console.log('📊 Duration calculation:', {
+                startTime: callStartTime.toISOString(),
+                endTime: callEndTime.toISOString(),
+                timerDuration: callDuration,
+                actualDuration: actualDuration,
+                finalDuration: finalDuration
+            });
+        } else {
+            console.warn('⚠️ No start time available, using timer duration:', callDuration);
+        }     
+           
         console.log('🔚 Ending video call...');
         console.log('📝 Call timing:', {
-            startTime: callStartTime,
-            endTime: callEndTime,
-            durationSeconds: duration,
+            startTime: callStartTime?.toISOString(),
+            endTime: callEndTime.toISOString(),
+            durationSeconds: finalDuration,
             callDurationState: callDuration
         });
         
@@ -380,10 +451,16 @@ const AgoraVideoCall = ({
                 console.log('📝 End call params:', { 
                     callId, 
                     userId: currentUserId,
-                    userIdString: String(currentUserId)
+                    userIdString: String(currentUserId),
+                    endedAt: callEndTime.toISOString(),
+                    durationSeconds: finalDuration
                 });
                 
-                await api.post(`/api/video-calls/${callId}/end`, null, {
+                // GỬI THÔNG TIN ĐẦY ĐỦ KHI KẾT THÚC
+                await api.post(`/api/video-calls/${callId}/end`, {
+                    endedAt: callEndTime.toISOString(),
+                    durationSeconds: finalDuration
+                }, {
                     params: { userId: String(currentUserId) }
                 });
                 
@@ -391,7 +468,9 @@ const AgoraVideoCall = ({
                 console.log('📊 Final call stats:', {
                     callId,
                     userId: currentUserId,
-                    duration: duration,
+                    startTime: callStartTime?.toISOString(),
+                    endTime: callEndTime.toISOString(),
+                    duration: finalDuration,
                     isConsultant
                 });
                 
@@ -405,7 +484,7 @@ const AgoraVideoCall = ({
         }
         
         await cleanup();
-        onCallEnd?.(duration);
+        onCallEnd?.(finalDuration);
     };
 
     // Get display name với fallback tốt hơn
@@ -434,6 +513,17 @@ const AgoraVideoCall = ({
 
     const displayName = getDisplayName();
 
+    const getCallStartTimeString = () => {
+        if (callStartTime) {
+            return callStartTime.toLocaleTimeString('vi-VN', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+        return 'Chưa bắt đầu';
+    };
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col z-50">
             {/* Header */}
@@ -451,6 +541,11 @@ const AgoraVideoCall = ({
                                 ? `Thời gian: ${String(Math.floor(callDuration/60)).padStart(2,'0')}:${String(callDuration%60).padStart(2,'0')}` 
                                 : connectionState === 'CONNECTING' ? 'Đang kết nối...' : 'Chờ kết nối...'}
                         </p>
+                        {callStartTime && (
+                            <p className="text-xs text-gray-400">
+                                Bắt đầu lúc: {getCallStartTimeString()}
+                            </p>
+                        )}
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -545,6 +640,9 @@ const AgoraVideoCall = ({
                         )}
                         {!isConsultant && opponentInfo?.avgRating && (
                             <p className="text-sm">⭐ Đánh giá: {opponentInfo.avgRating}/5</p>
+                        )}
+                        {callStartTime && (
+                            <p className="text-sm">🕐 Bắt đầu: {getCallStartTimeString()}</p>
                         )}
                         {callId && (
                             <p className="text-xs text-gray-300 mt-2">Call ID: {callId}</p>
