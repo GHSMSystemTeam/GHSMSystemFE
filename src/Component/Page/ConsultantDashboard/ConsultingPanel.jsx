@@ -452,13 +452,6 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                           </div>
                         </div>
                       )}
-                      
-                      {/* Success badge cho trạng thái hoàn thành */}
-                      {booking.status === 2 && (
-                        <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white rounded-full flex items-center justify-center animate-pulse">
-                          <Check size={10} />
-                        </div>
-                      )}
                     </div>
                   </div>
                   <div className="flex justify-end gap-2">

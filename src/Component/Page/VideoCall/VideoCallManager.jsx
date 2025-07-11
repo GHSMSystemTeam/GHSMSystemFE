@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Video, Phone, User } from 'lucide-react';
 import AgoraVideoCall from './AgoraVideoCall'; // Thay đổi import
-import api from '../../config/axios';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 
@@ -79,7 +78,7 @@ const VideoCallManager = ({ appointment, onClose, isConsultant = true }) => {
   if (isCallActive) {
     return (
       <AgoraVideoCall
-        channelName={`consultation_${appointment.id}`}
+        channelName={`apt_${appointment.id}`}
         token={null} // Null cho testing
         onCallEnd={handleCallEnd}
         appointment={appointment}
