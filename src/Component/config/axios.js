@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://02d4ea8a290b.ngrok-free.app",
+    baseURL: "https://21b28a7fc203.ngrok-free.app",
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ api.interceptors.response.use(
     },
     (error) => {
         console.error('❌ API Error:', error);
-        
+
         // Special handling for video call errors
         if (error.config?.url?.includes('video-calls')) {
             console.error('🎥 Video Call API Error Details:', {
@@ -70,7 +70,7 @@ api.interceptors.response.use(
                 headers: error.response?.headers
             });
         }
-        
+
         return Promise.reject(error);
     }
 );

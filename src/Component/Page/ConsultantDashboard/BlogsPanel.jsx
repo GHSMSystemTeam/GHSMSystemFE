@@ -21,6 +21,7 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     active: true
   });
   const [updatingBlog, setUpdatingBlog] = useState(false);
+  const [deletingBlogId, setDeletingBlogId] = useState(null);
   const [form, setForm] = useState({
     title: '',
     categoryId: '',
@@ -34,12 +35,16 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
 
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [categoryForm, setCategoryForm] = useState({ id: '', isActive: true });
+  const [submittingCategory, setSubmittingCategory] = useState(false);
+
   // Thêm hàm xử lý chỉnh sửa bài viết
   const handleEditClick = (blog) => {
     setEditForm({
       id: blog.id,
       title: blog.title || '',
-      categoryId: blog.categoryId?.id?.toString() || '',
+      categoryId: blog.categoryId?.id || blog.categoryId || '',
       content: blog.content || '',
       active: blog.active !== undefined ? blog.active : true
     });
@@ -93,11 +98,21 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
         ? blog.title.toLowerCase().includes(searchTerm.toLowerCase())
         : true;
     })
+    // Sửa hàm lọc blog theo danh mục
     .filter(blog => {
       // Lọc theo danh mục
-      return categoryFilter === 'all'
-        ? true
-        : blog.categoryId?.id === Number(categoryFilter);
+      if (categoryFilter === 'all') {
+        return true;
+      }
+
+      // Kiểm tra và debug để xem cấu trúc thực tế
+      console.log('Blog Category:', blog.categoryId);
+      console.log('Selected Filter:', categoryFilter);
+
+      // Cách so sánh linh hoạt hơn
+      return blog.categoryId?.id?.toString() === categoryFilter ||
+        blog.categoryId?.name === categoryFilter ||
+        blog.categoryId === categoryFilter;
     });
 
   const handleChange = (e) => {
@@ -116,7 +131,7 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     try {
       await api.post('/api/health-post', {
         consultantId: user.id,
-        categoryId: Number(form.categoryId),
+        categoryId: form.categoryId,
         title: form.title,
         content: form.content
       });
@@ -162,7 +177,7 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     try {
       await api.put(`/api/health-post/id/${editForm.id}`, {
         consultantId: user.id,
-        categoryId: Number(editForm.categoryId),
+        categoryId: editForm.categoryId,
         title: editForm.title,
         content: editForm.content,
         active: editForm.active
@@ -184,6 +199,30 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     }
   };
 
+  // Thêm hàm xóa blog
+  const handleDeleteBlog = async (blogId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa bài viết này không?')) {
+      return;
+    }
+
+    setDeletingBlogId(blogId);
+    try {
+      await api.delete(`/api/health-post/id/${blogId}`);
+      showToast('Xóa bài viết thành công', 'success');
+      fetchBlogs();
+    } catch (error) {
+      console.error('Lỗi khi xóa bài viết:', error);
+      showToast(
+        error.response?.data?.message || 'Không thể xóa bài viết',
+        'error'
+      );
+    } finally {
+      setDeletingBlogId(null);
+    }
+  };
+
+
+
   // Format date
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -201,10 +240,9 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     setLoadingCategories(true);
     try {
       const response = await api.get('/api/post-category/');
-      console.log('Categories:', response.data); // Để kiểm tra dữ liệu
-
-      // Bỏ qua việc filter theo id vì không có trường id
-      setCategories(response.data || []);
+      // Chỉ lấy các category đang hoạt động
+      const activeCategories = (response.data || []).filter(cat => cat.isActive);
+      setCategories(activeCategories);
     } catch (error) {
       console.error('Không thể tải danh mục:', error);
       showToast('Không thể tải danh mục bài viết', 'error');
@@ -219,36 +257,99 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
     setShowCategoryDetails(true);
   };
 
+  const handleCategoryFormChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setCategoryForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const handleCreateCategory = async (e) => {
+    e.preventDefault();
+    if (!categoryForm.id) {
+      showToast('Vui lòng nhập tên danh mục', 'error');
+      return;
+    }
+    setSubmittingCategory(true);
+    try {
+      await api.post('/api/post-category/', {
+        id: categoryForm.id,
+        isActive: categoryForm.isActive
+      });
+      showToast('Tạo danh mục thành công', 'success');
+      setShowCategoryModal(false);
+      setCategoryForm({ id: '', isActive: true });
+      fetchCategories();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Không thể tạo danh mục', 'error');
+    } finally {
+      setSubmittingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa danh mục này không?')) return;
+    try {
+      // Sử dụng encodeURIComponent để xử lý đúng các ký tự đặc biệt và dấu
+      const encodedCategoryId = encodeURIComponent(categoryId);
+      console.log("Đang xóa danh mục:", categoryId);
+      console.log("Encoded ID:", encodedCategoryId);
+
+      await api.delete(`/api/post-category/${encodedCategoryId}`);
+      showToast('Xóa danh mục thành công', 'success');
+      setShowCategoryDetails(false);
+
+      // Xóa danh mục khỏi state ngay lập tức
+      setCategories(prevCategories =>
+        prevCategories.filter(category => category.id !== categoryId)
+      );
+
+      fetchCategories();
+    } catch (error) {
+      console.error("Lỗi khi xóa danh mục:", error);
+      console.error("Response:", error.response?.data);
+      showToast(error.response?.data?.message || `Không thể xóa danh mục: ${error.message}`, 'error');
+    }
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold">Quản lý blog</h2>
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
-          onClick={() => setShowModal(true)}
-        >
-          <Plus size={16} />
-          Tạo bài viết mới
-        </button>
+        <div className="flex gap-2">
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2"
+            onClick={() => setShowModal(true)}
+          >
+            <Plus size={16} />
+            Tạo bài viết mới
+          </button>
+          <button
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
+            onClick={() => setShowCategoryModal(true)}
+          >
+            <Plus size={16} />
+            Tạo danh mục
+          </button>
+        </div>
       </div>
 
       <div className="mb-4 flex gap-4">
         <div className="flex items-center gap-2">
           <Filter size={16} />
           <select
-            name="categoryId"
-            value={form.categoryId}
-            onChange={handleChange}
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
             className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            required
           >
-            <option value="">-- Chọn danh mục --</option>
+            <option value="all">Tất cả danh mục</option>
             {loadingCategories ? (
               <option disabled>Đang tải danh mục...</option>
             ) : categories.length > 0 ? (
               categories.map((category) => (
-                <option key={category.name} value={category.id}>
-                  {category.name}
+                <option key={category.id} value={category.id}>
+                  {category.id}
                 </option>
               ))
             ) : (
@@ -291,7 +392,7 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                   <div className="flex-1">
                     <h3 className="font-medium mb-2">{blog.title}</h3>
                     <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>Danh mục: {blog.categoryId?.name || 'Không xác định'}</span>
+                      <span>Danh mục:  {blog.categoryId?.id || blog.categoryId || 'Không xác định'}</span>
                       <span>Tác giả: {blog.consultantId?.name || 'Không xác định'}</span>
                       <span>Trạng thái: {blog.active ? 'Hiển thị' : 'Ẩn'}</span>
                     </div>
@@ -308,9 +409,20 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                     <button
                       className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 flex items-center gap-1"
                       title="Xóa"
+                      onClick={() => handleDeleteBlog(blog.id)}
+                      disabled={deletingBlogId === blog.id}
                     >
-                      <Trash2 size={14} />
-                      Xóa
+                      {deletingBlogId === blog.id ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Đang xóa...
+                        </>
+                      ) : (
+                        <>
+                          <Trash2 size={14} />
+                          Xóa
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -324,6 +436,44 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
           )}
         </div>
       )}
+      {/* Danh sách danh mục */}
+      <div className="mt-8">
+        <h3 className="text-xl font-bold mb-4">Danh sách danh mục</h3>
+        <div className="bg-white rounded-lg shadow">
+          {loadingCategories ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : categories.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              Chưa có danh mục nào
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              {categories.map((category) => (
+                <div key={category.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium">{category.id}</h4>
+                    <span className={`text-xs px-2 py-1 rounded ${category.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {category.isActive ? 'Hoạt động' : 'Không hoạt động'}
+                    </span>
+                  </div>
+                  <div className="flex justify-end mt-3">
+                    <button
+                      onClick={() => handleCategoryClick(category)}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 flex items-center gap-1 text-sm"
+                    >
+                      <Edit size={14} />
+                      Chi tiết
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
 
       {/* Modal chi tiết danh mục */}
       {showCategoryDetails && selectedCategory && (
@@ -337,7 +487,7 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
             </button>
 
             <h3 className="text-xl font-bold mb-6">
-              Chi tiết danh mục: {selectedCategory.name}
+              Chi tiết danh mục: {selectedCategory.id}
             </h3>
 
             <div className="space-y-4">
@@ -347,11 +497,6 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                   <p className="text-gray-700">
                     <strong>ID:</strong> {selectedCategory.id}
                   </p>
-                  {selectedCategory.description && (
-                    <p className="text-gray-700 mt-2">
-                      <strong>Mô tả:</strong> {selectedCategory.description}
-                    </p>
-                  )}
                   <p className="text-gray-700 mt-2">
                     <strong>Trạng thái:</strong>{" "}
                     {selectedCategory.isActive !== undefined ? (
@@ -397,7 +542,14 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4 border-t">
+              <div className="flex justify-between pt-4 border-t">
+                <button
+                  onClick={() => handleDeleteCategory(selectedCategory.id)}
+                  className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 flex items-center gap-2"
+                >
+                  <Trash2 size={16} />
+                  Xóa danh mục
+                </button>
                 <button
                   onClick={() => setShowCategoryDetails(false)}
                   className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
@@ -455,8 +607,8 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                     <option disabled>Đang tải danh mục...</option>
                   ) : categories.length > 0 ? (
                     categories.map((category) => (
-                      <option key={category.name} value={category.id}>
-                        {category.name}
+                      <option key={category.id} value={category.id}>
+                        {category.id} {/* Hiển thị tên danh mục */}
                       </option>
                     ))
                   ) : (
@@ -556,8 +708,8 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
                     <option disabled>Đang tải danh mục...</option>
                   ) : categories.length > 0 ? (
                     categories.map((category) => (
-                      <option key={category.name} value={category.id}>
-                        {category.name}
+                      <option key={category.id} value={category.id}>
+                        {category.id}
                       </option>
                     ))
                   ) : (
@@ -625,6 +777,77 @@ export default function BlogsPanel({ loading: externalLoading = false, error: ex
           </div>
         </div>
       )}
+
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6 relative animate-fade-in">
+            <button
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              onClick={() => setShowCategoryModal(false)}
+            >
+              <X size={24} />
+            </button>
+            <h3 className="text-xl font-bold mb-6">Tạo danh mục mới</h3>
+            <form onSubmit={handleCreateCategory} className="space-y-5">
+              <div>
+                <label className="block mb-1 font-medium text-gray-700">
+                  Tên danh mục <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="id"
+                  value={categoryForm.id}
+                  onChange={handleCategoryFormChange}
+                  className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nhập tên danh mục"
+                  required
+                />
+              </div>
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    name="isActive"
+                    checked={categoryForm.isActive}
+                    onChange={handleCategoryFormChange}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-gray-700">Hoạt động</span>
+                </label>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4 border-t">
+                <button
+                  type="button"
+                  onClick={() => setShowCategoryModal(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+                  disabled={submittingCategory}
+                >
+                  Hủy
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex items-center gap-2"
+                  disabled={submittingCategory}
+                >
+                  {submittingCategory ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      Đang tạo...
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={16} />
+                      Tạo danh mục
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
+
+
 }
