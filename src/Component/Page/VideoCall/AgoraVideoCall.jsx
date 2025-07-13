@@ -115,6 +115,110 @@ const AgoraVideoCall = ({
 
     // BƯỚC 3: Khởi tạo cuộc gọi qua API trước
     useEffect(() => {
+        const acceptCall = async (callId) => {
+            try {
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                
+                // Enhanced user validation
+                if (!currentUser || !currentUser.id) {
+                    console.error('❌ No valid user found in localStorage');
+                    throw new Error('User not authenticated');
+                }
+                
+                console.log('📞 Accepting call via API:', callId, 'for user:', currentUser.id);
+                console.log('👤 Current user details:', {
+                    id: currentUser.id,
+                    name: currentUser.name,
+                    email: currentUser.email,
+                    role: currentUser.role
+                });
+
+                // Enhanced token retrieval - check multiple possible token keys
+                const authToken = localStorage.getItem('authToken') || 
+                                localStorage.getItem('token') || 
+                                localStorage.getItem('accessToken') || 
+                                localStorage.getItem('jwt') ||
+                                localStorage.getItem('access_token');
+                
+                console.log('🔍 Checking for authentication tokens:');
+                console.log('- authToken:', localStorage.getItem('authToken') ? '✅' : '❌');
+                console.log('- token:', localStorage.getItem('token') ? '✅' : '❌');
+                console.log('- accessToken:', localStorage.getItem('accessToken') ? '✅' : '❌');
+                console.log('- jwt:', localStorage.getItem('jwt') ? '✅' : '❌');
+                console.log('- access_token:', localStorage.getItem('access_token') ? '✅' : '❌');
+                
+                if (!authToken) {
+                    console.error('❌ No authentication token found in any storage key');
+                    console.log('🔍 All localStorage keys:', Object.keys(localStorage));
+                    
+                    // Try to use user session or alternative authentication
+                    const userSession = localStorage.getItem('userSession');
+                    const userToken = currentUser.token || currentUser.accessToken;
+                    
+                    if (userSession) {
+                        try {
+                            const session = JSON.parse(userSession);
+                            if (session.token) {
+                                console.log('✅ Found token in userSession');
+                                authToken = session.token;
+                            }
+                        } catch (e) {
+                            console.error('❌ Error parsing userSession:', e);
+                        }
+                    }
+                    
+                    if (!authToken && userToken) {
+                        console.log('✅ Found token in user object');
+                        authToken = userToken;
+                    }
+                    
+                    if (!authToken) {
+                        console.error('❌ No authentication token found anywhere');
+                        throw new Error('No authentication token');
+                    }
+                }
+
+                console.log('🔑 Using authentication token:', authToken ? '✅ Found' : '❌ Not found');
+
+                // Make the API call with proper headers
+                const response = await api.post(`/api/video-calls/${callId}/accept?userId=${currentUser.id}`, {}, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                console.log('✅ Call accepted via API successfully:', response.data);
+                
+                // Set the started time when call is accepted
+                if (!callStartTime) {
+                    setCallStartTime(new Date());
+                }
+                
+                return response.data;
+            } catch (error) {
+                console.error('❌ Error accepting call via API:', error);
+                
+                // Enhanced error logging
+                if (error.response) {
+                    console.error('❌ Accept Call API Error Details:', {
+                        status: error.response.status,
+                        statusText: error.response.statusText,
+                        data: error.response.data,
+                        headers: error.response.headers
+                    });
+                    
+                    // Handle specific error cases
+                    if (error.response.status === 401) {
+                        console.error('❌ Authentication failed - user may need to log in again');
+                    } else if (error.response.status === 400) {
+                        console.error('❌ Bad request - check userId and callId format');
+                    }
+                }
+                
+                throw error;
+            }
+        };
         const initiateVideoCall = async () => {
             if (isInitializedRef.current || !appointment?.id || !consultantInfo?.id || !customerInfo?.id) {
                 console.log('⚠️ Call initialization delayed: Waiting for complete appointment data...', {
@@ -181,6 +285,19 @@ const AgoraVideoCall = ({
                     setCallId(callIdString);
                     console.log(`✅ Call ID saved: ${callIdString}`);
 
+                    // Accept the call to set startedAt timestamp
+                    if (!isConsultant) {
+                        console.log('👤 Customer accepting call...');
+                        try {
+                            await acceptCall(callIdString);
+                            console.log('✅ Call accepted by customer and startedAt timestamp set');
+                        } catch (acceptError) {
+                            console.warn('⚠️ Customer failed to accept call, continuing anyway:', acceptError);
+                        }
+                    } else {
+                        console.log('👨‍💼 Consultant initiated call, waiting for customer to accept...');
+                    }
+                    
                     const startTime = new Date();
                     setCallStartTime(startTime);
                     console.log('⏰ Call started at:', startTime.toLocaleTimeString());
@@ -721,66 +838,34 @@ const AgoraVideoCall = ({
 
         const endTime = new Date();
         console.log('⏰ Call ended at:', endTime.toLocaleTimeString());
+        
         // Cleanup Agora
         await cleanup();
 
-        // Nếu có callId từ API, gọi API end call
+        // Call the correct API to end the call
         if (callId) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
                 console.log('🔄 Attempting to end call via API:', callId, 'for user:', currentUser.id);
 
-                // Check if call is already ended by fetching current status first
-                try {
-                    const callDetailsResponse = await api.get(`/api/video-calls/${callId}`);
-                    const currentCallStatus = callDetailsResponse.data?.status;
-                    
-                    console.log('🔍 Current call status before ending:', currentCallStatus);
-                    
-                    if (currentCallStatus === 'ENDED' || currentCallStatus === 'CANCELLED') {
-                        console.log('ℹ️ Call is already ended, skipping API call');
-                } else {
-                    // Prepare request body with required fields
-                    const endCallPayload = {
-                        endedAt: endTime.toISOString(),
-                        durationSeconds: Math.max(0, callDuration)
-                    };
+                // Use the correct API endpoint with request body
+                const endCallPayload = {
+                    endedAt: endTime.toISOString(),
+                    durationSeconds: Math.max(0, callDuration)
+                };
 
-                    console.log('📝 Sending end call payload:', endCallPayload);
+                console.log('📝 Sending end call request:', endCallPayload);
 
-                    // Use exact Swagger API format with both query param and request body
-                    const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`, endCallPayload);
-                    console.log('✅ Call ended via API successfully:', response.data);
-                    }
-                } catch (statusError) {
-                    console.log('⚠️ Could not check call status, proceeding with end call:', statusError);
-                    
-                    // Try to end call anyway
-                    try {
-                        const endCallPayload = {
-                            endedAt: endTime.toISOString(),
-                            durationSeconds: Math.max(0, callDuration)
-                        };
-
-                        const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`, endCallPayload);
-                        console.log('✅ Call ended via API successfully:', response.data);
-                    } catch (endError) {
-                        console.log('⚠️ Failed to end call via API:', endError);
-                    }
-                }
+                // Call the end API with the correct format
+                const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`, endCallPayload);
+                console.log('✅ Call ended via API successfully:', response.data);
                 
             } catch (error) {
-                const errorStatus = error.response?.status;
-                
-                console.log('⚠️ Error ending call via API (this is expected if call was already ended):', {
-                    status: errorStatus,
-                    callId: callId,
-                    message: 'Ignoring error - call cleanup completed successfully'
-                });
+                console.error('❌ Error ending call via API:', error);
             }
         }
 
-        // Always callback về parent component với dữ liệu để parent tự xử lý
+        // Always callback to parent component
         onCallEnd?.({
             appointmentId: appointment.id,
             duration: callDuration,

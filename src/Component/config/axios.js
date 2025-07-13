@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "https://02d4ea8a290b.ngrok-free.app",
+    baseURL: "https://876681932054.ngrok-free.app",
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',
@@ -50,27 +50,37 @@ api.interceptors.response.use(
 );
 
 // Enhanced error logging for video call debugging
-api.interceptors.response.use(
-    (response) => {
-        console.log('✅ API Response:', response);
-        return response;
-    },
-    (error) => {
-        console.error('❌ API Error:', error);
+api.interceptors.request.use(
+    (config) => {
+        // Add authentication token to all requests
+        const authToken = localStorage.getItem('authToken') || localStorage.getItem('token');
+        if (authToken) {
+            config.headers.Authorization = `Bearer ${authToken}`;
+        }
         
-        // Special handling for video call errors
-        if (error.config?.url?.includes('video-calls')) {
-            console.error('🎥 Video Call API Error Details:', {
-                url: error.config.url,
-                method: error.config.method,
-                data: error.config.data,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                responseData: error.response?.data,
-                headers: error.response?.headers
+        // Special logging for video call APIs
+        if (config.url?.includes('video-calls')) {
+            console.log('🎥 Video Call API Request:', {
+                method: config.method?.toUpperCase(),
+                url: config.url,
+                fullURL: `${config.baseURL}${config.url}`,
+                headers: config.headers,
+                data: config.data,
+                params: config.params
             });
         }
         
+        console.log('🚀 API Request:', {
+            method: config.method?.toUpperCase(),
+            url: config.url,
+            fullURL: `${config.baseURL}${config.url}`,
+            headers: config.headers,
+            data: config.data
+        });
+        return config;
+    },
+    (error) => {
+        console.error('❌ Request Error:', error);
         return Promise.reject(error);
     }
 );
