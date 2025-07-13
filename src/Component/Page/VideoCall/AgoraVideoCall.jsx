@@ -29,10 +29,11 @@ const AgoraVideoCall = ({
     const localTracksRef = useRef({ video: null, audio: null });
     const remoteUsersRef = useRef({});
     const isInitializedRef = useRef(false);
+    const [isPolling, setIsPolling] = useState(false);
+    const pollingIntervalRef = useRef(null);
 
     // PRIMARY: Super short channel name using just appointment ID
     const createShortChannelName = (appointmentId) => {
-        // Just use appointment ID with prefix - guaranteed short
         const shortName = `apt_${appointmentId}`;
         console.log('📺 Generated short channel name:', shortName, 'Length:', shortName.length);
         return shortName;
@@ -44,11 +45,9 @@ const AgoraVideoCall = ({
             return longChannelName;
         }
 
-        // Extract meaningful parts or create hash
         const parts = longChannelName.split('_');
 
         if (parts.length >= 2) {
-            // Try to use first and last parts
             const firstPart = parts[0];
             const lastPart = parts[parts.length - 1];
             const shortened = `${firstPart}_${lastPart}`;
@@ -59,7 +58,6 @@ const AgoraVideoCall = ({
             }
         }
 
-        // If still too long, create a hash-based name
         const hash = longChannelName.split('').reduce((a, b) => {
             a = ((a << 5) - a) + b.charCodeAt(0);
             return a & a;
@@ -113,7 +111,381 @@ const AgoraVideoCall = ({
         console.log('✅ Opponent info set:', opponent);
     }, [isConsultant, consultantInfo, customerInfo]);
 
-    // BƯỚC 3: Khởi tạo cuộc gọi qua API trước
+    // Helper function to check call status
+    const checkCallStatus = async (callId) => {
+        try {
+            console.log('🔍 Checking call status for callId:', callId);
+            const response = await api.get(`/api/video-calls/${callId}`);
+            console.log('📊 Call status response:', response.data);
+            return response.data;
+        } catch (error) {
+            console.error('❌ Error checking call status:', error);
+            return null;
+        }
+    };
+
+    // Function to find available call for this appointment
+    const findAvailableCall = async () => {
+        try {
+            console.log('🔍 Looking for available calls...');
+            console.log('🔍 Current user info:', { consultantInfo, customerInfo, appointment });
+
+            const response = await api.get('/api/video-calls/videcalls');
+            console.log('📊 All calls from API:', response.data);
+
+            if (response.data && Array.isArray(response.data)) {
+                console.log('📋 Total calls found:', response.data.length);
+
+                // Log each call for debugging
+                response.data.forEach((call, index) => {
+                    console.log(`📞 Call ${index}:`, {
+                        id: call.id,
+                        status: call.status,
+                        channelName: call.channelName,
+                        consultantId: call.consultantId?.id,
+                        customerId: call.customerId?.id,
+                        createdAt: call.createdAt
+                    });
+                });
+
+                // Enhanced filtering logic
+                const availableCall = response.data.find(call => {
+                    const matchesStatus = call.status === 'INITIATED';
+                    const matchesConsultant = call.consultantId?.id === consultantInfo.id;
+                    const matchesCustomer = call.customerId?.id === customerInfo.id;
+                    const hasChannelName = call.channelName && call.channelName.length > 0;
+                    const matchesAppointment = call.channelName && call.channelName.includes(appointment.id.toString());
+
+                    console.log('🔍 Call matching check:', {
+                        callId: call.id,
+                        matchesStatus,
+                        matchesConsultant,
+                        matchesCustomer,
+                        hasChannelName,
+                        matchesAppointment,
+                        isMatch: matchesStatus && (matchesConsultant || matchesCustomer) && hasChannelName
+                    });
+
+                    return matchesStatus && (matchesConsultant || matchesCustomer) && hasChannelName;
+                });
+
+                if (availableCall) {
+                    console.log('✅ Found available call:', availableCall);
+                    return availableCall;
+                } else {
+                    console.log('⚠️ No matching calls found');
+
+                    // Show what we're looking for
+                    console.log('🎯 Looking for call with:', {
+                        status: 'INITIATED',
+                        consultantId: consultantInfo.id,
+                        customerId: customerInfo.id,
+                        appointmentId: appointment.id
+                    });
+                }
+            } else {
+                console.log('⚠️ No calls data or invalid format');
+            }
+
+            return null;
+        } catch (error) {
+            console.error('❌ Error finding available calls:', error);
+            if (error.response) {
+                console.error('❌ API Error Details:', {
+                    status: error.response.status,
+                    data: error.response.data
+                });
+            }
+            return null;
+        }
+    };
+    const createConsultantCall = async () => {
+        try {
+            console.log('👨‍💼 CONSULTANT: Initiating new video call via API...');
+
+            const consultantId = consultantInfo.id;
+            const customerId = customerInfo.id;
+
+            // Validate IDs
+            if (!consultantId || consultantId === 'undefined' || consultantId === 'null') {
+                throw new Error(`Invalid consultantId: "${consultantId}"`);
+            }
+
+            if (!customerId || customerId === 'undefined' || customerId === 'null') {
+                throw new Error(`Invalid customerId: "${customerId}"`);
+            }
+
+            console.log('🔍 Validated IDs:', { consultantId, customerId });
+
+            const payload = {
+                consultantId: String(consultantId).trim(),
+                customerId: String(customerId).trim(),
+                callType: "video"
+            };
+
+            console.log('📝 Sending API payload:', payload);
+
+            // Make the API call
+            const response = await api.post('/api/video-calls/initiate', payload);
+            console.log('✅ Video call initiated successfully:', response.data);
+
+            const {
+                callId: newCallId,
+                channelName: apiChannelName,
+                appId,
+                status,
+                message
+            } = response.data;
+
+            console.log('📋 API Response Details:', {
+                callId: newCallId,
+                channelName: apiChannelName,
+                appId,
+                status,
+                message
+            });
+
+            // Verify the call was created by checking the database
+            console.log('🔍 Verifying call was created in database...');
+            setTimeout(async () => {
+                try {
+                    const verificationResponse = await api.get('/api/video-calls/videcalls');
+                    const createdCall = verificationResponse.data.find(call => call.id === newCallId);
+                    if (createdCall) {
+                        console.log('✅ Call verified in database:', createdCall);
+                    } else {
+                        console.error('❌ Call not found in database after creation');
+                    }
+                } catch (verifyError) {
+                    console.error('❌ Error verifying call:', verifyError);
+                }
+            }, 1000);
+
+            if (status === "INITIATED" || status === "RINGING" || status === "ACTIVE") {
+                const callIdString = typeof newCallId === 'bigint'
+                    ? newCallId.toString()
+                    : String(newCallId);
+
+                setCallId(callIdString);
+                console.log(`✅ CONSULTANT: Call ID created and saved: ${callIdString}`);
+
+                // Use API channel name if provided, otherwise use shared name
+                const SHARED_CHANNEL_NAME = createShortChannelName(appointment.id);
+                const finalChannelName = apiChannelName && apiChannelName.trim()
+                    ? shortenChannelName(apiChannelName.trim())
+                    : SHARED_CHANNEL_NAME;
+
+                // Save call information
+                localStorage.setItem(`activeCallId_${appointment.id}`, callIdString);
+                localStorage.setItem(`channelName_${appointment.id}`, finalChannelName);
+                console.log('💾 Saved call info - ID:', callIdString, 'Channel:', finalChannelName);
+
+                // Auto-accept the call as consultant
+                if (status === "INITIATED") {
+                    try {
+                        await acceptCall(callIdString);
+                        console.log('✅ Consultant auto-accepted call');
+                    } catch (acceptError) {
+                        console.warn('⚠️ Consultant failed to auto-accept call:', acceptError);
+                    }
+                }
+
+                const startTime = new Date();
+                setCallStartTime(startTime);
+                console.log('⏰ Call started at:', startTime.toLocaleTimeString());
+
+                // Initialize Agora
+                const finalAppId = appId && appId.trim() ? appId.trim() : APP_ID;
+                isInitializedRef.current = false;
+                await initAgora(finalChannelName, finalAppId);
+
+                return true;
+            } else {
+                throw new Error(`Call initiation failed with unexpected status: ${status}`);
+            }
+        } catch (error) {
+            console.error('❌ Error creating consultant call:', error);
+            if (error.response) {
+                console.error('❌ API Error Details:', {
+                    status: error.response.status,
+                    statusText: error.response.statusText,
+                    data: error.response.data
+                });
+            }
+            throw error;
+        }
+    };
+    // Accept call function
+    const acceptCall = async (callId) => {
+        try {
+            const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+            if (!currentUser || !currentUser.id) {
+                console.error('❌ No valid user found in localStorage');
+                return null;
+            }
+
+            // Check if the call status is INITIATED
+            const callStatus = await checkCallStatus(callId);
+            if (!callStatus) {
+                console.error('❌ Could not retrieve call status');
+                return null;
+            }
+
+            if (callStatus.status !== 'INITIATED') {
+                console.warn('⚠️ Call status is not INITIATED, current status:', callStatus.status);
+                if (callStatus.status === 'ACTIVE') {
+                    console.log('✅ Call is already active, proceeding...');
+                    return callStatus;
+                } else {
+                    console.error('❌ Cannot accept call with status:', callStatus.status);
+                    return null;
+                }
+            }
+
+            console.log('📞 Accepting call via API:', callId, 'for user:', currentUser.id);
+
+            const response = await api.post(`/api/video-calls/${callId}/accept?userId=${currentUser.id}`);
+            console.log('✅ Call accepted via API:', response.data);
+
+            // Verify the call is now active
+            const updatedStatus = await checkCallStatus(callId);
+            if (updatedStatus) {
+                console.log('📋 Call status after accept:', updatedStatus.status);
+                if (updatedStatus.startedAt) {
+                    console.log('⏰ Call started at (from API):', new Date(updatedStatus.startedAt));
+                }
+            }
+
+            return response.data;
+        } catch (error) {
+            console.error('❌ Error accepting call via API:', error);
+            if (error.response) {
+                console.error('❌ Accept API Error Details:', {
+                    status: error.response.status,
+                    statusText: error.response.statusText,
+                    data: error.response.data
+                });
+            }
+            return null;
+        }
+    };
+
+    // Stop polling function
+    const stopPolling = () => {
+        if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+            pollingIntervalRef.current = null;
+            setIsPolling(false);
+            console.log('⏹️ Stopped polling for calls');
+        }
+    };
+
+
+    // Enhanced polling with better retry logic
+    const startPollingForCall = () => {
+        if (isConsultant || isPolling) return;
+
+        console.log('🔄 Customer: Starting to poll for initiated calls...');
+        setIsPolling(true);
+
+        let pollCount = 0;
+        const maxPolls = 30; // 30 polls x 2 seconds = 60 seconds max
+
+        pollingIntervalRef.current = setInterval(async () => {
+            pollCount++;
+            console.log(`🔄 Customer: Polling attempt ${pollCount}/${maxPolls}`);
+
+            try {
+                const availableCall = await findAvailableCall();
+
+                if (availableCall) {
+                    console.log('🎉 Customer: Found consultant\'s call!', availableCall);
+
+                    // Stop polling
+                    clearInterval(pollingIntervalRef.current);
+                    setIsPolling(false);
+
+                    // Join the consultant's call (DO NOT CREATE NEW CALL)
+                    await joinExistingCall(availableCall.id.toString(), availableCall.channelName);
+
+                    return; // Exit the polling
+                }
+
+                // Check localStorage again (in case consultant created call while polling)
+                const callId = localStorage.getItem(`activeCallId_${appointment.id}`);
+                const channelName = localStorage.getItem(`channelName_${appointment.id}`);
+
+                if (callId && channelName) {
+                    console.log('🎉 Customer: Found call in localStorage during polling!');
+
+                    // Stop polling
+                    clearInterval(pollingIntervalRef.current);
+                    setIsPolling(false);
+
+                    // Join the consultant's call (DO NOT CREATE NEW CALL)
+                    await joinExistingCall(callId, channelName);
+
+                    return; // Exit the polling
+                }
+
+                // If we've polled too many times, stop
+                if (pollCount >= maxPolls) {
+                    console.log('⏰ Customer: Polling timeout, stopping...');
+                    clearInterval(pollingIntervalRef.current);
+                    setIsPolling(false);
+
+                    // Try fallback connection
+                    console.log('🔄 Customer: Attempting fallback connection...');
+                    const fallbackChannelName = createShortChannelName(appointment.id);
+                    const startTime = new Date();
+                    setCallStartTime(startTime);
+
+                    isInitializedRef.current = false;
+                    await initAgora(fallbackChannelName, APP_ID);
+                }
+            } catch (error) {
+                console.error('❌ Error during polling:', error);
+                pollCount--; // Don't count failed polls
+            }
+        }, 2000); // Poll every 2 seconds
+    };
+    const joinExistingCall = async (callId, channelName) => {
+        try {
+            console.log('👤 CUSTOMER: Joining existing call:', { callId, channelName });
+
+            setCallId(callId);
+
+            // 📞 Customer accepts the call
+            const acceptResult = await acceptCall(callId);
+            if (acceptResult) {
+                console.log('✅ Customer accepted call successfully');
+            } else {
+                console.warn('⚠️ Customer failed to accept call, but continuing...');
+            }
+
+            // Start the call
+            const startTime = new Date();
+            setCallStartTime(startTime);
+            console.log('⏰ Customer call started at:', startTime.toLocaleTimeString());
+
+            // Initialize Agora with the same channel name as consultant
+            isInitializedRef.current = false;
+            await initAgora(channelName, APP_ID);
+
+            console.log('✅ Customer: Successfully joined consultant\'s call');
+        } catch (error) {
+            console.error('❌ Error joining existing call:', error);
+            throw error;
+        }
+    };
+    // Add missing helper function:
+    const getCallDurationDisplay = () => {
+        const minutes = Math.floor(callDuration / 60);
+        const seconds = callDuration % 60;
+        return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+    // Updated initialization logic
     useEffect(() => {
         const initiateVideoCall = async () => {
             if (isInitializedRef.current || !appointment?.id || !consultantInfo?.id || !customerInfo?.id) {
@@ -122,203 +494,101 @@ const AgoraVideoCall = ({
                     appointmentId: appointment?.id,
                     consultantId: consultantInfo?.id,
                     customerId: customerInfo?.id,
+                    isConsultant: isConsultant
                 });
                 return;
             }
 
             try {
-                console.log('🚀 Initiating video call via API...');
-
-                // Extract IDs properly from appointment
-                const consultantId = consultantInfo.id;
-                const customerId = customerInfo.id;
-
-                // Enhanced validation to catch potential issues
-                if (!consultantId || consultantId === 'undefined' || consultantId === 'null') {
-                    throw new Error(`Invalid consultantId: "${consultantId}"`);
-                }
-
-                if (!customerId || customerId === 'undefined' || customerId === 'null') {
-                    throw new Error(`Invalid customerId: "${customerId}"`);
-                }
-
-                console.log('🔍 Validated IDs:', { consultantId, customerId });
-
-                // Prepare payload for API
-                const payload = {
-                    consultantId: String(consultantId).trim(),
-                    customerId: String(customerId).trim(),
-                    callType: "video"
-                };
-
-                console.log('📝 Sending API payload:', payload);
-                const response = await api.post('/api/video-calls/initiate', payload);
-                console.log('✅ Video call initiated successfully:', response.data);
-
-                // IMPROVED: Extract all response fields according to API spec
-                const {
-                    callId: newCallId,
-                    channelName: apiChannelName,
-                    appId,
-                    status,
-                    message
-                } = response.data;
-
-                console.log('📋 API Response Details:', {
-                    callId: newCallId,
-                    channelName: apiChannelName,
-                    appId,
-                    status,
-                    message
-                });
-
-                // Check for a valid status to proceed with the call
-                if (status === "INITIATED" || status === "RINGING" || status === "ACTIVE") {
-                    const callIdString = typeof newCallId === 'bigint'
-                        ? newCallId.toString()
-                        : String(newCallId);
-
-                    setCallId(callIdString);
-                    console.log(`✅ Call ID saved: ${callIdString}`);
-
-                    const startTime = new Date();
-                    setCallStartTime(startTime);
-                    console.log('⏰ Call started at:', startTime.toLocaleTimeString());
-
-                    // FIXED: Ưu tiên channel name từ props (VideoCallManager)
-                    const finalChannelName = (() => {
-                        // 1. Dùng channel name từ props trước (từ VideoCallManager)
-                        if (channelName && channelName.trim()) {
-                            console.log('🎯 Using channel name from props:', channelName);
-                            return channelName.trim();
-                        }
-
-                        // 2. Nếu không có, dùng từ API
-                        if (apiChannelName && apiChannelName.trim()) {
-                            const trimmedName = apiChannelName.trim();
-                            if (trimmedName.length <= 64) {
-                                console.log('🎯 Using API channel name:', trimmedName);
-                                return trimmedName;
-                            } else {
-                                console.log('⚠️ API channel name too long, shortening:', trimmedName);
-                                return shortenChannelName(trimmedName);
-                            }
-                        }
-
-                        // 3. Fallback: tạo channel name đơn giản
-                        const fallbackName = createShortChannelName(appointment.id);
-                        console.log('🎯 Using fallback channel name:', fallbackName);
-                        return fallbackName;
-                    })();
-
-                    console.log('🎯 Final channel name decided:', finalChannelName, 'Length:', finalChannelName.length);
-
-                    // IMPROVED: Use API appId if provided
-                    const finalAppId = appId && appId.trim() ? appId.trim() : APP_ID;
-                    console.log('🔑 Using App ID:', finalAppId);
-
-                    await initAgora(finalChannelName, finalAppId);
+                if (isConsultant) {
+                    // 👨‍💼 CONSULTANT: Use the existing createConsultantCall function
+                    await createConsultantCall();
                 } else {
-                    throw new Error(`Call initiation failed with unexpected status: ${status}`);
-                }
-            } catch (error) {
-                console.error('❌ Error initiating video call:', error);
+                    // 👤 CUSTOMER: Finds consultant's call and joins it
+                    console.log('👤 CUSTOMER: Looking for consultant\'s call...');
 
-                // Enhanced error logging
-                if (error.response) {
-                    console.error('❌ API Error Details:');
-                    console.error('  Status:', error.response.status);
-                    console.error('  Status Text:', error.response.statusText);
-                    console.error('  Response Data:', error.response.data);
-                    console.error('  Request URL:', error.config?.url);
-                    console.error('  Request Method:', error.config?.method);
-                    console.error('  Request Data:', error.config?.data);
+                    // First, try to find call from localStorage
+                    let existingCallId = localStorage.getItem(`activeCallId_${appointment.id}`);
+                    let existingChannelName = localStorage.getItem(`channelName_${appointment.id}`);
 
-                    // IMPROVED: Handle specific HTTP status codes
-                    switch (error.response.status) {
-                        case 400:
-                            console.error('❌ Bad Request: Check if consultantId and customerId are valid');
-                            break;
-                        case 401:
-                            console.error('❌ Unauthorized: Check if user is logged in');
-                            break;
-                        case 403:
-                            console.error('❌ Forbidden: User may not have permission to start calls');
-                            break;
-                        case 409:
-                            console.error('❌ Conflict: There might be an active call already');
-                            break;
-                        case 500:
-                            console.error('❌ Server Error: Backend issue');
-                            break;
-                        default:
-                            console.error('❌ Unexpected error status');
+                    if (existingCallId && existingChannelName) {
+                        console.log('✅ CUSTOMER: Found call in localStorage:', {
+                            callId: existingCallId,
+                            channelName: existingChannelName
+                        });
+
+                        // Join the existing call
+                        await joinExistingCall(existingCallId, existingChannelName);
+                    } else {
+                        // If not found in localStorage, poll the API
+                        console.log('🔄 CUSTOMER: No call found in localStorage, polling API...');
+                        startPollingForCall();
                     }
                 }
+            } catch (error) {
+                console.error('❌ Error in video call initialization:', error);
 
-                // FIXED: Fallback với channel name từ props
-                console.log('🔄 Attempting direct Agora initialization with props channel name...');
+                // Fallback initialization
+                console.log('🔄 Attempting fallback initialization...');
                 try {
-                    const fallbackChannelName = channelName || createShortChannelName(appointment.id);
-                    console.log('🎯 Using fallback channel name:', fallbackChannelName);
-
+                    const fallbackChannelName = createShortChannelName(appointment.id);
                     const startTime = new Date();
                     setCallStartTime(startTime);
-                    console.log('⏰ Fallback call started at:', startTime.toLocaleTimeString());
 
+                    isInitializedRef.current = false;
                     await initAgora(fallbackChannelName, APP_ID);
-                    console.log('✅ Direct Agora initialization successful');
+                    console.log('✅ Fallback initialization successful');
                 } catch (fallbackError) {
                     console.error('❌ Fallback initialization failed:', fallbackError);
-
-                    const errorMessage = error.response?.data?.message ||
-                        error.response?.data?.error ||
-                        error.message ||
-                        'Không thể khởi tạo cuộc gọi';
-
-                    alert(`Lỗi khởi tạo cuộc gọi: ${errorMessage}`);
+                    alert(`Lỗi khởi tạo cuộc gọi: ${error.message}`);
                     onCallEnd?.();
                 }
             }
         };
 
-        const timeoutId = setTimeout(initiateVideoCall, 100);
+        const timeoutId = setTimeout(initiateVideoCall, 2000);
 
         return () => {
             clearTimeout(timeoutId);
-            cleanup();
+            stopPolling();
         };
 
-    }, [appointment, consultantInfo, customerInfo, channelName]);
+    }, [appointment, consultantInfo, customerInfo, channelName, isConsultant]);
+    // Cleanup effect
+    useEffect(() => {
+        return () => {
+            stopPolling();
+            if (appointment?.id && isConsultant) {
+                try {
+                    localStorage.removeItem(`activeCallId_${appointment.id}`);
+                    localStorage.removeItem(`channelName_${appointment.id}`);
+                    console.log('🧹 Cleaned up localStorage');
+                } catch (storageError) {
+                    console.error('❌ Failed to cleanup localStorage:', storageError);
+                }
+            }
+            cleanup();
+        };
+    }, [appointment?.id, isConsultant]);
 
-    // Event handlers for remote users - ADD MORE DEBUGGING
+    // Event handlers for remote users
     const handleUserPublished = async (user, mediaType) => {
         console.log('👤 User published:', user.uid, 'Media type:', mediaType);
-        console.log('📊 Remote video ref exists:', !!remoteVideoRef.current);
         try {
             await clientRef.current.subscribe(user, mediaType);
             console.log('✅ Subscribed to user:', user.uid, mediaType);
 
             if (mediaType === 'video') {
                 console.log('🎥 Processing video track...');
-                console.log('📊 User video track:', user.videoTrack);
-                // Play remote video with better error handling
                 if (remoteVideoRef.current) {
                     try {
                         console.log('▶️ Attempting to play remote video...');
                         user.videoTrack.play(remoteVideoRef.current);
                         console.log('✅ Playing remote video successfully');
                         setIsConnected(true);
-
-                        // Force a state update to trigger re-render
-                        setTimeout(() => {
-                            console.log('🔄 Remote video element content:', remoteVideoRef.current?.innerHTML);
-                        }, 1000);
-
                     } catch (playError) {
                         console.error('❌ Error playing remote video:', playError);
 
-                        // Retry after a short delay
                         setTimeout(() => {
                             try {
                                 console.log('🔄 Retrying to play remote video...');
@@ -330,14 +600,11 @@ const AgoraVideoCall = ({
                             }
                         }, 1000);
                     }
-                } else {
-                    console.error('❌ Remote video ref is null');
                 }
             }
 
             if (mediaType === 'audio') {
                 console.log('🔊 Processing audio track...');
-                // Play remote audio
                 try {
                     user.audioTrack.play();
                     console.log('▶️ Playing remote audio successfully');
@@ -346,10 +613,8 @@ const AgoraVideoCall = ({
                 }
             }
 
-            // Store remote user
             remoteUsersRef.current[user.uid] = user;
             console.log('📊 Remote users count:', Object.keys(remoteUsersRef.current).length);
-            console.log('📋 Remote users:', Object.keys(remoteUsersRef.current));
         } catch (subscribeError) {
             console.error('❌ Error subscribing to user:', subscribeError);
         }
@@ -359,19 +624,16 @@ const AgoraVideoCall = ({
         console.log('👤 User unpublished:', user.uid, 'Media type:', mediaType);
 
         if (mediaType === 'video') {
-            // Remove video display
             if (remoteVideoRef.current) {
                 remoteVideoRef.current.innerHTML = '';
                 console.log('🧹 Cleared remote video display');
             }
         }
 
-        // Clean up remote user if no more tracks
         if (!user.videoTrack && !user.audioTrack) {
             delete remoteUsersRef.current[user.uid];
             console.log('🗑️ Removed remote user:', user.uid);
 
-            // Check if no more remote users
             if (Object.keys(remoteUsersRef.current).length === 0) {
                 setIsConnected(false);
                 console.log('⚠️ No more remote users, disconnected');
@@ -379,7 +641,6 @@ const AgoraVideoCall = ({
         }
     };
 
-    // Enhanced connection state handler
     const handleConnectionStateChange = (curState, prevState) => {
         console.log('🔄 Connection state changed:', prevState, '->', curState);
         setConnectionState(curState);
@@ -399,7 +660,6 @@ const AgoraVideoCall = ({
                 break;
             case 'FAILED':
                 console.error('❌ Connection failed');
-                // Try to reconnect
                 setTimeout(() => {
                     if (clientRef.current && appointment?.id) {
                         console.log('🔄 Attempting to reconnect...');
@@ -457,68 +717,18 @@ const AgoraVideoCall = ({
         };
     }, [isConnected, callStartTime]);
 
-    // Network connectivity check
-    const checkNetworkConnectivity = async () => {
-        try {
-            console.log('🔍 Checking network connectivity...');
-
-            // Create AbortController for timeout support
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
-
-            try {
-                // Check basic internet connectivity with manual timeout
-                const response = await fetch('https://httpbin.org/get', {
-                    method: 'GET',
-                    signal: controller.signal
-                });
-
-                clearTimeout(timeoutId);
-
-                if (response.ok) {
-                    console.log('✅ Internet connectivity: OK');
-                    return true;
-                } else {
-                    console.log('⚠️ Internet connectivity: Limited');
-                    return false;
-                }
-            } catch (fetchError) {
-                clearTimeout(timeoutId);
-
-                if (fetchError.name === 'AbortError') {
-                    console.log('⚠️ Network connectivity check timed out');
-                    return false;
-                } else {
-                    throw fetchError;
-                }
-            }
-        } catch (error) {
-            console.error('❌ Network connectivity check failed:', error);
-
-            // Fallback: assume network is available
-            console.log('🔄 Assuming network is available (fallback)');
-            return true;
-        }
-    };
-
-    // ...existing code...
-    // BƯỚC 4: Khởi tạo Agora client với retry logic
-    const initAgora = async (channelName, appId = APP_ID, retryCount = 0) => {
+    // BƯỚC 4: Khởi tạo Agora client
+    const initAgora = async (channelName, appId = APP_ID) => {
         if (isInitializedRef.current) {
             console.log('⚠️ Agora already initialized, skipping...');
             return;
         }
 
         try {
-            console.log('🎯 Initializing Agora with:', { channelName, appId, attempt: retryCount + 1 });
+            console.log('🎯 Initializing Agora with:', { channelName, appId });
             console.log('🔍 CRITICAL: Channel name being used:', channelName);
             console.log('🔍 CRITICAL: Channel name length:', channelName.length);
-            console.log('🔍 CRITICAL: Appointment ID:', appointment?.id);
 
-            // Skip network check to avoid CORS issues
-            console.log('⚡ Skipping network check (CORS prevention)');
-
-            // Enhanced channel name validation
             if (!channelName) {
                 throw new Error('Channel name is required');
             }
@@ -543,7 +753,6 @@ const AgoraVideoCall = ({
 
             isInitializedRef.current = true;
 
-            // FIXED: Create client with minimal configuration
             const client = AgoraRTC.createClient({
                 mode: 'rtc',
                 codec: 'vp8'
@@ -555,7 +764,6 @@ const AgoraVideoCall = ({
             client.on('user-unpublished', handleUserUnpublished);
             client.on('connection-state-change', handleConnectionStateChange);
 
-            // Add more event handlers for debugging
             client.on('user-joined', (user) => {
                 console.log('👋 User joined:', user.uid);
                 console.log('🎉 REMOTE USER DETECTED! Connection should be established soon...');
@@ -565,7 +773,6 @@ const AgoraVideoCall = ({
                 console.log('👋 User left:', user.uid);
             });
 
-            // Enhanced error handling
             client.on('network-quality', (stats) => {
                 console.log('📊 Network quality update:', stats);
             });
@@ -574,7 +781,7 @@ const AgoraVideoCall = ({
                 console.error('❌ Agora exception:', evt);
             });
 
-            // Join with better error handling
+            // Join channel
             let uid;
             try {
                 console.log('🔄 Attempting to join channel:', channelName);
@@ -616,7 +823,6 @@ const AgoraVideoCall = ({
             } catch (trackError) {
                 console.error('❌ Error creating tracks:', trackError);
 
-                // Fallback
                 try {
                     [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks();
                     console.log('✅ Created tracks with basic settings');
@@ -625,7 +831,6 @@ const AgoraVideoCall = ({
                 }
             }
 
-            // Store tracks
             localTracksRef.current = { audio: audioTrack, video: videoTrack };
 
             // Play local video
@@ -645,7 +850,6 @@ const AgoraVideoCall = ({
                 console.log('✅ Published local tracks successfully');
                 console.log('🎯 Other users should now be able to see/hear you');
 
-                // Set initial states
                 setMicOn(true);
                 setCameraOn(true);
 
@@ -662,8 +866,8 @@ const AgoraVideoCall = ({
             throw error;
         }
     };
-    // ...existing code...
-    // BƯỚC 5: Enhanced cleanup with better error handling
+
+    // BƯỚC 5: Cleanup
     const cleanup = async () => {
         try {
             isInitializedRef.current = false;
@@ -672,7 +876,6 @@ const AgoraVideoCall = ({
                 clearInterval(timerRef.current);
             }
 
-            // Stop and close tracks
             if (localTracksRef.current.audio) {
                 try {
                     localTracksRef.current.audio.stop();
@@ -691,7 +894,6 @@ const AgoraVideoCall = ({
                 }
             }
 
-            // Leave channel and cleanup client
             if (clientRef.current) {
                 try {
                     await clientRef.current.leave();
@@ -702,7 +904,6 @@ const AgoraVideoCall = ({
                 }
             }
 
-            // Clear remote users
             remoteUsersRef.current = {};
             setIsConnected(false);
             setConnectionState('DISCONNECTED');
@@ -713,77 +914,43 @@ const AgoraVideoCall = ({
         }
     };
 
-    // BƯỚC 6: Kết thúc cuộc gọi và gọi API để đánh dấu kết thúc
+    // BƯỚC 6: End call
     const endCall = async () => {
         console.log('🔚 Ending video call...');
-        console.log('📊 Call duration:', callDuration, 'seconds');
-        console.log('⏰ Call started at:', callStartTime?.toLocaleTimeString());
+
+        // Stop polling if active
+        stopPolling();
 
         const endTime = new Date();
-        console.log('⏰ Call ended at:', endTime.toLocaleTimeString());
-        // Cleanup Agora
+        const actualDuration = callStartTime ? Math.floor((endTime - callStartTime) / 1000) : callDuration;
+
         await cleanup();
 
-        // Nếu có callId từ API, gọi API end call
         if (callId) {
             try {
                 const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                console.log('🔄 Attempting to end call via API:', callId, 'for user:', currentUser.id);
+                console.log('🔄 Attempting to end call via API:', callId);
 
-                // Check if call is already ended by fetching current status first
-                try {
-                    const callDetailsResponse = await api.get(`/api/video-calls/${callId}`);
-                    const currentCallStatus = callDetailsResponse.data?.status;
+                const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`);
+                console.log('✅ Call ended via API:', response.data);
 
-                    console.log('🔍 Current call status before ending:', currentCallStatus);
-
-                    if (currentCallStatus === 'ENDED' || currentCallStatus === 'CANCELLED') {
-                        console.log('ℹ️ Call is already ended, skipping API call');
-                    } else {
-                        // Prepare request body with required fields
-                        const endCallPayload = {
-                            endedAt: endTime.toISOString(),
-                            durationSeconds: Math.max(0, callDuration)
-                        };
-
-                        console.log('📝 Sending end call payload:', endCallPayload);
-
-                        // Use exact Swagger API format with both query param and request body
-                        const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`, endCallPayload);
-                        console.log('✅ Call ended via API successfully:', response.data);
-                    }
-                } catch (statusError) {
-                    console.log('⚠️ Could not check call status, proceeding with end call:', statusError);
-
-                    // Try to end call anyway
-                    try {
-                        const endCallPayload = {
-                            endedAt: endTime.toISOString(),
-                            durationSeconds: Math.max(0, callDuration)
-                        };
-
-                        const response = await api.post(`/api/video-calls/${callId}/end?userId=${currentUser.id}`, endCallPayload);
-                        console.log('✅ Call ended via API successfully:', response.data);
-                    } catch (endError) {
-                        console.log('⚠️ Failed to end call via API:', endError);
+                // Verify call was ended
+                const finalStatus = await checkCallStatus(callId);
+                if (finalStatus) {
+                    console.log('📋 Final call status:', finalStatus.status);
+                    if (finalStatus.endedAt) {
+                        console.log('⏰ Call ended at (from API):', new Date(finalStatus.endedAt));
                     }
                 }
 
             } catch (error) {
-                const errorStatus = error.response?.status;
-
-                console.log('⚠️ Error ending call via API (this is expected if call was already ended):', {
-                    status: errorStatus,
-                    callId: callId,
-                    message: 'Ignoring error - call cleanup completed successfully'
-                });
+                console.error('❌ Error ending call via API:', error);
             }
         }
 
-        // Always callback về parent component với dữ liệu để parent tự xử lý
         onCallEnd?.({
             appointmentId: appointment.id,
-            duration: callDuration,
+            duration: actualDuration,
             startTime: callStartTime,
             endTime: endTime,
             consultantId: consultantInfo.id,
@@ -793,20 +960,45 @@ const AgoraVideoCall = ({
         });
     };
 
+    // FIX: Separate cleanup effect
+    useEffect(() => {
+        return () => {
+            if (appointment?.id && isConsultant) {
+                try {
+                    localStorage.removeItem(`activeCallId_${appointment.id}`);
+                    localStorage.removeItem(`channelName_${appointment.id}`);
+                    console.log('🧹 Cleaned up localStorage');
+                } catch (storageError) {
+                    console.error('❌ Failed to cleanup localStorage:', storageError);
+                }
+            }
+
+            cleanup();
+        };
+    }, [appointment?.id, isConsultant]);
+
     // Display helpers
     const getDisplayName = () => {
         return opponentInfo?.name || (isConsultant ? 'Khách hàng' : 'Tư vấn viên');
     };
 
-    const getCallDurationDisplay = () => {
-        const minutes = Math.floor(callDuration / 60);
-        const seconds = callDuration % 60;
-        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    // Update your status display to include polling:
+    const getConnectionStatusDisplay = () => {
+        if (!isConsultant && isPolling) {
+            return 'Đang tìm cuộc gọi...';
+        }
+        if (isConnected) {
+            return `Thời gian: ${getCallDurationDisplay()}`;
+        }
+        if (connectionState === 'CONNECTING') {
+            return 'Đang kết nối...';
+        }
+        return 'Chờ kết nối...';
     };
 
     const displayName = getDisplayName();
 
-    // ADD: Debug effect to monitor video elements
+    // Debug effect
     useEffect(() => {
         const checkVideoElements = () => {
             console.log('🔍 Video Element Check:');
@@ -822,7 +1014,6 @@ const AgoraVideoCall = ({
                 video: !!localTracksRef.current?.video
             });
 
-            // Check if remote video has actual video content
             if (remoteVideoRef.current) {
                 const videoElements = remoteVideoRef.current.querySelectorAll('video');
                 console.log('- Remote video elements found:', videoElements.length);
@@ -835,6 +1026,7 @@ const AgoraVideoCall = ({
         const debugInterval = setInterval(checkVideoElements, 5000);
         return () => clearInterval(debugInterval);
     }, []);
+
     return (
         <div className="fixed inset-0 bg-black bg-opacity-90 flex flex-col z-50">
             {/* Header */}
@@ -848,21 +1040,20 @@ const AgoraVideoCall = ({
                             Tư vấn với {displayName}
                         </h3>
                         <p className="text-sm text-gray-300">
-                            {isConnected
-                                ? `Thời gian: ${getCallDurationDisplay()}`
-                                : connectionState === 'CONNECTING' ? 'Đang kết nối...' : 'Chờ kết nối...'}
+                            {getConnectionStatusDisplay()}
                         </p>
                     </div>
                 </div>
                 <div className="flex items-center space-x-2">
                     <div className={`px-3 py-1 rounded-full text-sm flex items-center gap-2 ${isConnected ? 'bg-green-600' :
-                            connectionState === 'CONNECTING' ? 'bg-yellow-600' : 'bg-red-600'
+                            (isPolling || connectionState === 'CONNECTING') ? 'bg-yellow-600' : 'bg-red-600'
                         }`}>
-                        {connectionState === 'CONNECTING' && (
+                        {(isPolling || connectionState === 'CONNECTING') && (
                             <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                         )}
                         {isConnected ? 'Đã kết nối' :
-                            connectionState === 'CONNECTING' ? 'Đang kết nối' : 'Chờ kết nối'}
+                            isPolling ? 'Đang tìm cuộc gọi' :
+                                connectionState === 'CONNECTING' ? 'Đang kết nối' : 'Chờ kết nối'}
                     </div>
                     <div className="text-xs text-gray-400">
                         {callId ? `Call ID: ${callId}` : 'Direct Call'}
@@ -976,8 +1167,8 @@ const AgoraVideoCall = ({
                     <button
                         onClick={toggleMic}
                         className={`p-3 rounded-full transition-colors ${micOn
-                                ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                                : 'bg-red-600 hover:bg-red-500 text-white'
+                            ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                            : 'bg-red-600 hover:bg-red-500 text-white'
                             }`}
                         title={micOn ? 'Tắt micro' : 'Bật micro'}
                     >
@@ -987,8 +1178,8 @@ const AgoraVideoCall = ({
                     <button
                         onClick={toggleCamera}
                         className={`p-3 rounded-full transition-colors ${cameraOn
-                                ? 'bg-gray-600 hover:bg-gray-500 text-white'
-                                : 'bg-red-600 hover:bg-red-500 text-white'
+                            ? 'bg-gray-600 hover:bg-gray-500 text-white'
+                            : 'bg-red-600 hover:bg-red-500 text-white'
                             }`}
                         title={cameraOn ? 'Tắt camera' : 'Bật camera'}
                     >
