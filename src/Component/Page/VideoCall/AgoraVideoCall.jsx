@@ -1046,7 +1046,7 @@ const AgoraVideoCall = ({
                 </div>
                 <div className="flex items-center space-x-2">
                     <div className={`px-3 py-1 rounded-full text-sm flex items-center gap-2 ${isConnected ? 'bg-green-600' :
-                            (isPolling || connectionState === 'CONNECTING') ? 'bg-yellow-600' : 'bg-red-600'
+                        (isPolling || connectionState === 'CONNECTING') ? 'bg-yellow-600' : 'bg-red-600'
                         }`}>
                         {(isPolling || connectionState === 'CONNECTING') && (
                             <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

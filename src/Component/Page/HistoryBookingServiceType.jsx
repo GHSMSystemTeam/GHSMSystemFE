@@ -101,6 +101,29 @@ export default function HistoryBookingServiceType() {
         }
     };
 
+    const downloadResultPdf = async (resultId) => {
+        if (!resultId) {
+            showToast('Không tìm thấy ID kết quả!', 'error');
+            return;
+        }
+        try {
+            const response = await api.get(`/api/result/${resultId}/pdf`, {
+                responseType: 'blob'
+            });
+            const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `KetQuaXetNghiem_${resultId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (error) {
+            showToast('Không thể tải file PDF. Vui lòng thử lại!', 'error');
+            console.error(error);
+        }
+    };
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-purple-50 via-indigo-50 to-blue-50 pt-24 mt-10">
             <Header />
@@ -374,6 +397,7 @@ export default function HistoryBookingServiceType() {
                         <div className="mt-6 flex justify-between">
                             <button
                                 className="px-4 py-2 bg-indigo-50 text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-100 flex items-center"
+                                onClick={() => downloadResultPdf(selectedResult.id)}
                             >
                                 <Download size={16} className="mr-1.5" />
                                 Tải PDF
