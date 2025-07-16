@@ -1,112 +1,119 @@
 import React, { useState, useEffect } from 'react';
-import { Video, Phone, User } from 'lucide-react';
+import { Video, Phone, User, RefreshCw } from 'lucide-react';
 import AgoraVideoCall from './AgoraVideoCall';
 import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
+import api from '../../config/axios';
 
 const VideoCallManager = ({ appointment, onClose, isConsultant = true }) => {
   const [isCallActive, setIsCallActive] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(false);
+  const [callId, setCallId] = useState(null);
   const { showToast } = useToast();
   const { user } = useAuth();
 
-  // Remove Firebase logic and use API-based approach
-  useEffect(() => {
-    if (!isConsultant) {
-      // Customer: Check if there's already an active call
-      const checkForActiveCall = async () => {
-        try {
-          const existingCallId = localStorage.getItem(`activeCallId_${appointment.id}`);
-          if (existingCallId) {
-            console.log('👤 Customer found existing call ID:', existingCallId);
-            setIsCallActive(true);
-            return;
-          }
-          
-          // If no call in localStorage, customer waits
-          console.log('👤 Customer waiting for consultant to start call...');
-        } catch (error) {
-          console.error('❌ Error checking for active call:', error);
-        }
-      };
-      
-      checkForActiveCall();
-    }
-  }, [isConsultant, appointment.id]);
-
-  const startCall = async () => {
-    if (!isConsultant) {
-      console.log('⚠️ Only consultant can start calls');
+  // Customer: Check callId (localStorage, API, broadcast)
+  const checkCallAvailable = async () => {
+    setFetching(true);
+    // 1. Check localStorage
+    const callIdLS = localStorage.getItem(`activeCallId_${appointment.id}`);
+    if (callIdLS) {
+      setCallId(callIdLS);
+      setIsCallActive(true);
+      setFetching(false);
       return;
     }
-
-    setLoading(true);
+    // 2. Try API
     try {
-      console.log('👨‍💼 Consultant starting call...');
-      
-      // Simply set call active - the API logic will be handled in AgoraVideoCall
-      setIsCallActive(true);
-      
-      console.log('✅ Call started successfully');
-    } catch (error) {
-      console.error('❌ Error starting call:', error);
-      showToast('Lỗi: Không thể khởi tạo cuộc gọi', 'error');
-    } finally {
-      setLoading(false);
+      const res = await api.get('/api/video-calls/videcalls');
+      if (Array.isArray(res.data)) {
+        const found = res.data.find(
+          call =>
+            call.consultantId?.id === appointment.consultantId?.id &&
+            call.customerId?.id === appointment.customerId?.id &&
+            (call.status === 'ACTIVE' || call.status === 'INITIATED')
+        );
+        if (found) {
+          localStorage.setItem(`activeCallId_${appointment.id}`, found.id);
+          setCallId(found.id);
+          setIsCallActive(true);
+          setFetching(false);
+          return;
+        }
+      }
+    } catch (e) {
+      // ignore
     }
+    setFetching(false);
+  };
+
+  useEffect(() => {
+    if (!isConsultant) {
+      checkCallAvailable();
+      // Listen for broadcast
+      const channel = new BroadcastChannel(`appointment_${appointment.id}`);
+      const handleMessage = (event) => {
+        if (event.data.type === 'CALL_READY') {
+          localStorage.setItem(`activeCallId_${appointment.id}`, event.data.callId);
+          setCallId(event.data.callId);
+          setIsCallActive(true);
+          channel.close();
+        }
+      };
+      channel.addEventListener('message', handleMessage);
+      return () => {
+        channel.removeEventListener('message', handleMessage);
+        channel.close();
+      };
+    }
+    // eslint-disable-next-line
+  }, [isConsultant, appointment.id, appointment.consultantId?.id, appointment.customerId?.id]);
+  
+  useEffect(() => {
+      if (!isConsultant) {
+          const channel = new BroadcastChannel(`appointment_${appointment.id}`);
+          const handleMessage = (event) => {
+              if (event.data.type === 'CALL_ENDED') {
+                  handleCallEnd();
+              }
+          };
+          channel.addEventListener('message', handleMessage);
+          return () => {
+              channel.removeEventListener('message', handleMessage);
+              channel.close();
+          };
+      }
+  }, [isConsultant, appointment.id]);
+  const startCall = async () => {
+    if (!isConsultant) return;
+    setLoading(true);
+    setIsCallActive(true); // Render AgoraVideoCall, call sẽ được tạo ở đó
+    setLoading(false);
   };
 
   const handleCallEnd = async () => {
-    console.log('🔚 Call ended, cleaning up...');
-    
-    // Clean up localStorage
     try {
       localStorage.removeItem(`activeCallId_${appointment.id}`);
-      localStorage.removeItem(`channelName_${appointment.id}`);
-      console.log('🧹 VideoCallManager cleaned up localStorage');
-    } catch (error) {
-      console.error('❌ Error cleaning localStorage:', error);
-    }
-    
+    } catch {}
     setIsCallActive(false);
+    setCallId(null);
     onClose();
   };
 
-  // Customer polling logic to detect when consultant starts call
-  useEffect(() => {
-    if (!isConsultant && !isCallActive) {
-      console.log('👤 Customer: Setting up polling for consultant call...');
-      
-      const checkInterval = setInterval(() => {
-        const existingCallId = localStorage.getItem(`activeCallId_${appointment.id}`);
-        const existingChannelName = localStorage.getItem(`channelName_${appointment.id}`);
-        
-        if (existingCallId && existingChannelName) {
-          console.log('🎉 Customer detected consultant call!', { existingCallId, existingChannelName });
-          setIsCallActive(true);
-          clearInterval(checkInterval);
-        }
-      }, 1000); // Check every second
-      
-      return () => {
-        clearInterval(checkInterval);
-      };
-    }
-  }, [isConsultant, isCallActive, appointment.id]);
-
-  // Use AgoraVideoCall with proper role detection
+  // Khi đã có callId, render AgoraVideoCall
   if (isCallActive) {
     return (
       <AgoraVideoCall
-        channelName={`apt_${appointment.id}`}
-        token={null}
         onCallEnd={handleCallEnd}
         appointment={appointment}
         isConsultant={isConsultant}
+        callId={callId}
       />
     );
   }
 
+  // Consultant UI
   if (isConsultant) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -161,6 +168,7 @@ const VideoCallManager = ({ appointment, onClose, isConsultant = true }) => {
     );
   }
 
+  // Customer waiting UI
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4 text-center">
@@ -169,7 +177,7 @@ const VideoCallManager = ({ appointment, onClose, isConsultant = true }) => {
         </div>
         <h3 className="text-xl font-bold mb-2">Chờ tư vấn viên bắt đầu cuộc gọi...</h3>
         <p className="text-gray-600 mb-4">
-          Hệ thống sẽ tự động kết nối khi tư vấn viên sẵn sàng.
+          Hệ thống sẽ tự động cho phép bạn tham gia khi tư vấn viên sẵn sàng.
         </p>
         <div className="space-y-2 mb-6">
           <p className="text-sm font-medium">
@@ -180,6 +188,14 @@ const VideoCallManager = ({ appointment, onClose, isConsultant = true }) => {
           </p>
         </div>
         <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <button
+          onClick={checkCallAvailable}
+          disabled={fetching}
+          className="mt-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+        >
+          <RefreshCw size={16} className={fetching ? "animate-spin" : ""} />
+          {fetching ? "Đang kiểm tra..." : "Thử lại"}
+        </button>
         <button 
           onClick={onClose} 
           className="mt-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
