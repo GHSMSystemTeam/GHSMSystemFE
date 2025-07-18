@@ -997,7 +997,7 @@ const ServiceManagementComponent = () => {
                         >
                             &times;
                         </button>
-                        <h3 className="text-lg font-semibold mb-6">Thêm loại dịch vụ mới</h3>
+                        <h3 className="text-lg font-semibold mb-6">Cập nhật loại dịch vụ</h3>
                         <form onSubmit={handleSaveService} className="space-y-4">
                             <div>
                                 <label className="block mb-1 font-medium">Loại dịch vụ *</label>
