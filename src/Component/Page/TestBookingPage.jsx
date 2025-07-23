@@ -202,10 +202,16 @@ const TestBookingPage = () => {
       }, 3000);
     } catch (error) {
       console.error('Booking error:', error);
-      const errorMessage = error.response?.data?.message ||
-        error.response?.data?.error ||
-        'Có lỗi xảy ra khi đặt lịch!';
-      showToast(errorMessage, 'error');
+
+      const statusCode = error.response?.status;
+
+      // Nếu là lỗi 400 (Bad Request), mặc định hiển thị thông báo trùng lịch
+      if (statusCode === 400) {
+        showToast('Bạn đã đặt lịch trong ngày này, vui lòng chọn ngày khác!', 'error');
+      } else {
+        const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Có lỗi xảy ra khi đặt lịch!';
+        showToast(errorMessage, 'error');
+      }
     } finally {
       // Re-enable nút submit
       if (submitButton) {

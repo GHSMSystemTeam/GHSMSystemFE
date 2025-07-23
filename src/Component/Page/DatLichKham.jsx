@@ -72,7 +72,9 @@ export default function DatLichKham() {
             try {
                 const response = await api.get('/api/servicetypes/active');
                 if (response.data && response.data.length > 0) {
-                    let service = response.data.find(s => s.name.toLowerCase().includes('consulting'));
+                    // Ưu tiên lấy dịch vụ có typeCode === 0 (dịch vụ tư vấn)
+                    let service = response.data.find(s => s.typeCode === 0);
+                    // Nếu không có, fallback theo tên
                     if (!service) {
                         service = response.data.find(s => s.name && s.name.toLowerCase().includes('tư vấn'));
                     }
@@ -208,10 +210,16 @@ export default function DatLichKham() {
             showToast('Đặt lịch tư vấn thành công!', 'success');
         } catch (error) {
             console.error("API Error:", error.response || error);
-            const errorMessage = error.response?.data?.message ||
-                error.response?.data?.error ||
-                'Có lỗi xảy ra khi đặt lịch!';
-            showToast(errorMessage, 'error');
+
+            const statusCode = error.response?.status;
+
+            // Nếu là lỗi 400, hiển thị thông báo trùng lịch
+            if (statusCode === 400) {
+                showToast('Bạn đã đặt lịch trong ngày này, vui lòng chọn ngày khác!', 'error');
+            } else {
+                const errorMessage = error.response?.data?.message || error.response?.data?.error || 'Có lỗi xảy ra khi đặt lịch!';
+                showToast(errorMessage, 'error');
+            }
         } finally {
             setSubmitting(false);
         }
