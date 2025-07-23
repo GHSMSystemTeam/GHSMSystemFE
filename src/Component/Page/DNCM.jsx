@@ -4,21 +4,25 @@ import Navigation from '../Nav/Navigation';
 import Footer from '../Footer/Footer';
 import LogoGHSMS from '../Logo/LogoGHSMS';
 import DoctorTeam from '../Array/DoctorTeam';
-import { doctors } from '../Array/DoctorTeam';
 import { Mail, Phone } from 'lucide-react';
 import Header from '../Header/Header';
+import useConsultants from '../Hooks/useConsultants';
 
 export default function DNCM() {
-  const specialistTeam = doctors.map((doctor) => ({
-    id: doctor.id,
-    name: doctor.name,
-    title: doctor.title,
-    description: doctor.description,
-    image: doctor.image,
-    specialty: "Y học Giới tính & Nam học",
-    education: "Đại học Y Dược TP.HCM",
-    experience: "10+ năm kinh nghiệm",
-  }));
+  const { consultants, loading } = useConsultants();
+
+  // Map dữ liệu cho UI
+const specialistTeam = consultants.map((doctor) => ({
+  id: doctor.id,
+  name: doctor.name,
+  // Ưu tiên lấy title, nếu không có thì lấy role.name, nếu không có thì để rỗng
+  title: doctor.title || doctor.role?.name || "",
+  description: doctor.description || "",
+  image: doctor.profilePicture || `https://placehold.co/300x400/667eea/ffffff?text=${doctor.name}`,
+  // Nếu API có specialty, education, experience thì lấy, không thì fallback mặc định
+  specialty: doctor.specialization || "Y học Giới tính & Nam học",
+  experience: doctor.expYear ? `${doctor.expYear}+ năm kinh nghiệm` : "10+ năm kinh nghiệm",
+}));
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 pt-24 mt-10">
@@ -65,9 +69,6 @@ export default function DNCM() {
                       <p className="text-gray-700 mb-4">{doctor.description}</p>
                       {doctor.specialty && (
                         <p className="text-gray-700 mb-2"><span className="font-semibold">Chuyên môn:</span> {doctor.specialty}</p>
-                      )}
-                      {doctor.education && (
-                        <p className="text-gray-700 mb-2"><span className="font-semibold">Học vấn:</span> {doctor.education}</p>
                       )}
                       {doctor.experience && (
                         <p className="text-gray-700"><span className="font-semibold">Kinh nghiệm:</span> {doctor.experience}</p>
