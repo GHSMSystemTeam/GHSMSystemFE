@@ -253,23 +253,7 @@ export default function GHSMSCenter() {
 
 
 
-                <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center">
 
-                    {/* nên chèn ảnh ở đây */}
-
-                    {/* Floating contact buttons */}
-                    <div className="fixed right-4 bottom-4 flex flex-col space-y-2 z-50">
-                        <button className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center shadow-lg">
-                            <MessageCircle size={24} className="text-white" />
-                        </button>
-                        <button className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
-                            <svg viewBox="0 0 24 24" width="24" height="24" stroke="white" fill="none" strokeWidth="2">
-                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
-                            </svg>
-                        </button>
-                    </div>
-
-                </div>
 
                 {/* Doctor Team Section */}
                 <section className="text-center relative bg-gradient-to-r from-pink-50 via-purple-50 to-blue-50 animate-fade-in">

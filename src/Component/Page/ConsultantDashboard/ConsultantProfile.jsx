@@ -11,16 +11,16 @@ export default function ConsultantProfile({ consultant, open, onClose }) {
     try {
       // Xóa token nếu có
       localStorage.removeItem('authToken');
-      
+
       // Gọi logout từ AuthContext
       logout();
-      
+
       // Hiển thị thông báo thành công
       toast.success("Đăng xuất thành công!");
-      
+
       // Đóng modal profile
       onClose();
-      
+
       // Chuyển hướng về trang chủ
       navigate('/');
     } catch (error) {
@@ -57,24 +57,24 @@ export default function ConsultantProfile({ consultant, open, onClose }) {
             <div>SĐT: <span className="text-gray-700">{consultant.phone}</span></div>
           )}
         </div>
-        
+
         <div className="mt-4 pt-4 border-t border-gray-200">
           <button
             onClick={handleLogout}
             className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center gap-2"
           >
-            <svg 
-              xmlns="http://www.w3.org/2000/svg" 
-              className="h-4 w-4" 
-              fill="none" 
-              viewBox="0 0 24 24" 
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
               stroke="currentColor"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
-                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
               />
             </svg>
             Đăng xuất

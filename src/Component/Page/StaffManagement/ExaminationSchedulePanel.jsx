@@ -404,46 +404,46 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
               <div>Trạng thái</div>
               <div className="text-right">Thao tác</div>
             </div>
-          <div className="overflow-y-auto max-h-[600px]">
-            {filteredBookings.map((booking) => (
-              <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
-                <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
-                <div>{getGenderText(booking.customerId?.gender)}</div>
-                <div>{formatDate(booking.appointmentDate)}</div>
-                <div className="text-indigo-600 font-medium">
-                  {getTimeSlotText(booking.slot)}
-                </div>
-                <div>{booking.serviceTypeId?.name}</div>
-                <div>
-                  {/* Hiển thị trạng thái dạng badge, không cho chọn */}
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(booking.status)}`}>
-                    {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.icon}
-                    {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.label}
-                  </span>
-                </div>
-                <div className="flex justify-end">
-                  {booking.status === 1 && (
+            <div className="overflow-y-auto max-h-[600px]">
+              {filteredBookings.map((booking) => (
+                <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
+                  <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
+                  <div>{getGenderText(booking.customerId?.gender)}</div>
+                  <div>{formatDate(booking.appointmentDate)}</div>
+                  <div className="text-indigo-600 font-medium">
+                    {getTimeSlotText(booking.slot)}
+                  </div>
+                  <div>{booking.serviceTypeId?.name}</div>
+                  <div>
+                    {/* Hiển thị trạng thái dạng badge, không cho chọn */}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(booking.status)}`}>
+                      {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.icon}
+                      {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.label}
+                    </span>
+                  </div>
+                  <div className="flex justify-end">
+                    {booking.status === 1 && (
+                      <button
+                        onClick={() => {
+                          setSelectedAppointment(booking);
+                          setShowResultModal(true);
+                        }}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                        title="Gửi kết quả xét nghiệm"
+                      >
+                        <FileText size={16} />
+                      </button>
+                    )}
                     <button
-                      onClick={() => {
-                        setSelectedAppointment(booking);
-                        setShowResultModal(true);
-                      }}
-                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      title="Gửi kết quả xét nghiệm"
+                      onClick={() => handleViewDetail(booking)}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Xem chi tiết"
                     >
-                      <FileText size={16} />
+                      <Eye size={16} />
                     </button>
-                  )}
-                  <button
-                    onClick={() => handleViewDetail(booking)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    title="Xem chi tiết"
-                  >
-                    <Eye size={16} />
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
             </div>
           </>
         )}

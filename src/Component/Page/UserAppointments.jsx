@@ -120,26 +120,6 @@ export default function UserAppointments() {
         fetchAppointments();
     }, [user, navigate, showToast]);
 
-    // Lấy danh sách các booking đã đánh giá khi load component
-    useEffect(() => {
-        if (!user || !user.id) {
-            console.log('user hoặc user.id bị thiếu:', user);
-            return;
-        }
-        const fetchUserRatings = async () => {
-            try {
-                console.log('Gọi API rating với user.id:', user.id);
-                const res = await api.get(`/api/rating/userID/${user.id}`);
-                if (Array.isArray(res.data)) {
-                    setRatedBookingIds(res.data.map(r => r.serviceBookingId?.id));
-                }
-            } catch (err) {
-                console.error('Lỗi khi lấy rating:', err);
-            }
-        };
-        fetchUserRatings();
-    }, [user]);
-
     // Kiểm tra đã đánh giá chưa
     const isAlreadyRated = (bookingId) => ratedBookingIds.includes(bookingId);
 
