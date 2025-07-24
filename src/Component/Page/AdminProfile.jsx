@@ -1,7 +1,7 @@
 import { useAuth } from "../Auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper, HomeIcon, XCircle, CheckCircle2, Video } from "lucide-react";
+import { Bell, User, LogOut, FileText, Users, BarChart2, Settings, HelpCircle, Star, Briefcase, CalendarDays, ClipboardCheck, Newspaper, HomeIcon, XCircle, CheckCircle2, Video, CreditCard } from "lucide-react";
 import { Search, Users as PeopleIcon } from "lucide-react";
 import api from '../config/axios';
 import { 
@@ -1685,6 +1685,130 @@ const TestResultManagementComponent = () => {
         </div>
     );
 };
+const STATUS_LABELS = {
+  SUCCESS: { label: "Thành công", color: "bg-green-100 text-green-700" },
+  PENDING: { label: "Đang xử lý", color: "bg-yellow-100 text-yellow-700" },
+  FAILED:  { label: "Thất bại", color: "bg-red-100 text-red-700" },
+};
+
+const PaymentManagementComponent = () => {
+  const [payments, setPayments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("ALL");
+
+  const fetchPaymentList = async () => {
+    setLoading(true);
+    try {
+      // Lấy danh sách booking/servicebooking
+      const res = await api.get("/api/servicebookings");
+      const bookings = res.data || [];
+      // Chỉ lấy booking có orderId (đã thanh toán)
+      const paymentBookings = bookings.filter(b => b.orderId);
+
+      // Lấy trạng thái từng giao dịch
+      const detailedPayments = await Promise.all(
+        paymentBookings.map(async (item) => {
+          try {
+            const statusRes = await api.get(`/payment/vnpay/status/${item.orderId}`);
+            return {
+              ...statusRes.data,
+              customerName: item.customerId?.name || "N/A",
+            };
+          } catch {
+            return {
+              orderId: item.orderId,
+              customerName: item.customerId?.name || "N/A",
+              transactionStatus: "FAILED",
+              message: "Không lấy được trạng thái",
+            };
+          }
+        })
+      );
+      setPayments(detailedPayments);
+    } catch {
+      setPayments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPaymentList();
+  }, []);
+
+  // Filter payments theo trạng thái
+  const filteredPayments = payments.filter((p) => {
+    if (filter === "ALL") return true;
+    if (filter === "SUCCESS") return p.transactionStatus === "SUCCESS";
+    if (filter === "PENDING") return p.transactionStatus === "PENDING";
+    if (filter === "FAILED")  return p.transactionStatus === "FAILED";
+    return true;
+  });
+
+  return (
+    <div className="bg-white rounded-xl shadow p-6 mb-8">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-semibold text-gray-800">Quản lý thanh toán</h2>
+        <div className="flex gap-2">
+          <button
+            className={`px-3 py-1 rounded ${filter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
+            onClick={() => setFilter("ALL")}
+          >Tất cả</button>
+          <button
+            className={`px-3 py-1 rounded ${filter === "PENDING" ? "bg-yellow-500 text-white" : "bg-gray-100"}`}
+            onClick={() => setFilter("PENDING")}
+          >Đang xử lý</button>
+          <button
+            className={`px-3 py-1 rounded ${filter === "SUCCESS" ? "bg-green-600 text-white" : "bg-gray-100"}`}
+            onClick={() => setFilter("SUCCESS")}
+          >Thành công</button>
+          <button
+            className={`px-3 py-1 rounded ${filter === "FAILED" ? "bg-red-600 text-white" : "bg-gray-100"}`}
+            onClick={() => setFilter("FAILED")}
+          >Thất bại</button>
+        </div>
+      </div>
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-sm text-left">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-4 py-3 font-semibold text-gray-700">Order ID</th>
+              <th className="font-semibold text-gray-700">Khách hàng</th>
+              <th className="font-semibold text-gray-700">Số tiền</th>
+              <th className="font-semibold text-gray-700">Trạng thái</th>
+              <th className="font-semibold text-gray-700">Ngày tạo</th>
+              <th className="font-semibold text-gray-700">Mã giao dịch</th>
+              <th className="font-semibold text-gray-700">Ghi chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={7} className="text-center py-6">Đang tải...</td></tr>
+            ) : filteredPayments.length === 0 ? (
+              <tr><td colSpan={7} className="text-center py-6 text-gray-400">Không có giao dịch.</td></tr>
+            ) : (
+              filteredPayments.map((p) => (
+                <tr key={p.orderId} className="border-b hover:bg-gray-50">
+                  <td className="px-4 py-3">{p.orderId}</td>
+                  <td>{p.customerName}</td>
+                  <td>{p.amount?.toLocaleString("vi-VN")} VNĐ</td>
+                  <td>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_LABELS[p.transactionStatus]?.color || "bg-gray-200 text-gray-600"}`}>
+                      {STATUS_LABELS[p.transactionStatus]?.label || p.transactionStatus || "Không xác định"}
+                    </span>
+                  </td>
+                  <td>{p.createDate ? new Date(p.createDate).toLocaleString("vi-VN") : "N/A"}</td>
+                  <td>{p.transactionId || "N/A"}</td>
+                  <td>{p.message || ""}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
 
 const FeedbackManagementComponent = () => {
     const [ratings, setRatings] = useState([]);
@@ -2840,6 +2964,8 @@ export default function AdminProfile() {
                 return <PostManagementComponent />;
             case 'testResults':
                 return <TestResultManagementComponent />;
+            case 'payments':
+                return <PaymentManagementComponent />;
             case 'feedback':
                 return <FeedbackManagementComponent />;
             case 'reports':
@@ -2944,6 +3070,13 @@ export default function AdminProfile() {
                         }`}>
                         <Video size={18} />
                         <span>Online Consulting</span>
+                        </button>
+                        <button onClick={() => setActiveView('payments')} 
+                        className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
+                            activeView === 'payments' ? 'font-semibold text-blue-700 bg-blue-100' : ''
+                        }`}>
+                        <CreditCard size={18} />
+                        <span>Payments</span>
                         </button>
                         <button onClick={() => setActiveView('posts')} 
                         className={`flex items-center gap-3 px-4 py-2 rounded-xl hover:bg-blue-50 ${
