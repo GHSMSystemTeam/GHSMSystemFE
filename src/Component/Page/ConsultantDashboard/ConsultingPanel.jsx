@@ -95,6 +95,36 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
             booking.consultantId &&
             String(booking.consultantId.id) === String(user.id)
         );
+      // TỰ ĐỘNG HỦY các booking quá hạn hôm nay và status === 0
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // Dùng Promise.all để xóa đồng thời các booking quá hạn
+      const expiredBookings = consultBookings.filter(
+        booking =>
+          booking.status === 0 &&
+          new Date(booking.appointmentDate) < today
+      );
+
+      if (expiredBookings.length > 0) {
+        await Promise.all(
+          expiredBookings.map(async (booking) => {
+            try {
+              await api.delete(`/api/booking/${booking.id}`);
+            } catch (err) {
+              // Có thể log lỗi nếu cần
+            }
+          })
+        );
+        // Sau khi xóa, loại bỏ các booking đã bị xóa khỏi danh sách
+        consultBookings = consultBookings.filter(
+          booking =>
+            !(
+              booking.status === 0 &&
+              new Date(booking.appointmentDate) < today
+            )
+        );
+      }
       setBookings(consultBookings);
     } catch (err) {
       setError("Không thể tải danh sách lịch tư vấn.");
