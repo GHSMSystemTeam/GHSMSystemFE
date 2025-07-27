@@ -5,7 +5,13 @@ import { useToast } from '../../Toast/ToastProvider';
 import { useAuth } from '../../Auth/AuthContext';
 
 const STATUS_OPTIONS = [
+  { value: 0, label: 'Chờ xác nhận', icon: <Clock size={14} className="mr-1 text-yellow-600" /> },
   { value: 1, label: 'Đã xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
+  { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
+];
+
+const STATUS_ACTIONS = [
+  { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> },
   { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> },
 ];
 
@@ -26,6 +32,7 @@ function getGenderText(gender) {
 
 function getStatusClass(status) {
   switch (status) {
+    case 0: return 'bg-yellow-100 text-yellow-800';
     case 1: return 'bg-green-100 text-green-800';
     case 2: return 'bg-blue-100 text-blue-800';
     case 3: return 'bg-red-100 text-red-800';
@@ -62,6 +69,8 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
   const [showCompleteConfirmModal, setShowCompleteConfirmModal] = useState(false);
   const [bookingToComplete, setBookingToComplete] = useState(null);
 
+  const [openDropdown, setOpenDropdown] = useState(null);
+
   // Lấy danh sách dịch vụ xét nghiệm có typeCode = 1
   useEffect(() => {
     const fetchServiceTypes = async () => {
@@ -87,7 +96,6 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       // Lọc ra các booking có serviceTypeId.typeCode === 1 (dịch vụ xét nghiệm)
       const examBookings = (response.data || [])
         .filter(booking => booking.serviceTypeId && booking.serviceTypeId.typeCode === 1)
-        .map(b => ({ ...b, status: b.status === 0 ? 1 : b.status }));
 
       setBookings(examBookings);
       setFilteredBookings(examBookings);
@@ -106,7 +114,6 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       return;
     }
 
-
     try {
       setSubmittingResult(true);
 
@@ -124,10 +131,19 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       // Cập nhật trạng thái của lịch hẹn thành "Hoàn thành" (status 2)
       await api.put(`/api/servicebooking/status/${selectedAppointment.id}/2`);
 
-      // Cập nhật UI
-      setBookings(prev =>
+      // Cập nhật cả bookings và filteredBookings
+      const updatedBookings = bookings.map(b => (b.id === selectedAppointment.id ? { ...b, status: 2 } : b));
+      setBookings(updatedBookings);
+
+      // Cập nhật filteredBookings ngay lập tức
+      setFilteredBookings(prev =>
         prev.map(b => (b.id === selectedAppointment.id ? { ...b, status: 2 } : b))
       );
+
+      // Cập nhật selectedAppointment nếu đang mở modal chi tiết
+      if (selectedAppointment) {
+        setSelectedAppointment(prev => ({ ...prev, status: 2 }));
+      }
 
       showToast('Đã gửi kết quả xét nghiệm thành công!', 'success');
       setShowResultModal(false);
@@ -151,9 +167,10 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
 
   const getSortPriorityByStatus = (status) => {
     switch (status) {
+      case 0: return 1; // Chờ xác nhận - ưu tiên hàng đầu
       case 1: return 2; // Đã xác nhận - ưu tiên thứ hai
       case 2: return 3; // Hoàn thành - ưu tiên thứ ba
-      default: return 5;
+      default: return 4;
     }
   };
 
@@ -207,32 +224,61 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     setFilteredBookings(filtered);
   }, [bookings, searchTerm, statusFilter, dateFilter]);
 
-  const handleStatusChange = async (id, statusNumber) => {
-    // Nếu đang chuyển sang trạng thái "Hoàn thành" (status 2), hiển thị modal xác nhận
-    if (statusNumber === 2) {
-      const bookingToUpdate = bookings.find(b => b.id === id);
-      setBookingToComplete(bookingToUpdate);
-      setShowCompleteConfirmModal(true);
-      return; // Dừng lại và chờ xác nhận từ modal
-    }
+  const getStatusDisplay = (status) => {
+    return STATUS_OPTIONS.find(opt => opt.value === status) || STATUS_OPTIONS[0];
+  };
 
-    // Các trạng thái khác xử lý như cũ
-    if (!window.confirm('Bạn có chắc chắn muốn cập nhật trạng thái lịch xét nghiệm này?')) {
+  // Thêm useEffect để handle click outside dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openDropdown && !event.target.closest('.relative')) {
+        setOpenDropdown(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [openDropdown]);
+
+  const handleStatusChange = async (id, statusNumber) => {
+    const currentBooking = bookings.find(b => b.id === id);
+
+    if (currentBooking.status === 0 && statusNumber === 1) {
+      if (!window.confirm('Bạn có chắc chắn muốn xác nhận lịch xét nghiệm này?')) {
+        return;
+      }
+    } else if (currentBooking.status === 1 && statusNumber === 2) {
+      setBookingToComplete(currentBooking);
+      setShowCompleteConfirmModal(true);
+      return;
+    } else {
+      showToast('Không thể thay đổi trạng thái này!', 'error');
       return;
     }
 
     setUpdatingId(id);
     try {
       await api.put(`/api/servicebooking/status/${id}/${statusNumber}`);
-      setBookings(prev =>
+
+      // Cập nhật cả bookings và filteredBookings
+      const updatedBookings = bookings.map(b => (b.id === id ? { ...b, status: statusNumber } : b));
+      setBookings(updatedBookings);
+
+      // Cập nhật filteredBookings ngay lập tức
+      setFilteredBookings(prev =>
         prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
       );
-      showToast('Cập nhật trạng thái thành công!', 'success');
+
+      const statusText = getStatusDisplay(statusNumber)?.label;
+      showToast(`Đã cập nhật trạng thái thành "${statusText}"!`, 'success');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
       showToast(errorMessage, 'error');
     } finally {
       setUpdatingId(null);
+      setOpenDropdown(null); // Đóng dropdown
     }
   };
 
@@ -244,9 +290,16 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
 
     try {
       await api.put(`/api/servicebooking/status/${id}/2`);
-      setBookings(prev =>
+
+      // Cập nhật cả bookings và filteredBookings
+      const updatedBookings = bookings.map(b => (b.id === id ? { ...b, status: 2 } : b));
+      setBookings(updatedBookings);
+
+      // Cập nhật filteredBookings ngay lập tức
+      setFilteredBookings(prev =>
         prev.map(b => (b.id === id ? { ...b, status: 2 } : b))
       );
+
       showToast('Đã chuyển trạng thái thành "Hoàn thành"!', 'success');
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Cập nhật trạng thái thất bại!';
@@ -320,6 +373,26 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
     );
   }
 
+  const getStatusActions = (currentStatus) => {
+    switch (currentStatus) {
+      case 0: // Chờ xác nhận - chỉ có thể "Xác nhận"
+        return [
+          { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> }
+        ];
+      case 1: // Đã xác nhận - có thể "Hoàn thành" trực tiếp
+        return [
+          { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> }
+        ];
+      case 2: // Đã hoàn thành - không có action nào
+        return [];
+      default:
+        return [];
+    }
+  };
+
+
+
+
   return (
     <div className="space-y-6">
 
@@ -391,7 +464,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
       <div className="bg-white rounded-lg shadow overflow-hidden">
         {filteredBookings.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            Không có lịch xét nghiệm nào
+            {bookings.length > 0 ? "Không tìm thấy lịch xét nghiệm phù hợp" : "Không có lịch xét nghiệm nào"}
           </div>
         ) : (
           <>
@@ -415,13 +488,82 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                   </div>
                   <div>{booking.serviceTypeId?.name}</div>
                   <div>
-                    {/* Hiển thị trạng thái dạng badge, không cho chọn */}
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(booking.status)}`}>
-                      {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.icon}
-                      {STATUS_OPTIONS.find(opt => opt.value === booking.status)?.label}
-                    </span>
+                    {/* Trạng thái với dropdown giống ConsultingPanel */}
+                    <div className="relative">
+                      <div
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 ${getStatusClass(booking.status)} ${getStatusActions(booking.status).length > 0 ? 'hover:ring-2 hover:ring-blue-300 hover:shadow-md' : ''}`}
+                        onClick={() => {
+                          if (getStatusActions(booking.status).length > 0) {
+                            const newDropdown = openDropdown === booking.id ? null : booking.id;
+                            setOpenDropdown(newDropdown);
+                          }
+                        }}
+                      >
+                        {getStatusDisplay(booking.status)?.icon}
+                        {getStatusDisplay(booking.status)?.label}
+                        {getStatusActions(booking.status).length > 0 && (
+                          <svg
+                            className={`ml-1 h-3 w-3 text-gray-500 hover:text-gray-700 transition-all duration-200 ${openDropdown === booking.id ? 'rotate-180 text-blue-600' : ''
+                              }`}
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        )}
+                      </div>
+
+                      {getStatusActions(booking.status).length > 0 && openDropdown === booking.id && (
+                        <div
+                          className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl"
+                          style={{ zIndex: 9999 }}
+                        >
+                          <div className="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-200"></div>
+                          <div className="absolute -top-1 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
+
+                          <div className="py-1">
+                            <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b rounded-t-lg flex items-center">
+                              <Clock size={12} className="mr-1" />
+                              Thao tác với lịch hẹn
+                            </div>
+                            {getStatusActions(booking.status).map(action => (
+                              <button
+                                key={action.value}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleStatusChange(booking.id, action.value);
+                                }}
+                                disabled={updatingId === booking.id}
+                                className={`w-full px-3 py-3 text-left text-sm transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${action.value === 1
+                                  ? 'hover:bg-green-50 hover:text-green-700 hover:pl-4'
+                                  : 'hover:bg-blue-50 hover:text-blue-700 hover:pl-4'
+                                  }`}
+                              >
+                                <div className="flex items-center flex-1">
+                                  <div className="mr-2">
+                                    {action.icon}
+                                  </div>
+                                  <div>
+                                    <div className="font-medium">{action.label}</div>
+                                    <div className="text-xs text-gray-500">
+                                      {action.value === 1 ? 'Xác nhận lịch xét nghiệm' : 'Hoàn thành xét nghiệm'}
+                                    </div>
+                                  </div>
+                                </div>
+                                {updatingId === booking.id && (
+                                  <div className={`w-4 h-4 border-2 ${action.value === 1 ? 'border-green-600' : 'border-blue-600'
+                                    } border-t-transparent rounded-full animate-spin`}></div>
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-end">
+                    {/* Chỉ hiển thị nút gửi kết quả khi status = 1 (đã xác nhận) */}
                     {booking.status === 1 && (
                       <button
                         onClick={() => {

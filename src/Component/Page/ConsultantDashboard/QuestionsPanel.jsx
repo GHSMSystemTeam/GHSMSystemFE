@@ -429,113 +429,121 @@ export default function QuestionsPanel({ questions: externalQuestions, loading: 
           <div className="p-4">
             <h2 className="text-xl font-bold text-gray-800 mb-4">Danh sách câu hỏi</h2>
             {filteredQuestions.length > 0 ? (
-              <div className="space-y-4">
-                {filteredQuestions.map(question => (
-                  <div
-                    key={question.id}
-                    className="border border-gray-100 p-4 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="mb-2 flex items-center justify-between">
-                      <button
-                        onClick={() => setSelectedQuestion(question)}
-                        className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left flex items-center"
-                      >
-                        {question.title}
-                        {question.edited && (
-                          <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
-                        )}
-                      </button>
+              <>
+                {/* Header information - CỐ ĐỊNH */}
+                <div className="mb-4 text-sm text-gray-600">
+                  Tìm thấy {filteredQuestions.length} câu hỏi
+                </div>
 
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center text-gray-500">
-                          <MessageSquare className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{question.answers?.length || 0}</span>
+                {/* Questions list - CHỈ PHẦN NÀY CÓ SCROLL */}
+                <div className="max-h-96 overflow-y-auto space-y-4">
+                  {filteredQuestions.map(question => (
+                    <div
+                      key={question.id}
+                      className="border border-gray-100 p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="mb-2 flex items-center justify-between">
+                        <button
+                          onClick={() => setSelectedQuestion(question)}
+                          className="text-lg font-medium text-blue-700 hover:text-blue-800 text-left flex items-center"
+                        >
+                          {question.title}
+                          {question.edited && (
+                            <span className="ml-2 text-xs text-gray-500 font-normal">(đã chỉnh sửa)</span>
+                          )}
+                        </button>
+
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center text-gray-500">
+                            <MessageSquare className="h-4 w-4 mr-1" />
+                            <span className="text-sm">{question.answers?.length || 0}</span>
+                          </div>
+
+                          <div className="flex items-center text-gray-500">
+                            <Eye className="h-4 w-4 mr-1" />
+                            <span className="text-sm">{question.views || 0}</span>
+                          </div>
+
+                          {getStatusBadge(question.status)}
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 line-clamp-2 mb-3">
+                        {(question.content || question.question)?.replace(/\(edited\)/gi, '').trim()}
+                      </p>
+
+                      {question.tags && question.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {question.tags.map((tag, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="mt-3 flex items-center justify-between">
+                        <div className="flex items-center text-gray-500 text-sm">
+                          <User className="h-3 w-3 mr-1" />
+                          <span className="mr-3">{question.userName}</span>
+                          <Calendar className="h-3 w-3 mr-1" />
+                          <span>{formatDate(question.date)}</span>
                         </div>
 
-                        <div className="flex items-center text-gray-500">
-                          <Eye className="h-4 w-4 mr-1" />
-                          <span className="text-sm">{question.views || 0}</span>
-                        </div>
-
-                        {getStatusBadge(question.status)}
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 line-clamp-2 mb-3">
-                      {(question.content || question.question)?.replace(/\(edited\)/gi, '').trim()}
-                    </p>
-
-                    {question.tags && question.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {question.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className="bg-blue-50 text-blue-700 text-xs px-2 py-0.5 rounded-full"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="mt-3 flex items-center justify-between">
-                      <div className="flex items-center text-gray-500 text-sm">
-                        <User className="h-3 w-3 mr-1" />
-                        <span className="mr-3">{question.userName}</span>
-                        <Calendar className="h-3 w-3 mr-1" />
-                        <span>{formatDate(question.date)}</span>
+                        <button
+                          onClick={() => setSelectedQuestion(question)}
+                          className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 flex items-center gap-2 text-sm"
+                        >
+                          <Reply size={14} />
+                          Trả lời
+                        </button>
                       </div>
 
-                      <button
-                        onClick={() => setSelectedQuestion(question)}
-                        className="bg-blue-600 text-white px-4 py-1.5 rounded hover:bg-blue-700 flex items-center gap-2 text-sm"
-                      >
-                        <Reply size={14} />
-                        Trả lời
-                      </button>
-                    </div>
-
-                    {/* Hiển thị câu trả lời ngay dưới câu hỏi */}
-                    {question.answers && question.answers.length > 0 && (
-                      <div className="mt-3">
-                        {!expandedAnswers[question.id] ? (
-                          <button
-                            onClick={() => toggleAnswerVisibility(question.id)}
-                            className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
-                          >
-                            {question.answers.length > 1 ?
-                              `Xem ${question.answers.length} câu trả lời của bác sĩ` :
-                              'Xem câu trả lời của bác sĩ'}
-                            <ChevronDown className="h-4 w-4 ml-1" />
-                          </button>
-                        ) : (
-                          <>
+                      {/* Hiển thị câu trả lời ngay dưới câu hỏi */}
+                      {question.answers && question.answers.length > 0 && (
+                        <div className="mt-3">
+                          {!expandedAnswers[question.id] ? (
                             <button
                               onClick={() => toggleAnswerVisibility(question.id)}
-                              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center mb-3"
+                              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
                             >
-                              Ẩn câu trả lời
-                              <ChevronUp className="h-4 w-4 ml-1" />
+                              {question.answers.length > 1 ?
+                                `Xem ${question.answers.length} câu trả lời của bác sĩ` :
+                                'Xem câu trả lời của bác sĩ'}
+                              <ChevronDown className="h-4 w-4 ml-1" />
                             </button>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => toggleAnswerVisibility(question.id)}
+                                className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center mb-3"
+                              >
+                                Ẩn câu trả lời
+                                <ChevronUp className="h-4 w-4 ml-1" />
+                              </button>
 
-                            <div className="space-y-3 pl-4 border-l-2 border-blue-100">
-                              {question.answers.map(answer => (
-                                <div key={answer.id} className="bg-blue-50 rounded-lg p-3">
-                                  <div className="flex justify-between items-start mb-1">
-                                    <div className="font-medium text-blue-800 text-sm">{answer.doctorName}</div>
-                                    <div className="text-xs text-gray-500">{formatDate(answer.date)}</div>
+                              <div className="space-y-3 pl-4 border-l-2 border-blue-100">
+                                {question.answers.map(answer => (
+                                  <div key={answer.id} className="bg-blue-50 rounded-lg p-3">
+                                    <div className="flex justify-between items-start mb-1">
+                                      <div className="font-medium text-blue-800 text-sm">{answer.doctorName}</div>
+                                      <div className="text-xs text-gray-500">{formatDate(answer.date)}</div>
+                                    </div>
+                                    <p className="text-gray-700 text-sm mb-1">{answer.content}</p>
                                   </div>
-                                  <p className="text-gray-700 text-sm mb-1">{answer.content}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </>
             ) : (
               <div className="text-center py-8">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

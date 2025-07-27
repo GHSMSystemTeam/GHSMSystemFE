@@ -10,7 +10,7 @@ import {
     Package, Plus, Eye, X, XCircle,
     Stethoscope, Trash2, Clock, User, UserRound,
     ClipboardList, Info, Download, CheckCircle,
-    Check, Star, FileText, Video
+    Check, Star, FileText, Video, CreditCard, QrCode
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '../Toast/ToastProvider';
@@ -83,28 +83,46 @@ export default function UserAppointments() {
             setLoading(true);
             try {
                 const res = await api.get(`/api/servicebookings/customer/${user.id}`);
-                // const allBookings = (res.data || []).map(b => ({
-                //     ...b,
-                //     status: b.status === 0 ? 1 : b.status
-                // }));
                 const allBookings = (res.data || []);
-                // ...lọc và setAppointments như cũ...
                 const uniqueBookings = allBookings.filter((booking, index, self) =>
                     index === self.findIndex(b => b.id === booking.id)
                 );
 
-                const testBookings = uniqueBookings.filter(
+                // Kiểm tra trạng thái thanh toán cho từng lịch
+                const bookingsWithPayment = await Promise.all(
+                    uniqueBookings.map(async (booking) => {
+                        if (!booking.orderId) {
+                            console.log('Booking thiếu orderId:', booking);
+                            return { ...booking, isPaid: false };
+                        }
+                        try {
+                            const payRes = await api.get(`/payment/vnpay/status/${booking.orderId}`);
+                            console.log('Kết quả kiểm tra thanh toán:', booking.orderId, payRes.data);
+                            if (
+                                payRes.data &&
+                                (payRes.data.resultCode === "00" || payRes.data.transactionStatus === "SUCCESS")
+                            ) {
+                                return { ...booking, isPaid: true };
+                            }
+                        } catch (e) {
+                            console.error('Lỗi kiểm tra thanh toán:', booking.orderId, e);
+                        }
+                        return { ...booking, isPaid: false };
+                    })
+                );
+
+                const testBookings = bookingsWithPayment.filter(
                     (booking) =>
                         booking.serviceTypeId &&
                         booking.serviceTypeId.typeCode === 1 &&
-                        booking.status !== 2 // Ẩn lịch đã hoàn thành
+                        booking.status !== 2
                 );
 
-                const medicalBookings = uniqueBookings.filter(
+                const medicalBookings = bookingsWithPayment.filter(
                     (booking) =>
                         booking.serviceTypeId &&
                         booking.serviceTypeId.typeCode === 0 &&
-                        booking.status !== 2 // Ẩn lịch đã hoàn thành
+                        booking.status !== 2
                 );
 
                 setAppointments({
@@ -303,6 +321,111 @@ export default function UserAppointments() {
         }
     };
 
+    const canPayAppointment = (appointment) => {
+        // Giả sử có trường isPaid trong appointment object
+        // Hoặc có thể kiểm tra status = 0 (chờ xác nhận) hoặc 1 (đã xác nhận) và chưa thanh toán
+        return (appointment.status === 0 || appointment.status === 1) && !appointment.isPaid;
+    };
+
+    const generatePaymentQR = async (appointment) => {
+        if (!appointment || !user) {
+            showToast('Thông tin lịch hẹn không hợp lệ', 'error');
+            return;
+        }
+
+        setLoadingPayment(true);
+        setPaymentError('');
+
+        try {
+            const response = await api.post(
+                `/payment/vnpay/booking/${appointment.id}`,
+                null,
+                {
+                    params: { userId: user.id },
+                    headers: { Accept: 'image/png' },
+                    responseType: 'blob', // Quan trọng!
+                }
+            );
+
+            // Tạo URL từ blob để hiển thị ảnh QR
+            const qrUrl = URL.createObjectURL(response.data);
+            setQrCodeUrl(qrUrl);
+            setAppointmentToPay(appointment);
+            setShowPaymentModal(true);
+            showToast('Đã tạo mã QR thanh toán', 'success');
+        } catch (error) {
+            console.error('Payment QR generation error:', error);
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                'Không thể tạo mã QR thanh toán. Vui lòng thử lại!';
+            setPaymentError(errorMessage);
+            showToast(errorMessage, 'error');
+        } finally {
+            setLoadingPayment(false);
+        }
+    };
+
+    // Đóng modal thanh toán
+    const closePaymentModal = () => {
+        setShowPaymentModal(false);
+        setAppointmentToPay(null);
+        setQrCodeUrl('');
+        setPaymentError('');
+    };
+
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [appointmentToPay, setAppointmentToPay] = useState(null);
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [loadingPayment, setLoadingPayment] = useState(false);
+    const [paymentError, setPaymentError] = useState('');
+
+    const checkPaymentStatus = async (appointmentId) => {
+        try {
+            const response = await api.get(`/payment/status/${appointmentId}`);
+
+            if (response.data && response.data.isPaid) {
+                // Cập nhật trạng thái thanh toán trong danh sách lịch hẹn
+                setAppointments(prev => ({
+                    test: prev.test.map(booking =>
+                        booking.id === appointmentId ? { ...booking, isPaid: true } : booking
+                    ),
+                    medical: prev.medical.map(booking =>
+                        booking.id === appointmentId ? { ...booking, isPaid: true } : booking
+                    )
+                }));
+
+                showToast('Thanh toán đã được xác nhận!', 'success');
+                closePaymentModal();
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('Payment status check error:', error);
+            return false;
+        }
+    };
+
+    useEffect(() => {
+        let paymentCheckInterval;
+
+        if (showPaymentModal && appointmentToPay) {
+            paymentCheckInterval = setInterval(() => {
+                checkPaymentStatus(appointmentToPay.id)
+                    .then(isPaid => {
+                        if (isPaid) {
+                            clearInterval(paymentCheckInterval);
+                        }
+                    });
+            }, 5000); // Kiểm tra mỗi 5 giây
+        }
+
+        return () => {
+            if (paymentCheckInterval) {
+                clearInterval(paymentCheckInterval);
+            }
+        };
+    }, [showPaymentModal, appointmentToPay])
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 pt-24 mt-10">
             <Header />
@@ -383,6 +506,14 @@ export default function UserAppointments() {
                                                 <p className="text-sm text-blue-700 font-medium">
                                                     Giá: {booking.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
                                                 </p>
+
+                                                {booking.isPaid && (
+                                                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
+                                                        <CheckCircle size={12} className="mr-1" /> Đã thanh toán
+                                                    </span>
+                                                )}
+
+
                                             </div>
 
                                             {/* DateTime */}
@@ -415,6 +546,22 @@ export default function UserAppointments() {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
+
+                                                    {/* Nút thanh toán */}
+                                                    {canPayAppointment(booking) && (
+                                                        <button
+                                                            onClick={() => generatePaymentQR(booking)}
+                                                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                            title="Thanh toán"
+                                                            disabled={loadingPayment}
+                                                        >
+                                                            {loadingPayment && appointmentToPay?.id === booking.id ? (
+                                                                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                                                            ) : (
+                                                                <CreditCard size={16} />
+                                                            )}
+                                                        </button>
+                                                    )}
                                                     {/* THÊM: Nút tham gia video call */}
                                                     {canJoinVideoCall(booking) && (
                                                         <button
@@ -564,6 +711,22 @@ export default function UserAppointments() {
                                                     >
                                                         <Eye size={16} />
                                                     </button>
+
+                                                    {/* Nút thanh toán */}
+                                                    {canPayAppointment(booking) && (
+                                                        <button
+                                                            onClick={() => generatePaymentQR(booking)}
+                                                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                                                            title="Thanh toán"
+                                                            disabled={loadingPayment}
+                                                        >
+                                                            {loadingPayment && appointmentToPay?.id === booking.id ? (
+                                                                <div className="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                                                            ) : (
+                                                                <CreditCard size={16} />
+                                                            )}
+                                                        </button>
+                                                    )}
 
                                                     {/* THÊM: Nút đánh giá cho xét nghiệm khi đã hoàn thành và có consultantId */}
                                                     {canJoinVideoCall(booking) && booking.consultantId && (
@@ -1088,6 +1251,89 @@ export default function UserAppointments() {
                                     Đóng
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Modal thanh toán QR */}
+            {showPaymentModal && appointmentToPay && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+                        <div className="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-4 rounded-t-2xl">
+                            <div className="flex justify-between items-center">
+                                <h3 className="text-xl font-bold flex items-center">
+                                    <QrCode className="mr-2" size={20} /> Thanh toán bằng VNPay
+                                </h3>
+                                <button
+                                    onClick={closePaymentModal}
+                                    className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            {paymentError ? (
+                                <div className="text-center p-4 bg-red-50 text-red-600 rounded-lg border border-red-100">
+                                    <p>{paymentError}</p>
+                                    <button
+                                        onClick={closePaymentModal}
+                                        className="mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                    >
+                                        Đóng
+                                    </button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="text-center">
+                                        <div className="mb-4">
+                                            <h4 className="font-semibold text-lg text-gray-800">
+                                                {appointmentToPay.serviceTypeId?.name}
+                                            </h4>
+                                            <p className="text-sm text-gray-600">
+                                                Ngày: {new Date(appointmentToPay.appointmentDate).toLocaleDateString('vi-VN')} |
+                                                Giờ: {getSlotTimeRange(appointmentToPay.slot)}
+                                            </p>
+                                            <div className="mt-2 text-purple-700 font-semibold">
+                                                Số tiền: {appointmentToPay.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                            <p className="mb-2 text-sm text-gray-600">Quét mã QR bằng ứng dụng VNPay để thanh toán</p>
+                                            {qrCodeUrl ? (
+                                                <div className="flex justify-center">
+                                                    <img
+                                                        src={qrCodeUrl}
+                                                        alt="VNPay QR Code"
+                                                        className="h-64 w-64 object-contain"
+                                                    />
+                                                </div>
+                                            ) : (
+                                                <div className="flex justify-center items-center h-64">
+                                                    <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="bg-yellow-50 p-3 mt-4 rounded-lg text-sm text-yellow-800 border border-yellow-200">
+                                            <p>Sau khi thanh toán thành công, trạng thái đơn hàng của bạn sẽ được cập nhật tự động.</p>
+                                        </div>
+
+                                    </div>
+
+                                    <div className="flex justify-center">
+                                        <button
+                                            onClick={closePaymentModal}
+                                            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                                        >
+                                            Đóng
+                                        </button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>

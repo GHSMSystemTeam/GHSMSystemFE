@@ -106,7 +106,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   useEffect(() => {
     fetchConsultBookings();
   }, [user]);
-    // Thêm useEffect để handle click outside
+  // Thêm useEffect để handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openDropdown && !event.target.closest('.relative')) {
@@ -130,21 +130,21 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
     }
   };
   const getStatusActions = (currentStatus) => {
-      switch (currentStatus) {
-        case 0: // Chờ xác nhận - chỉ có thể "Xác nhận"
-          return [
-            { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> }
-          ];
-        case 1: // Đã xác nhận - chỉ có thể "Hoàn thành"
-          return [
-            { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> }
-          ];
-        case 2: // Đã hoàn thành - không có action nào
-          return [];
-        default:
-          return STATUS_ACTIONS;
-      }
-    };
+    switch (currentStatus) {
+      case 0: // Chờ xác nhận - chỉ có thể "Xác nhận"
+        return [
+          { value: 1, label: 'Xác nhận', icon: <CheckCircle size={14} className="mr-1 text-green-600" /> }
+        ];
+      case 1: // Đã xác nhận - chỉ có thể "Hoàn thành"
+        return [
+          { value: 2, label: 'Hoàn thành', icon: <Check size={14} className="mr-1 text-blue-600" /> }
+        ];
+      case 2: // Đã hoàn thành - không có action nào
+        return [];
+      default:
+        return STATUS_ACTIONS;
+    }
+  };
 
   // Thêm useEffect để lọc kết quả dựa trên các bộ lọc
   useEffect(() => {
@@ -198,7 +198,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
 
   const handleStatusChange = async (id, statusNumber) => {
     const currentBooking = bookings.find(b => b.id === id);
-    
+
     // Kiểm tra logic chuyển đổi status
     if (currentBooking.status === 0 && statusNumber === 1) {
       // Chờ xác nhận → Đã xác nhận
@@ -222,7 +222,7 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
       setBookings(prev =>
         prev.map(b => (b.id === id ? { ...b, status: statusNumber } : b))
       );
-      
+
       const statusText = getStatusDisplay(statusNumber)?.label;
       showToast(`Đã cập nhật trạng thái thành "${statusText}"!`, 'success');
     } catch (err) {
@@ -354,126 +354,112 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                 <div>Trạng thái</div>
                 <div className="text-right">Thao tác</div>
               </div>
-              {filteredBookings.map((booking) => ( // Thay đổi bookings thành filteredBookings
-                <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50">
-                  {/* Existing row content */}
-                  <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
-                  <div>{getGenderText(booking.customerId?.gender)}</div>
-                  <div>{new Date(booking.appointmentDate).toLocaleDateString('vi-VN', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                  })}</div>
-                  <div className="text-indigo-600 font-medium">
-                    {getTimeSlotText(booking.slot)}
-                  </div>
-                  <div>{booking.serviceTypeId?.name}</div>
-                 <div>
-                    {/* Hiển thị status hiện tại + click dropdown action */}
-                    <div className="relative">
-                      {/* Status display với click effect */}
-                      <div 
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 ${getStatusClass(booking.status)} ${getStatusActions(booking.status).length > 0 ? 'hover:ring-2 hover:ring-blue-300 hover:shadow-md' : ''}`}
-                        onClick={() => {
-                          console.log('Status clicked!', booking.id);
-                          console.log('Current openDropdown:', openDropdown);
-                          console.log('getStatusActions:', getStatusActions(booking.status));
-                          if (getStatusActions(booking.status).length > 0) {
-                            const newDropdown = openDropdown === booking.id ? null : booking.id;
-                            console.log('Setting openDropdown to:', newDropdown);
-                            setOpenDropdown(newDropdown);
-                          }
-                        }}
-                      >
-                        {getStatusDisplay(booking.status)?.icon}
-                        {getStatusDisplay(booking.status)?.label}
-                        {/* Icon dropdown chỉ hiện khi có actions */}
-                        {getStatusActions(booking.status).length > 0 && (
-                          <svg 
-                            className={`ml-1 h-3 w-3 text-gray-500 hover:text-gray-700 transition-all duration-200 ${
-                              openDropdown === booking.id ? 'rotate-180 text-blue-600' : ''
-                            }`} 
-                            fill="none" 
-                            viewBox="0 0 24 24" 
-                            stroke="currentColor"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
-                        )}
-                      </div>
-                      
-                      {/* Click dropdown với animation */}
-                      {getStatusActions(booking.status).length > 0 && openDropdown === booking.id && (
-                        <div 
-                          className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl"
-                          style={{ zIndex: 9999 }}
+              <div className="max-h-96 overflow-y-auto">
+                {filteredBookings.map((booking) => (
+                  <div key={booking.id} className="grid grid-cols-7 items-center p-4 border-b last:border-b-0 hover:bg-gray-50 transition-colors">
+                    <div className="font-medium text-gray-800">{booking.customerId?.name}</div>
+                    <div>{getGenderText(booking.customerId?.gender)}</div>
+                    <div>{new Date(booking.appointmentDate).toLocaleDateString('vi-VN', {
+                      year: 'numeric',
+                      month: '2-digit',
+                      day: '2-digit'
+                    })}</div>
+                    <div className="text-indigo-600 font-medium">
+                      {getTimeSlotText(booking.slot)}
+                    </div>
+                    <div>{booking.serviceTypeId?.name}</div>
+                    <div>
+                      {/* Status dropdown với overflow visible */}
+                      <div className="relative z-20">
+                        <div
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 ${getStatusClass(booking.status)} ${getStatusActions(booking.status).length > 0 ? 'hover:ring-2 hover:ring-blue-300 hover:shadow-md' : ''}`}
+                          onClick={() => {
+                            if (getStatusActions(booking.status).length > 0) {
+                              const newDropdown = openDropdown === booking.id ? null : booking.id;
+                              setOpenDropdown(newDropdown);
+                            }
+                          }}
                         >
-                          {/* Arrow pointer */}
-                          <div className="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-200"></div>
-                          <div className="absolute -top-1 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
-                          
-                          <div className="py-1">
-                            <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b rounded-t-lg flex items-center">
-                              <Clock size={12} className="mr-1" />
-                              Thao tác với lịch hẹn
-                            </div>
-                            {getStatusActions(booking.status).map(action => (
-                              <button
-                                key={action.value}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  console.log('Action clicked:', action.label);
-                                  handleStatusChange(booking.id, action.value);
-                                  setOpenDropdown(null); // Đóng dropdown
-                                }}
-                                disabled={updatingId === booking.id}
-                                className={`w-full px-3 py-3 text-left text-sm transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${
-                                  action.value === 1 
-                                    ? 'hover:bg-green-50 hover:text-green-700 hover:pl-4' 
+                          {getStatusDisplay(booking.status)?.icon}
+                          {getStatusDisplay(booking.status)?.label}
+                          {getStatusActions(booking.status).length > 0 && (
+                            <svg
+                              className={`ml-1 h-3 w-3 text-gray-500 hover:text-gray-700 transition-all duration-200 ${openDropdown === booking.id ? 'rotate-180 text-blue-600' : ''}`}
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          )}
+                        </div>
+
+                        {/* Dropdown menu */}
+                        {getStatusActions(booking.status).length > 0 && openDropdown === booking.id && (
+                          <div className="absolute top-full left-0 mt-2 w-56 bg-white border border-gray-200 rounded-lg shadow-xl z-50">
+                            {/* Arrow pointer */}
+                            <div className="absolute -top-2 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-gray-200"></div>
+                            <div className="absolute -top-1 left-4 w-0 h-0 border-l-4 border-r-4 border-b-4 border-l-transparent border-r-transparent border-b-white"></div>
+
+                            <div className="py-1">
+                              <div className="px-3 py-2 text-xs font-medium text-gray-500 bg-gray-50 border-b rounded-t-lg flex items-center">
+                                <Clock size={12} className="mr-1" />
+                                Thao tác với lịch hẹn
+                              </div>
+                              {getStatusActions(booking.status).map(action => (
+                                <button
+                                  key={action.value}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleStatusChange(booking.id, action.value);
+                                    setOpenDropdown(null);
+                                  }}
+                                  disabled={updatingId === booking.id}
+                                  className={`w-full px-3 py-3 text-left text-sm transition-all duration-200 flex items-center disabled:opacity-50 disabled:cursor-not-allowed ${action.value === 1
+                                    ? 'hover:bg-green-50 hover:text-green-700 hover:pl-4'
                                     : 'hover:bg-blue-50 hover:text-blue-700 hover:pl-4'
-                                }`}
-                              >
-                                <div className="flex items-center flex-1">
-                                  <div className="mr-2">
-                                    {action.icon}
-                                  </div>
-                                  <div>
-                                    <div className="font-medium">{action.label}</div>
-                                    <div className="text-xs text-gray-500">
-                                      {action.value === 1 ? 'Xác nhận và cho phép video call' : 'Kết thúc cuộc tư vấn'}
+                                    }`}
+                                >
+                                  <div className="flex items-center flex-1">
+                                    <div className="mr-2">{action.icon}</div>
+                                    <div>
+                                      <div className="font-medium">{action.label}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {action.value === 1 ? 'Xác nhận và cho phép video call' : 'Kết thúc cuộc tư vấn'}
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                                {updatingId === booking.id && (
-                                  <div className={`w-4 h-4 border-2 ${action.value === 1 ? 'border-green-600' : 'border-blue-600'} border-t-transparent rounded-full animate-spin`}></div>
-                                )}
-                              </button>
-                            ))}
+                                  {updatingId === booking.id && (
+                                    <div className={`w-4 h-4 border-2 ${action.value === 1 ? 'border-green-600' : 'border-blue-600'} border-t-transparent rounded-full animate-spin`}></div>
+                                  )}
+                                </button>
+                              ))}
+                            </div>
                           </div>
-                        </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={() => handleViewDetail(booking)}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        title="Xem chi tiết"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      {canStartVideoCall(booking) && (
+                        <button
+                          onClick={() => handleStartVideoCall(booking)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          title="Bắt đầu tư vấn video"
+                        >
+                          <Video size={16} />
+                        </button>
                       )}
                     </div>
                   </div>
-                  <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => handleViewDetail(booking)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Xem chi tiết"
-                    >
-                      <Eye size={16} />
-                    </button>
-                    {canStartVideoCall(booking) && (
-                      <button
-                        onClick={() => handleStartVideoCall(booking)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Bắt đầu tư vấn video"
-                      >
-                        <Video size={16} />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </>
           )}
         </div>
