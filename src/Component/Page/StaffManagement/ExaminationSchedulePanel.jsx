@@ -71,6 +71,58 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
 
   const [openDropdown, setOpenDropdown] = useState(null);
 
+  // Thêm state cho payment status
+  const [paidBookingIds, setPaidBookingIds] = useState([]);
+
+  // Thêm hàm fetch payment status
+  const fetchPaymentStatus = async () => {
+    try {
+      // Lấy tất cả transaction thành công
+      const allTransactions = [];
+
+      // Lấy transaction cho từng booking (hoặc có thể tối ưu bằng cách lấy tất cả)
+      for (const booking of bookings) {
+        if (booking.customerId?.id) {
+          try {
+            const transRes = await api.get(`/transaction/customerId/${booking.customerId.id}`);
+            const transactions = transRes.data || [];
+            allTransactions.push(...transactions);
+          } catch (err) {
+            console.warn(`Failed to fetch transactions for user ${booking.customerId.id}:`, err);
+          }
+        }
+      }
+
+      // Lọc các appointment đã thanh toán
+      const paidIds = allTransactions
+        .filter(t => t.resultCode === "00" || t.status === "SUCCESS")
+        .map(t => t.appointmentId)
+        .filter(id => id); // Loại bỏ null/undefined
+
+      setPaidBookingIds(paidIds);
+    } catch (error) {
+      console.error('Error fetching payment status:', error);
+    }
+  };
+
+  // Thêm hàm kiểm tra đã thanh toán
+  const isBookingPaid = (bookingId) => {
+    return paidBookingIds.includes(bookingId);
+  };
+
+  // Thêm hàm kiểm tra có nên hiển thị trạng thái thanh toán không
+  const shouldShowPaymentStatus = (booking) => {
+    return booking.status === 0; // Chỉ hiển thị cho lịch chờ xác nhận
+  };
+
+  // Cập nhật useEffect để fetch payment status sau khi có bookings
+  useEffect(() => {
+    if (bookings.length > 0) {
+      fetchPaymentStatus();
+    }
+  }, [bookings]);
+
+
   // Lấy danh sách dịch vụ xét nghiệm có typeCode = 1
   useEffect(() => {
     const fetchServiceTypes = async () => {
@@ -487,6 +539,19 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                     {getTimeSlotText(booking.slot)}
                   </div>
                   <div>{booking.serviceTypeId?.name}</div>
+                  {shouldShowPaymentStatus(booking) && (
+                    <div className="mt-1">
+                      {isBookingPaid(booking.id) ? (
+                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                          <CheckCircle size={10} className="mr-1" /> Đã thanh toán
+                        </span>
+                      ) : (
+                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                          <XCircle size={10} className="mr-1" /> Chưa thanh toán
+                        </span>
+                      )}
+                    </div>
+                  )}
                   <div>
                     {/* Trạng thái với dropdown giống ConsultingPanel */}
                     <div className="relative">
@@ -645,6 +710,22 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                       {STATUS_OPTIONS.find(opt => opt.value === selectedAppointment.status)?.label}
                     </span>
                   </p>
+                  {shouldShowPaymentStatus(selectedAppointment) && (
+                    <>
+                      <p><span className="text-gray-500">Thanh toán:</span></p>
+                      <p>
+                        {isBookingPaid(selectedAppointment.id) ? (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <CheckCircle size={12} className="mr-1" /> Đã thanh toán
+                          </span>
+                        ) : (
+                          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <XCircle size={12} className="mr-1" /> Chưa thanh toán
+                          </span>
+                        )}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
 

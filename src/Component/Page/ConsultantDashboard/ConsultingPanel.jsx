@@ -66,6 +66,56 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
   const [statusFilter, setStatusFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('');
 
+  // Thêm state cho payment status
+  const [paidBookingIds, setPaidBookingIds] = useState([]);
+  // Thêm hàm fetch payment status
+  const fetchPaymentStatus = async () => {
+    try {
+      // Lấy tất cả transaction thành công
+      const allTransactions = [];
+
+      // Lấy transaction cho từng booking
+      for (const booking of bookings) {
+        if (booking.customerId?.id) {
+          try {
+            const transRes = await api.get(`/transaction/customerId/${booking.customerId.id}`);
+            const transactions = transRes.data || [];
+            allTransactions.push(...transactions);
+          } catch (err) {
+            console.warn(`Failed to fetch transactions for user ${booking.customerId.id}:`, err);
+          }
+        }
+      }
+
+      // Lọc các appointment đã thanh toán
+      const paidIds = allTransactions
+        .filter(t => t.resultCode === "00" || t.status === "SUCCESS")
+        .map(t => t.appointmentId)
+        .filter(id => id); // Loại bỏ null/undefined
+
+      setPaidBookingIds(paidIds);
+    } catch (error) {
+      console.error('Error fetching payment status:', error);
+    }
+  };
+
+  // Thêm hàm kiểm tra đã thanh toán
+  const isBookingPaid = (bookingId) => {
+    return paidBookingIds.includes(bookingId);
+  };
+
+  // Thêm hàm kiểm tra có nên hiển thị trạng thái thanh toán không
+  const shouldShowPaymentStatus = (booking) => {
+    return booking.status === 0; // Chỉ hiển thị cho lịch chờ xác nhận
+  };
+
+  // Cập nhật useEffect để fetch payment status sau khi có bookings
+  useEffect(() => {
+    if (bookings.length > 0) {
+      fetchPaymentStatus();
+    }
+  }, [bookings]);
+
 
   const handleStartVideoCall = (booking) => {
     setSelectedForCall(booking);
@@ -95,36 +145,6 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
             booking.consultantId &&
             String(booking.consultantId.id) === String(user.id)
         );
-      // TỰ ĐỘNG HỦY các booking quá hạn hôm nay và status === 0
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      // Dùng Promise.all để xóa đồng thời các booking quá hạn
-      const expiredBookings = consultBookings.filter(
-        booking =>
-          booking.status === 0 &&
-          new Date(booking.appointmentDate) < today
-      );
-
-      if (expiredBookings.length > 0) {
-        await Promise.all(
-          expiredBookings.map(async (booking) => {
-            try {
-              await api.delete(`/api/booking/${booking.id}`);
-            } catch (err) {
-              // Có thể log lỗi nếu cần
-            }
-          })
-        );
-        // Sau khi xóa, loại bỏ các booking đã bị xóa khỏi danh sách
-        consultBookings = consultBookings.filter(
-          booking =>
-            !(
-              booking.status === 0 &&
-              new Date(booking.appointmentDate) < today
-            )
-        );
-      }
       setBookings(consultBookings);
     } catch (err) {
       setError("Không thể tải danh sách lịch tư vấn.");
@@ -398,6 +418,20 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       {getTimeSlotText(booking.slot)}
                     </div>
                     <div>{booking.serviceTypeId?.name}</div>
+                    {/* Thêm hiển thị trạng thái thanh toán */}
+                    {shouldShowPaymentStatus(booking) && (
+                      <div className="mt-1">
+                        {isBookingPaid(booking.id) ? (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <CheckCircle size={10} className="mr-1" /> Đã thanh toán
+                          </span>
+                        ) : (
+                          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <XCircle size={10} className="mr-1" /> Chưa thanh toán
+                          </span>
+                        )}
+                      </div>
+                    )}
                     <div>
                       {/* Status dropdown với overflow visible */}
                       <div className="relative z-20">
@@ -559,6 +593,23 @@ export default function ConsultingPanel({ selectedAppointment, setSelectedAppoin
                       {STATUS_DISPLAY.find(opt => opt.value === selectedAppointment.status)?.label}
                     </span>
                   </p>
+                  {/* Thêm trạng thái thanh toán trong modal */}
+                  {shouldShowPaymentStatus(selectedAppointment) && (
+                    <>
+                      <p><span className="text-gray-500">Thanh toán:</span></p>
+                      <p>
+                        {isBookingPaid(selectedAppointment.id) ? (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <CheckCircle size={12} className="mr-1" /> Đã thanh toán
+                          </span>
+                        ) : (
+                          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <XCircle size={12} className="mr-1" /> Chưa thanh toán
+                          </span>
+                        )}
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
               {selectedAppointment.description && (

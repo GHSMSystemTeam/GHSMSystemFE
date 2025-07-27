@@ -82,35 +82,30 @@ export default function UserAppointments() {
         const fetchAppointments = async () => {
             setLoading(true);
             try {
+                // 1. Lấy danh sách transaction đã thanh toán
+                const transRes = await api.get(`/transaction/customerId/${user.id}`);
+                const transactions = transRes.data || [];
+                // Lọc các transaction thành công
+                const paidAppointmentIds = transactions
+                    .filter(
+                        t => t.resultCode === "00" || t.status === "SUCCESS"
+                    )
+                    .map(t => t.appointmentId);
+
+                // 2. Lấy danh sách booking
                 const res = await api.get(`/api/servicebookings/customer/${user.id}`);
-                const allBookings = (res.data || []);
+                const allBookings = res.data || [];
                 const uniqueBookings = allBookings.filter((booking, index, self) =>
                     index === self.findIndex(b => b.id === booking.id)
                 );
 
-                // Kiểm tra trạng thái thanh toán cho từng lịch
-                const bookingsWithPayment = await Promise.all(
-                    uniqueBookings.map(async (booking) => {
-                        if (!booking.orderId) {
-                            console.log('Booking thiếu orderId:', booking);
-                            return { ...booking, isPaid: false };
-                        }
-                        try {
-                            const payRes = await api.get(`/payment/vnpay/status/${booking.orderId}`);
-                            console.log('Kết quả kiểm tra thanh toán:', booking.orderId, payRes.data);
-                            if (
-                                payRes.data &&
-                                (payRes.data.resultCode === "00" || payRes.data.transactionStatus === "SUCCESS")
-                            ) {
-                                return { ...booking, isPaid: true };
-                            }
-                        } catch (e) {
-                            console.error('Lỗi kiểm tra thanh toán:', booking.orderId, e);
-                        }
-                        return { ...booking, isPaid: false };
-                    })
-                );
+                // 3. Đánh dấu booking đã thanh toán
+                const bookingsWithPayment = uniqueBookings.map(booking => ({
+                    ...booking,
+                    isPaid: paidAppointmentIds.includes(booking.id)
+                }));
 
+                // ...phân loại test/medical như cũ...
                 const testBookings = bookingsWithPayment.filter(
                     (booking) =>
                         booking.serviceTypeId &&
@@ -324,7 +319,12 @@ export default function UserAppointments() {
     const canPayAppointment = (appointment) => {
         // Giả sử có trường isPaid trong appointment object
         // Hoặc có thể kiểm tra status = 0 (chờ xác nhận) hoặc 1 (đã xác nhận) và chưa thanh toán
-        return (appointment.status === 0 || appointment.status === 1) && !appointment.isPaid;
+        return appointment.status === 0 && !appointment.isPaid;
+    };
+
+    const shouldShowPaymentStatus = (appointment) => {
+        // Chỉ hiển thị trạng thái thanh toán cho lịch chờ xác nhận (status = 0)
+        return appointment.status === 0;
     };
 
     const generatePaymentQR = async (appointment) => {
@@ -507,10 +507,18 @@ export default function UserAppointments() {
                                                     Giá: {booking.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
                                                 </p>
 
-                                                {booking.isPaid && (
-                                                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center">
-                                                        <CheckCircle size={12} className="mr-1" /> Đã thanh toán
-                                                    </span>
+                                                {shouldShowPaymentStatus(booking) && (
+                                                    <div className="mt-2">
+                                                        {booking.isPaid ? (
+                                                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                                <CheckCircle size={12} className="mr-1" /> Đã thanh toán
+                                                            </span>
+                                                        ) : (
+                                                            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                                <XCircle size={12} className="mr-1" /> Chưa thanh toán
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 )}
 
 
@@ -679,6 +687,20 @@ export default function UserAppointments() {
                                                 <p className="text-sm font-medium text-purple-800">
                                                     Giá: {booking.serviceTypeId?.price?.toLocaleString('vi-VN')} VNĐ
                                                 </p>
+
+                                                {shouldShowPaymentStatus(booking) && (
+                                                    <div className="mt-2">
+                                                        {booking.isPaid ? (
+                                                            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                                <CheckCircle size={12} className="mr-1" /> Đã thanh toán
+                                                            </span>
+                                                        ) : (
+                                                            <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                                                                <XCircle size={12} className="mr-1" /> Chưa thanh toán
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {/* DateTime */}
