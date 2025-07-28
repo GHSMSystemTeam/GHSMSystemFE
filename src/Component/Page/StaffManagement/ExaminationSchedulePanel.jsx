@@ -525,7 +525,7 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
               <div>Giới tính</div>
               <div>Ngày hẹn</div>
               <div>Khung giờ</div>
-              <div>Dịch vụ xét nghiệm</div>
+              <div>Dịch vụ</div>
               <div>Trạng thái</div>
               <div className="text-right">Thao tác</div>
             </div>
@@ -538,20 +538,22 @@ export default function ExaminationSchedulePanel({ selectedAppointment, setSelec
                   <div className="text-indigo-600 font-medium">
                     {getTimeSlotText(booking.slot)}
                   </div>
-                  <div>{booking.serviceTypeId?.name}</div>
-                  {shouldShowPaymentStatus(booking) && (
-                    <div className="mt-1">
-                      {isBookingPaid(booking.id) ? (
-                        <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
-                          <CheckCircle size={10} className="mr-1" /> Đã thanh toán
-                        </span>
-                      ) : (
-                        <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
-                          <XCircle size={10} className="mr-1" /> Chưa thanh toán
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  <div className="flex flex-col min-w-[180px] break-words">
+                    <span>{booking.serviceTypeId?.name}</span>
+                    {shouldShowPaymentStatus(booking) && (
+                      <span className="mt-1">
+                        {isBookingPaid(booking.id) ? (
+                          <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <CheckCircle size={10} className="mr-1" /> Đã thanh toán
+                          </span>
+                        ) : (
+                          <span className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full flex items-center w-fit">
+                            <XCircle size={10} className="mr-1" /> Chưa thanh toán
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </div>
                   <div>
                     {/* Trạng thái với dropdown giống ConsultingPanel */}
                     <div className="relative">
