@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useState } from 'react';
 import Header from '../Header/Header';
 import { useAuth } from '../Auth/AuthContext';
@@ -14,8 +14,9 @@ export default function UserProfile() {
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('profile');
     const [isLoading, setIsLoading] = useState(false);
+    const didFetch = useRef(false);
     const [formData, setFormData] = useState({
-        fullName: '',
+        name: '',
         email: '',
         phone: '',
         dateOfBirth: '',
@@ -27,21 +28,41 @@ export default function UserProfile() {
     useEffect(() => {
         if (!user) {
             navigate('/'); // Redirect to home page or login page
-        } else {
-            // If user is logged in, update formData if it hasn't been set yet
-            // or if user details change (e.g., after an update elsewhere)
-            const initialData = {
-                fullName: user.name || user.fullName || '',
-                email: user.email || '',
-                phone: user.phone || '',
-                dateOfBirth: user.birthDate ? user.birthDate.split('T')[0] : '',
-                gender: user.gender !== undefined ? user.gender : 0,
-                avatar: user.profilePicture && user.profilePicture.length > 0 ? user.profilePicture[0] : null,
-            };
-            setFormData(initialData);
-            setOriginalData(initialData);
+        } else if (!didFetch.current) {
+            didFetch.current = true;
+            // Lấy user mới nhất từ API
+            api.get('/api/user').then(res => {
+                const users = res.data || [];
+                const found = users.find(u => u.email === user.email);
+                if (found) {
+                    const initialData = {
+                        name: found.name || '',
+                        email: found.email || '',
+                        phone: found.phone || '',
+                        dateOfBirth: found.birthDate ? found.birthDate.split('T')[0] : '',
+                        gender: found.gender !== undefined ? found.gender : 0,
+                        avatar: found.profilePicture || null,
+                    };
+                    setFormData(initialData);
+                    setOriginalData(initialData);
+                    // Cập nhật lại context nếu muốn đồng bộ luôn
+                    login({ ...user, ...found });
+                }
+            }).catch(() => {
+                // fallback nếu lỗi API
+                const initialData = {
+                    name: user.name || '',
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    dateOfBirth: user.birthDate ? user.birthDate.split('T')[0] : '',
+                    gender: user.gender !== undefined ? user.gender : 0,
+                    avatar: user.profilePicture && user.profilePicture.length > 0 ? user.profilePicture[0] : null,
+                };
+                setFormData(initialData);
+                setOriginalData(initialData);
+            });
         }
-    }, [user, navigate]);
+    }, [user, navigate, login]);
 
 
     const [passwordData, setPasswordData] = useState({
@@ -69,41 +90,47 @@ export default function UserProfile() {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            // Start with the full, original user object to preserve all data
-            const payload = { ...user };
-
-            // Update only the fields that are editable on the form
-            payload.name = formData.fullName.trim();
-            payload.phone = formData.phone.trim();
-            payload.gender = parseInt(formData.gender);
-            payload.birthDate = formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : user.birthDate;
-            payload.profilePicture = formData.avatar ? [formData.avatar] : user.profilePicture || [];
-            // Ensure role is an object, not a string
-            if (typeof payload.role !== 'object' || payload.role === null) {
-                payload.role = { id: 3, name: "Customer", description: "Customer role" };
+            // Chỉ gửi các trường cần update
+            const payload = {};
+            if (formData.name !== user.name) payload.name = formData.name.trim();
+            if (formData.phone !== user.phone) payload.phone = formData.phone.trim();
+            if (formData.gender !== user.gender) payload.gender = Number(formData.gender);
+            if (formData.dateOfBirth && formData.dateOfBirth !== (user.birthDate ? user.birthDate.split('T')[0] : "")) {
+                payload.birthDate = new Date(formData.dateOfBirth).toISOString();
             }
-            // The API expects the full user object, so we send the modified payload
+            if (formData.avatar && formData.avatar !== (user.profilePicture && user.profilePicture[0])) {
+                payload.profilePicture = formData.avatar;
+            }
+
+            // Nếu không có trường nào thay đổi thì không gọi API
+            if (Object.keys(payload).length === 0) {
+                setIsEditing(false);
+                setIsLoading(false);
+                showToast('Không có thay đổi nào để lưu.', 'info');
+                return;
+            }
+
             await api.put(`/api/user/${user.email}`, payload);
 
-            // Create the updated user data for the context
+            // Cập nhật lại context và localStorage
             const updatedUserData = {
                 ...user,
-                name: payload.name,
-                fullName: payload.name, // for frontend consistency
-                phone: payload.phone,
-                birthDate: payload.birthDate,
-                gender: payload.gender,
-                profilePicture: payload.profilePicture,
+                ...payload,
+                name: payload.name || user.name,
+                phone: payload.phone || user.phone,
+                birthDate: payload.birthDate || user.birthDate,
+                gender: payload.gender !== undefined ? payload.gender : user.gender,
+                profilePicture: payload.profilePicture
+                    ? [payload.profilePicture]
+                    : user.profilePicture,
             };
 
-            // Update context and localStorage
             localStorage.setItem('user', JSON.stringify(updatedUserData));
             login(updatedUserData);
 
             setOriginalData(formData);
             setIsEditing(false);
             showToast('Cập nhật thông tin thành công!', 'success');
-
         } catch (error) {
             console.error("Error updating profile:", error);
             const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật thông tin!';
@@ -236,7 +263,7 @@ export default function UserProfile() {
                                 </div>
                                 <div className="text-center sm:text-left">
                                     <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg">
-                                        {formData.fullName}
+                                        {formData.name}
                                     </h1>
                                     <p className="text-purple-100 mb-1">{formData.email}</p>
                                 </div>
@@ -290,7 +317,7 @@ export default function UserProfile() {
                                     {/* Họ và tên */}
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center"><User size={16} className="mr-2" />Họ và tên</label>
-                                        <input type="text" name="fullName" value={formData.fullName} onChange={handleInputChange} disabled={!isEditing} className={`w-full pl-3 pr-3 py-2 border rounded-lg transition-all ${isEditing ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white' : 'border-gray-200 bg-gray-50 text-gray-700'}`} />
+                                        <input type="text" name="name" value={formData.name} onChange={handleInputChange} disabled={!isEditing} className={`w-full pl-3 pr-3 py-2 border rounded-lg transition-all ${isEditing ? 'border-blue-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white' : 'border-gray-200 bg-gray-50 text-gray-700'}`} />
                                     </div>
                                     {/* Email */}
                                     <div>
