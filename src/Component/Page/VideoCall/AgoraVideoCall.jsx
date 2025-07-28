@@ -410,6 +410,11 @@ const AgoraVideoCall = ({
 
     // Event handlers for remote users - ADD MORE DEBUGGING
     const handleUserPublished = async (user, mediaType) => {
+        // Không subscribe/play video của chính mình lên remoteVideoRef
+        if (clientRef.current && user.uid === clientRef.current.uid) {
+            console.log('🚫 Bỏ qua user-published của chính mình:', user.uid);
+            return;
+        }
         console.log('👤 User published:', user.uid, 'Media type:', mediaType);
         console.log('📊 Remote video ref exists:', !!remoteVideoRef.current);
         try {
