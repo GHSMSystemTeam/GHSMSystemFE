@@ -1690,60 +1690,39 @@ const STATUS_LABELS = {
   PENDING: { label: "Đang xử lý", color: "bg-yellow-100 text-yellow-700" },
   FAILED:  { label: "Thất bại", color: "bg-red-100 text-red-700" },
 };
-
+const PAYMENT_STATUS_API_MAP = {
+  ALL: "", // backend trả về tất cả nếu không truyền status hoặc truyền ALL
+  SUCCESS: "SUCCESS",
+  PENDING: "PENDING",
+  FAILED: "FAILED",
+};
 const PaymentManagementComponent = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("ALL");
 
-  const fetchPaymentList = async () => {
+  const fetchPayments = async (status) => {
     setLoading(true);
     try {
-      // Lấy danh sách booking/servicebooking
-      const res = await api.get("/api/servicebookings");
-      const bookings = res.data || [];
-      // Chỉ lấy booking có orderId (đã thanh toán)
-      const paymentBookings = bookings.filter(b => b.orderId);
-
-      // Lấy trạng thái từng giao dịch
-      const detailedPayments = await Promise.all(
-        paymentBookings.map(async (item) => {
-          try {
-            const statusRes = await api.get(`/payment/vnpay/status/${item.orderId}`);
-            return {
-              ...statusRes.data,
-              customerName: item.customerId?.name || "N/A",
-            };
-          } catch {
-            return {
-              orderId: item.orderId,
-              customerName: item.customerId?.name || "N/A",
-              transactionStatus: "FAILED",
-              message: "Không lấy được trạng thái",
-            };
-          }
-        })
-      );
-      setPayments(detailedPayments);
+        let res;
+        if (status === "ALL") {
+        // Lấy tất cả giao dịch
+        res = await api.get('/transaction/');
+        } else {
+        // Lọc theo trạng thái
+        res = await api.get(`/transaction/paymentStatus/${status}`);
+        }
+        setPayments(res.data || []);
     } catch {
-      setPayments([]);
+        setPayments([]);
     } finally {
-      setLoading(false);
+        setLoading(false);
     }
-  };
+};
 
   useEffect(() => {
-    fetchPaymentList();
-  }, []);
-
-  // Filter payments theo trạng thái
-  const filteredPayments = payments.filter((p) => {
-    if (filter === "ALL") return true;
-    if (filter === "SUCCESS") return p.transactionStatus === "SUCCESS";
-    if (filter === "PENDING") return p.transactionStatus === "PENDING";
-    if (filter === "FAILED")  return p.transactionStatus === "FAILED";
-    return true;
-  });
+    fetchPayments(filter);
+  }, [filter]);
 
   return (
     <div className="bg-white rounded-xl shadow p-6 mb-8">
@@ -1784,22 +1763,22 @@ const PaymentManagementComponent = () => {
           <tbody>
             {loading ? (
               <tr><td colSpan={7} className="text-center py-6">Đang tải...</td></tr>
-            ) : filteredPayments.length === 0 ? (
+            ) : payments.length === 0 ? (
               <tr><td colSpan={7} className="text-center py-6 text-gray-400">Không có giao dịch.</td></tr>
             ) : (
-              filteredPayments.map((p) => (
+              payments.map((p) => (
                 <tr key={p.orderId} className="border-b hover:bg-gray-50">
                   <td className="px-4 py-3">{p.orderId}</td>
-                  <td>{p.customerName}</td>
+                  <td>{p.userName || "N/A"}</td>
                   <td>{p.amount?.toLocaleString("vi-VN")} VNĐ</td>
                   <td>
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_LABELS[p.transactionStatus]?.color || "bg-gray-200 text-gray-600"}`}>
-                      {STATUS_LABELS[p.transactionStatus]?.label || p.transactionStatus || "Không xác định"}
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_LABELS[p.status]?.color || "bg-gray-200 text-gray-600"}`}>
+                      {STATUS_LABELS[p.status]?.label || p.status || "Không xác định"}
                     </span>
                   </td>
-                  <td>{p.createDate ? new Date(p.createDate).toLocaleString("vi-VN") : "N/A"}</td>
+                  <td>{p.createdAt ? new Date(p.createdAt).toLocaleString("vi-VN") : "N/A"}</td>
                   <td>{p.transactionId || "N/A"}</td>
-                  <td>{p.message || ""}</td>
+                  <td>{p.orderInfo || ""}</td>
                 </tr>
               ))
             )}
@@ -1808,7 +1787,7 @@ const PaymentManagementComponent = () => {
       </div>
     </div>
   );
-}
+};
 
 const FeedbackManagementComponent = () => {
     const [ratings, setRatings] = useState([]);
