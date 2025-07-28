@@ -56,7 +56,7 @@ export default function Header() {
                                         {user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'}
                                     </span>
                                 </div>
-                                <span className="text-gray-700 font-medium">{user.name}</span>
+                                <span className="text-gray-700 font-medium">{user.fullName}</span>
                             </button>
 
                             {/* User dropdown menu */}

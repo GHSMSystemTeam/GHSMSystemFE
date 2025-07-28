@@ -576,51 +576,53 @@ const CustomerManagementComponent = () => {
       {error && (
         <p className="text-red-500 bg-red-50 p-3 rounded-md mb-4">{error}</p>
       )}
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left text-gray-500">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-            <tr>
-              <th className="px-6 py-3">Name</th>
-              <th className="px-6 py-3">Email</th>
-              <th className="px-6 py-3">Phone</th>
-              <th className="px-6 py-3">Status</th>
-              <th className="px-6 py-3">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="5" className="text-center py-4">
-                  Loading...
-                </td>
-              </tr>
-            ) : (
-              customers.map((customer) => (
-                <tr key={customer.id} className="bg-white border-b hover:bg-gray-50">
-                  <td className="px-6 py-4 font-medium text-gray-900">{customer.name}</td>
-                  <td className="px-6 py-4">{customer.email}</td>
-                  <td className="px-6 py-4">{customer.phone || "N/A"}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-semibold ${customer.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
-                      {customer.active ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <button
-                      onClick={() => handleToggleActive(customer)}
-                                        className={`px-3 py-1 rounded transition-colors duration-200 ml-2
-                                            ${customer.active 
-                                                ? ' text-white bg-red-600' 
-                                                : ' text-white bg-green-500'}`}
-                                    >
-                                        {customer.active ? 'Deactivate' : 'Activate'}
-                    </button>
-                  </td>
+    <div className="overflow-x-auto">
+        <div className="max-h-[800px] overflow-y-auto">
+            <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
+                <tr>
+                <th className="px-6 py-3">Name</th>
+                <th className="px-6 py-3">Email</th>
+                <th className="px-6 py-3">Phone</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Actions</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+                {loading ? (
+                <tr>
+                    <td colSpan="5" className="text-center py-4">
+                    Loading...
+                    </td>
+                </tr>
+                ) : (
+                customers.map((customer) => (
+                    <tr key={customer.id} className="bg-white border-b hover:bg-gray-50">
+                    <td className="px-6 py-4 font-medium text-gray-900">{customer.name}</td>
+                    <td className="px-6 py-4">{customer.email}</td>
+                    <td className="px-6 py-4">{customer.phone || "N/A"}</td>
+                    <td className="px-6 py-4">
+                        <span className={`px-2 py-1 rounded text-xs font-semibold ${customer.active ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"}`}>
+                        {customer.active ? "Active" : "Inactive"}
+                        </span>
+                    </td>
+                    <td className="px-6 py-4">
+                        <button
+                        onClick={() => handleToggleActive(customer)}
+                                            className={`px-3 py-1 rounded transition-colors duration-200 ml-2
+                                                ${customer.active 
+                                                    ? ' text-white bg-red-600' 
+                                                    : ' text-white bg-green-500'}`}
+                                        >
+                                            {customer.active ? 'Deactivate' : 'Activate'}
+                        </button>
+                    </td>
+                    </tr>
+                ))
+                )}
+            </tbody>
+            </table>
+        </div>
       </div>
     </div>
   );
@@ -705,36 +707,38 @@ const StaffManagementComponent = () => {
                 </button>
             </div>
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th className="px-6 py-3">Name</th>
-                            <th className="px-6 py-3">Email</th>
-                            <th className="px-6 py-3">Phone</th>
-                            <th className="px-6 py-3">Gender</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loading ? (
+                <div className="max-h-[800px] overflow-y-auto"> 
+                    <table className="w-full text-sm text-left text-gray-500">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 top-0 sticky">
                             <tr>
-                                <td colSpan="6" className="text-center py-4">Loading...</td>
+                                <th className="px-6 py-3">Name</th>
+                                <th className="px-6 py-3">Email</th>
+                                <th className="px-6 py-3">Phone</th>
+                                <th className="px-6 py-3">Gender</th>
                             </tr>
-                        ) : staffList.length === 0 ? (
-                            <tr>
-                                <td colSpan="6" className="text-center py-4">No staff found.</td>
-                            </tr>
-                        ) : (
-                            staffList.map(staff => (
-                                <tr key={staff.id} className="bg-white border-b hover:bg-gray-50">
-                                    <td className="px-6 py-4">{staff.name}</td>
-                                    <td className="px-6 py-4">{staff.email}</td>
-                                    <td className="px-6 py-4">{staff.phone}</td>
-                                    <td className="px-6 py-4">{staff.gender === 0 ? 'Nam' : staff.gender === 2 ? 'Nữ' : 'Khác'}</td>
+                        </thead>
+                        <tbody>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-4">Loading...</td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ) : staffList.length === 0 ? (
+                                <tr>
+                                    <td colSpan="6" className="text-center py-4">No staff found.</td>
+                                </tr>
+                            ) : (
+                                staffList.map(staff => (
+                                    <tr key={staff.id} className="bg-white border-b hover:bg-gray-50">
+                                        <td className="px-6 py-4">{staff.name}</td>
+                                        <td className="px-6 py-4">{staff.email}</td>
+                                        <td className="px-6 py-4">{staff.phone}</td>
+                                        <td className="px-6 py-4">{staff.gender === 0 ? 'Nam' : staff.gender === 2 ? 'Nữ' : 'Khác'}</td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {showAddStaffModal && (
@@ -1159,9 +1163,9 @@ const BookingManagementComponent = () => {
             {/* Bookings List Table */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
                 <div className="overflow-x-auto">
-                    <div className="max-h-[600px] overflow-y-auto">
+                    <div className="max-h-[800px] overflow-y-auto">
                         <table className="w-full text-sm text-left text-gray-500">
-                            <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                            <thead className="text-xs text-gray-700 uppercase bg-gray-50 top-0 sticky">
                                 <tr>
                                     <th scope="col" className="px-6 py-3">Date</th>
                                     <th scope="col" className="px-6 py-3">Time Slot</th>
@@ -1258,7 +1262,7 @@ const BookingManagementComponent = () => {
                                     </select>
                                 </div>
                                 <div>
-                                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">Status *</label>
+                                    <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1 ">Status *</label>
                                     <select
                                         name="status"
                                         id="status"
@@ -1595,11 +1599,13 @@ const TestResultManagementComponent = () => {
                 <h2 className="text-2xl font-semibold text-gray-800">Test Result Management</h2>
             </div>
 
-            <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="max-h-[800px] overflow-y-auto">
                 <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                    <thead className="text-xs text-gray-700 uppercase bg-gray-50 top-0 sticky">
                         <tr>
-                            <th className="px-6 py-3">Tên khách hàng</th>
+                            <th className="px-6 py-3 ">Tên khách hàng</th>
+                            <th className="px-6 py-3">Email</th>
                             <th className="px-6 py-3">Tên dịch vụ</th>
                             <th className="px-6 py-3">Ngày hẹn</th>
                             <th className="px-6 py-3">Nội dung kết quả</th>
@@ -1683,6 +1689,7 @@ const TestResultManagementComponent = () => {
                 </table>
             </div>
         </div>
+    </div>
     );
 };
 const STATUS_LABELS = {
@@ -1690,12 +1697,12 @@ const STATUS_LABELS = {
   PENDING: { label: "Đang xử lý", color: "bg-yellow-100 text-yellow-700" },
   FAILED:  { label: "Thất bại", color: "bg-red-100 text-red-700" },
 };
-const PAYMENT_STATUS_API_MAP = {
-  ALL: "", // backend trả về tất cả nếu không truyền status hoặc truyền ALL
-  SUCCESS: "SUCCESS",
-  PENDING: "PENDING",
-  FAILED: "FAILED",
-};
+const filterOptions = [
+    { value: "ALL", label: "Tất cả" },
+    { value: "PENDING", label: "Đang xử lý" },
+    { value: "SUCCESS", label: "Thành công" },
+    { value: "FAILED", label: "Thất bại" },
+  ];
 const PaymentManagementComponent = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1726,38 +1733,33 @@ const PaymentManagementComponent = () => {
 
   return (
     <div className="bg-white rounded-xl shadow p-6 mb-8">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h2 className="text-2xl font-semibold text-gray-800">Quản lý thanh toán</h2>
-        <div className="flex gap-2">
-          <button
-            className={`px-3 py-1 rounded ${filter === "ALL" ? "bg-blue-600 text-white" : "bg-gray-100"}`}
-            onClick={() => setFilter("ALL")}
-          >Tất cả</button>
-          <button
-            className={`px-3 py-1 rounded ${filter === "PENDING" ? "bg-yellow-500 text-white" : "bg-gray-100"}`}
-            onClick={() => setFilter("PENDING")}
-          >Đang xử lý</button>
-          <button
-            className={`px-3 py-1 rounded ${filter === "SUCCESS" ? "bg-green-600 text-white" : "bg-gray-100"}`}
-            onClick={() => setFilter("SUCCESS")}
-          >Thành công</button>
-          <button
-            className={`px-3 py-1 rounded ${filter === "FAILED" ? "bg-red-600 text-white" : "bg-gray-100"}`}
-            onClick={() => setFilter("FAILED")}
-          >Thất bại</button>
+        <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Lọc theo trạng thái:</label>
+          <select
+            className="px-3 py-2 rounded border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+          >
+            {filterOptions.map(opt => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="max-h-[800px] overflow-y-auto">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50">
+          <thead className="bg-gray-50 sticky top-0 z-10">
             <tr>
-              <th className="px-4 py-3 font-semibold text-gray-700">Order ID</th>
-              <th className="font-semibold text-gray-700">Khách hàng</th>
-              <th className="font-semibold text-gray-700">Số tiền</th>
-              <th className="font-semibold text-gray-700">Trạng thái</th>
-              <th className="font-semibold text-gray-700">Ngày tạo</th>
-              <th className="font-semibold text-gray-700">Mã giao dịch</th>
-              <th className="font-semibold text-gray-700">Ghi chú</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Order ID</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Khách hàng</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Số tiền</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Trạng thái</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Ngày tạo</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Mã giao dịch</th>
+              <th className="px-3 py-3 font-semibold text-gray-700 whitespace-nowrap">Ghi chú</th>
             </tr>
           </thead>
           <tbody>
@@ -1768,22 +1770,23 @@ const PaymentManagementComponent = () => {
             ) : (
               payments.map((p) => (
                 <tr key={p.orderId} className="border-b hover:bg-gray-50">
-                  <td className="px-4 py-3">{p.orderId}</td>
-                  <td>{p.userName || "N/A"}</td>
-                  <td>{p.amount?.toLocaleString("vi-VN")} VNĐ</td>
-                  <td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.orderId}</td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.userId || "N/A"}</td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.amount?.toLocaleString("vi-VN")} VNĐ</td>
+                  <td className="px-2 py-3 whitespace-nowrap">
                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_LABELS[p.status]?.color || "bg-gray-200 text-gray-600"}`}>
                       {STATUS_LABELS[p.status]?.label || p.status || "Không xác định"}
                     </span>
                   </td>
-                  <td>{p.createdAt ? new Date(p.createdAt).toLocaleString("vi-VN") : "N/A"}</td>
-                  <td>{p.transactionId || "N/A"}</td>
-                  <td>{p.orderInfo || ""}</td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.createdAt ? new Date(p.createdAt).toLocaleString("vi-VN") : "N/A"}</td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.transactionId || "N/A"}</td>
+                  <td className="px-2 py-3 whitespace-nowrap">{p.orderInfo || ""}</td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );
@@ -1999,9 +2002,9 @@ const FeedbackManagementComponent = () => {
 
             {/* Ratings Table */}
             <div className="overflow-x-auto">
-                <div className="max-h-[600px] overflow-y-auto">
+                <div className="max-h-[800px] overflow-y-auto">
                     <table className="w-full text-sm text-left text-gray-500">
-                        <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                             <tr>
                                 <th className="px-6 py-3">Date</th>
                                 <th className="px-6 py-3">Customer</th>

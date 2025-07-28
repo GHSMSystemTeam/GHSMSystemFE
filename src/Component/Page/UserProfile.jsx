@@ -16,7 +16,7 @@ export default function UserProfile() {
     const [isLoading, setIsLoading] = useState(false);
     const didFetch = useRef(false);
     const [formData, setFormData] = useState({
-        name: '',
+        fullName: '',
         email: '',
         phone: '',
         dateOfBirth: '',
@@ -36,7 +36,7 @@ export default function UserProfile() {
                 const found = users.find(u => u.email === user.email);
                 if (found) {
                     const initialData = {
-                        name: found.name || '',
+                        fullName: user.name || user.fullName || '',
                         email: found.email || '',
                         phone: found.phone || '',
                         dateOfBirth: found.birthDate ? found.birthDate.split('T')[0] : '',
