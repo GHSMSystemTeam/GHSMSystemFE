@@ -28,9 +28,23 @@ export default function ProtectedRoute({ children, requiredRole }) {
         );
     }
 
-    if (requiredRole && user.role?.toLowerCase() !== requiredRole.toLowerCase()) {
-        // Nếu không đúng role, chuyển về trang chủ hoặc trang lỗi
-        return <Navigate to="/" state={{ from: location, message: "Không có quyền truy cập." }} replace />;
+    // Kiểm tra role an toàn
+    if (requiredRole) {
+        // Chuyển đổi user.role thành string an toàn
+        let userRole = "";
+        if (typeof user.role === "string") {
+            userRole = user.role.toLowerCase();
+        } else if (typeof user.role === "object" && user.role?.name) {
+            userRole = user.role.name.toLowerCase();
+        } else if (typeof user.role === "number") {
+            userRole = user.role.toString();
+        }
+
+        const requiredRoleLower = typeof requiredRole === "string" ? requiredRole.toLowerCase() : "";
+
+        if (userRole !== requiredRoleLower) {
+            return <Navigate to="/" state={{ from: location, message: "Không có quyền truy cập." }} replace />;
+        }
     }
 
     return children;
