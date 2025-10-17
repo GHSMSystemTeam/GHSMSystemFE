@@ -134,7 +134,7 @@ const AgoraVideoCall = ({
                 });
 
                 // Enhanced token retrieval - check multiple possible token keys
-                const authToken = localStorage.getItem('authToken') || 
+                let authToken = localStorage.getItem('authToken') || 
                                 localStorage.getItem('token') || 
                                 localStorage.getItem('accessToken') || 
                                 localStorage.getItem('jwt') ||
